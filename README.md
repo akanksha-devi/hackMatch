@@ -1,4 +1,4 @@
-# ⚡ HackMatch — Hackathon Team & Skill Matching Platform
+ss# ⚡ HackMatch — Hackathon Team & Skill Matching Platform
 
 > **Solve the *"I have an idea but no teammate with skill X"* problem for hackathon participants worldwide.**
 
@@ -390,3 +390,5 @@ To test the application instantly without manual registration, 1-click quick log
 ## 📄 License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+# hackMatch
+Smart hackathon team formation platform based on skill and interest matching.
