@@ -32,6 +32,7 @@ export const expireOldHackathons = async () => {
   const now = new Date();
   const result = await Hackathon.updateMany(
     {
+      isExternal: true,
       status: 'Active',
       $or: [
         { registrationDeadline: { $exists: true, $ne: null, $lt: now } },

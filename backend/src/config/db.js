@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import fs from 'fs';
+import path from 'path';
 
 let cached = global.mongoose;
 
@@ -6,17 +8,33 @@ if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
+const LOCAL_URI_FILE = path.resolve(process.cwd(), '.local-mongo-uri');
+
 export const connectDB = async () => {
   if (cached.conn) {
     return cached.conn;
   }
 
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/hackmatch';
+  let mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/hackmatch';
+
+  // In local dev, if .local-mongo-uri exists, attempt to connect to the existing running instance
+  if (process.env.NODE_ENV !== 'production' && (mongoUri.includes('127.0.0.1') || mongoUri.includes('localhost'))) {
+    if (fs.existsSync(LOCAL_URI_FILE)) {
+      try {
+        const savedUri = fs.readFileSync(LOCAL_URI_FILE, 'utf8').trim();
+        if (savedUri) {
+          mongoUri = savedUri;
+        }
+      } catch (e) {
+        // Ignore read errors
+      }
+    }
+  }
 
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 4000,
+      serverSelectionTimeoutMS: 2000,
     };
 
     cached.promise = mongoose.connect(mongoUri, opts)
@@ -33,9 +51,17 @@ export const connectDB = async () => {
             const mongod = await MongoMemoryServer.create({
               instance: { dbName: 'hackmatch' }
             });
-            const memUri = mongod.getUri();
-            console.log(`[MongoDB] Embedded MongoDB started at: ${memUri}`);
-            return mongoose.connect(memUri, { bufferCommands: false });
+            const rawUri = mongod.getUri();
+            const fullUri = rawUri.endsWith('/') ? `${rawUri}hackmatch` : `${rawUri}/hackmatch`;
+            console.log(`[MongoDB] Embedded MongoDB started at: ${fullUri}`);
+
+            try {
+              fs.writeFileSync(LOCAL_URI_FILE, fullUri, 'utf8');
+            } catch (writeErr) {
+              // Ignore file write error
+            }
+
+            return mongoose.connect(fullUri, { bufferCommands: false });
           } catch (memErr) {
             console.error('[MongoDB] Failed to start embedded MongoDB:', memErr.message);
             throw err;
@@ -55,3 +81,4 @@ export const connectDB = async () => {
 
   return cached.conn;
 };
+

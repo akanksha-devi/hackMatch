@@ -11,6 +11,8 @@ build/
 .env
 .env.local
 *.env
+.local-mongo-uri
+*.local-mongo-uri
 
 # Logs
 logs/

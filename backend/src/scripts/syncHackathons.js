@@ -10,7 +10,8 @@ async function main() {
   console.log('====================================================');
 
   try {
-    await connectDB();
+    const conn = await connectDB();
+    console.log(`Connected Database: ${conn.name}`);
 
     const result = await runHackathonSync();
 
