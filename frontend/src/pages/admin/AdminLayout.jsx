@@ -20,6 +20,7 @@ import {
   BadgeCheck,
 } from 'lucide-react';
 import NotificationBell from '../../components/NotificationBell';
+import ThemeToggle from '../../components/ThemeToggle';
 import { PageTransition } from '../../animations';
 
 export const AdminLayout = () => {
@@ -78,7 +79,7 @@ export const AdminLayout = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#07090e]/75 text-gray-100 flex flex-col md:flex-row font-sans relative z-10">
+    <div className="min-h-screen bg-[#07090e]/75 dark:bg-[#07090e]/75 text-gray-100 dark:text-gray-100 flex flex-col md:flex-row font-sans relative z-10 transition-colors duration-300">
       {/* Mobile Top Nav */}
       <div className="md:hidden flex items-center justify-between p-4 bg-gray-950/80 border-b border-gray-800 sticky top-0 z-40 backdrop-blur-md">
         <div className="flex items-center gap-2">
@@ -88,6 +89,7 @@ export const AdminLayout = () => {
           <span className="font-bold text-white text-base">HackMatch Admin</span>
         </div>
         <div className="flex items-center gap-2">
+          <ThemeToggle size="sm" />
           <NotificationBell />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -220,6 +222,7 @@ export const AdminLayout = () => {
             </div>
 
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <NotificationBell />
             </div>
           </div>

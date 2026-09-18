@@ -3,17 +3,19 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 export const ParticleNetwork = ({
-  nodeCount = 60,
+  nodeCount = 65,
   maxConnections = 4,
-  connectionDistance = 3.8,
-  spread = 16,
+  connectionDistance = 4.0,
+  spread = 17,
   nodeColor = '#38bdf8',
   lineColor = '#6366f1',
   speed = 0.05,
+  theme = 'dark',
   reducedMotion = false,
 }) => {
   const groupRef = useRef();
   const linesRef = useRef();
+  const isLight = theme === 'light';
 
   // Generate node anchors and velocities
   const nodes = useMemo(() => {
@@ -21,11 +23,8 @@ export const ParticleNetwork = ({
     for (let i = 0; i < nodeCount; i++) {
       list.push({
         x: (Math.random() - 0.5) * spread,
-        y: (Math.random() - 0.5) * spread * 0.7,
-        z: (Math.random() - 0.5) * (spread * 0.5),
-        vx: (Math.random() - 0.5) * 0.02,
-        vy: (Math.random() - 0.5) * 0.02,
-        vz: (Math.random() - 0.5) * 0.015,
+        y: (Math.random() - 0.5) * spread * 0.75,
+        z: (Math.random() - 0.5) * (spread * 0.55),
       });
     }
     return list;
@@ -63,9 +62,11 @@ export const ParticleNetwork = ({
   useFrame((state) => {
     if (reducedMotion || !groupRef.current) return;
     const time = state.clock.getElapsedTime();
-    groupRef.current.rotation.y = time * speed * 0.4;
-    groupRef.current.rotation.x = Math.sin(time * speed * 0.2) * 0.05;
+    groupRef.current.rotation.y = time * speed * 0.45;
+    groupRef.current.rotation.x = Math.sin(time * speed * 0.22) * 0.06;
   });
+
+  const blending = isLight ? THREE.NormalBlending : THREE.AdditiveBlending;
 
   return (
     <group ref={groupRef}>
@@ -80,12 +81,12 @@ export const ParticleNetwork = ({
           />
         </bufferGeometry>
         <pointsMaterial
-          size={0.09}
+          size={isLight ? 0.10 : 0.11}
           color={nodeColor}
           transparent
-          opacity={0.9}
+          opacity={isLight ? 0.8 : 0.95}
           sizeAttenuation
-          blending={THREE.AdditiveBlending}
+          blending={blending}
           depthWrite={false}
         />
       </points>
@@ -104,8 +105,8 @@ export const ParticleNetwork = ({
           <lineBasicMaterial
             color={lineColor}
             transparent
-            opacity={0.22}
-            blending={THREE.AdditiveBlending}
+            opacity={isLight ? 0.35 : 0.3}
+            blending={blending}
             depthWrite={false}
           />
         </lineSegments>
@@ -113,3 +114,5 @@ export const ParticleNetwork = ({
     </group>
   );
 };
+
+export default ParticleNetwork;

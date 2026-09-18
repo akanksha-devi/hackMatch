@@ -17,6 +17,7 @@ import {
   Bell
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
+import ThemeToggle from './ThemeToggle';
 
 export const Navbar = () => {
   const { user, collegeName, isAdmin, logout, isAuthenticated } = useAuth();
@@ -119,6 +120,9 @@ export const Navbar = () => {
 
                 {/* Notifications Bell */}
                 <NotificationBell />
+
+                {/* Theme Toggle */}
+                <ThemeToggle />
 
                 {/* Profile Dropdown */}
                 <div className="relative shrink-0">
@@ -239,12 +243,14 @@ export const Navbar = () => {
                 >
                   Get Started
                 </Link>
+                <ThemeToggle />
               </div>
             )}
           </div>
 
           {/* Mobile Menu Trigger */}
           <div className="flex md:hidden items-center gap-2 shrink-0">
+            <ThemeToggle size="sm" />
             {isAuthenticated && <NotificationBell />}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

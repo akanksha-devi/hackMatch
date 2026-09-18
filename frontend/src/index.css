@@ -2,9 +2,23 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
-:root {
+:root, [data-theme="dark"], .dark {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color-scheme: dark;
+  --color-bg-primary: #07090e;
+  --color-bg-surface: rgba(15, 23, 42, 0.65);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-text-primary: #f3f4f6;
+  --color-text-secondary: #9ca3af;
+}
+
+[data-theme="light"], .light {
+  color-scheme: light;
+  --color-bg-primary: #f8fafc;
+  --color-bg-surface: rgba(255, 255, 255, 0.85);
+  --color-border: rgba(203, 213, 225, 0.8);
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
 }
 
 .font-mono-code {
@@ -47,6 +61,11 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  transition: background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1), color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+nav, aside, main, .glass-panel {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Background animated gradient glow */
@@ -150,3 +169,145 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* ======================================================
+   LIGHT THEME COMPREHENSIVE OVERRIDES
+   Ensures pristine clarity, contrast, and elegance in Light Mode
+   ====================================================== */
+
+.light body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Navigation & Layout */
+.light nav.sticky {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  border-bottom-color: rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 4px 20px -5px rgba(15, 23, 42, 0.05);
+}
+
+.light aside {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  border-right-color: rgba(226, 232, 240, 0.9) !important;
+}
+
+.light .glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(203, 213, 225, 0.7);
+  box-shadow: 0 4px 25px -4px rgba(15, 23, 42, 0.06);
+}
+
+.light .glass-panel-hover:hover {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 12px 30px -8px rgba(99, 102, 241, 0.15);
+}
+
+/* Surface backgrounds */
+.light .bg-gray-950,
+.light .bg-gray-950\/90,
+.light .bg-gray-950\/80,
+.light .bg-gray-900,
+.light .bg-gray-900\/90,
+.light .bg-gray-900\/80,
+.light .bg-gray-900\/60,
+.light .bg-slate-900,
+.light .bg-slate-900\/90,
+.light .bg-\[\#07090e\]\/75,
+.light .bg-\[\#07090e\]\/90,
+.light .bg-\[\#0b0f17\] {
+  background-color: rgba(255, 255, 255, 0.92);
+}
+
+.light .bg-gray-800\/60,
+.light .bg-gray-800\/50,
+.light .bg-gray-800\/40,
+.light .bg-gray-900\/40 {
+  background-color: rgba(241, 245, 249, 0.85);
+}
+
+/* Borders */
+.light .border-gray-800,
+.light .border-gray-800\/80,
+.light .border-gray-800\/90,
+.light .border-gray-700 {
+  border-color: rgba(226, 232, 240, 0.9);
+}
+
+/* Typography Overrides (Except inside filled buttons/badges) */
+.light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
+  color: #0f172a;
+}
+
+.light .text-white:not(.btn-glow):not([class*="bg-indigo"]):not([class*="bg-violet"]):not([class*="bg-gradient"]):not([class*="bg-cyan"]):not([class*="bg-emerald"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-blue"]):not([class*="badge"]) {
+  color: #0f172a;
+}
+
+.light .text-gray-100 {
+  color: #0f172a;
+}
+
+.light .text-gray-200 {
+  color: #1e293b;
+}
+
+.light .text-gray-300 {
+  color: #334155;
+}
+
+.light .text-gray-400 {
+  color: #475569;
+}
+
+.light .text-gray-500 {
+  color: #64748b;
+}
+
+/* Form controls */
+.light input:not([type="checkbox"]):not([type="radio"]),
+.light select,
+.light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Grid in light mode */
+.light .cyber-grid {
+  background-image: 
+    linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+}
+
+/* Scrollbar in light mode */
+.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Hero Gradient in Light Mode */
+.light .text-gradient {
+  background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 50%, #6366f1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.light .text-gradient-cyan {
+  background: linear-gradient(135deg, #0369a1 0%, #0284c7 50%, #4f46e5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+

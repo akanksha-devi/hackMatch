@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -37,7 +38,7 @@ import { AnimationBackground, PageTransition, AnimationProvider } from './animat
 // Student Layout Wrapper (Header + Main + Footer)
 const StudentLayout = () => {
   return (
-    <div className="min-h-screen bg-[#07090e]/75 text-gray-100 flex flex-col selection:bg-indigo-500 selection:text-white font-sans relative z-10">
+    <div className="min-h-screen bg-[#07090e]/75 dark:bg-[#07090e]/75 text-gray-100 dark:text-gray-100 flex flex-col selection:bg-indigo-500 selection:text-white font-sans relative z-10 transition-colors duration-300">
       <Navbar />
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PageTransition>
@@ -51,10 +52,11 @@ const StudentLayout = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AnimationProvider>
-        <AnimationBackground isRoot />
-        <Routes>
+    <ThemeProvider>
+      <AuthProvider>
+        <AnimationProvider>
+          <AnimationBackground isRoot />
+          <Routes>
           {/* ================= ADMIN ROUTES ================= */}
           <Route path="/admin/login" element={<AdminLogin />} />
 
@@ -195,8 +197,9 @@ export default function App() {
             }
           />
         </Route>
-      </Routes>
-    </AnimationProvider>
-  </AuthProvider>
+        </Routes>
+      </AnimationProvider>
+    </AuthProvider>
+  </ThemeProvider>
   );
 }

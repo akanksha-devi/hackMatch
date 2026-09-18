@@ -3,11 +3,15 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { AmbientGlow } from '../components/AmbientGlow';
 import { DataStreams } from '../components/DataStreams';
+import { SCENE_KEYS, getSceneThemePalette } from '../animationConfig';
 
-export const DataUniverseScene = ({ density = 1, reducedMotion = false }) => {
+export const DataUniverseScene = ({ density = 1, theme = 'dark', reducedMotion = false }) => {
   const meshRef = useRef();
-  const cols = 28;
-  const rows = 18;
+  const palette = getSceneThemePalette(SCENE_KEYS.DASHBOARD, theme);
+  const isLight = theme === 'light';
+
+  const cols = 30;
+  const rows = 20;
   const count = cols * rows;
 
   const [positions, gridData] = useMemo(() => {
@@ -17,8 +21,8 @@ export const DataUniverseScene = ({ density = 1, reducedMotion = false }) => {
     for (let i = 0; i < cols; i++) {
       for (let j = 0; j < rows; j++) {
         const idx = i * rows + j;
-        const x = (i - cols / 2) * 1.1;
-        const z = (j - rows / 2) * 1.1 - 4;
+        const x = (i - cols / 2) * 1.15;
+        const z = (j - rows / 2) * 1.15 - 4;
         const y = -3;
 
         pos[idx * 3] = x;
@@ -40,7 +44,7 @@ export const DataUniverseScene = ({ density = 1, reducedMotion = false }) => {
 
     for (let i = 0; i < count; i++) {
       const d = gridData[i];
-      const wave = Math.sin(d.x * 0.3 + time * 0.8) * Math.cos(d.z * 0.3 + time * 0.6) * 1.2;
+      const wave = Math.sin(d.x * 0.3 + time * 0.8) * Math.cos(d.z * 0.3 + time * 0.6) * 1.25;
       posArr[i * 3 + 1] = d.origY + wave;
     }
 
@@ -49,23 +53,40 @@ export const DataUniverseScene = ({ density = 1, reducedMotion = false }) => {
 
   return (
     <group>
-      <AmbientGlow color1="#4f46e5" color2="#06b6d4" intensity={0.5} reducedMotion={reducedMotion} />
+      <AmbientGlow
+        color1={palette.glow1}
+        color2={palette.glow2}
+        intensity={0.6}
+        theme={theme}
+        reducedMotion={reducedMotion}
+      />
       {/* Undulating Data Matrix Plane */}
-      <points ref={meshRef} rotation={[0.2, 0, 0]}>
+      <points ref={meshRef} rotation={[0.22, 0, 0]}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
         </bufferGeometry>
         <pointsMaterial
-          size={0.05}
-          color="#818cf8"
+          size={isLight ? 0.07 : 0.075}
+          color={palette.primary}
           transparent
-          opacity={0.65}
-          blending={THREE.AdditiveBlending}
+          opacity={isLight ? 0.75 : 0.85}
+          blending={isLight ? THREE.NormalBlending : THREE.AdditiveBlending}
           depthWrite={false}
         />
       </points>
       {/* Ascending Telemetry Streams */}
-      <DataStreams streamCount={6} particlesPerStream={20} height={16} spread={14} speed={0.9} color="#38bdf8" reducedMotion={reducedMotion} />
+      <DataStreams
+        streamCount={7}
+        particlesPerStream={22}
+        height={18}
+        spread={15}
+        speed={0.9}
+        color={palette.secondary}
+        theme={theme}
+        reducedMotion={reducedMotion}
+      />
     </group>
   );
 };
+
+export default DataUniverseScene;

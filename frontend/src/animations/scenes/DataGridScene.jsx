@@ -2,8 +2,9 @@ import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { AmbientGlow } from '../components/AmbientGlow';
 import { DataStreams } from '../components/DataStreams';
+import { SCENE_KEYS, getSceneThemePalette } from '../animationConfig';
 
-const TacticalGrid = ({ size = 26, divisions = 26, color = '#312e81', reducedMotion = false }) => {
+const TacticalGrid = ({ size = 28, divisions = 28, centerColor = '#6366f1', gridColor = '#1e1b4b', reducedMotion = false }) => {
   const gridRef = useRef();
 
   useFrame((state) => {
@@ -14,17 +15,42 @@ const TacticalGrid = ({ size = 26, divisions = 26, color = '#312e81', reducedMot
 
   return (
     <group position={[0, -4, -6]} rotation={[0.4, 0, 0]}>
-      <gridHelper ref={gridRef} args={[size, divisions, '#6366f1', color]} />
+      <gridHelper ref={gridRef} args={[size, divisions, centerColor, gridColor]} />
     </group>
   );
 };
 
-export const DataGridScene = ({ density = 1, reducedMotion = false }) => {
+export const DataGridScene = ({ density = 1, theme = 'dark', reducedMotion = false }) => {
+  const palette = getSceneThemePalette(SCENE_KEYS.ADMIN, theme);
+
   return (
     <group>
-      <AmbientGlow color1="#312e81" color2="#0369a1" intensity={0.5} reducedMotion={reducedMotion} />
-      <TacticalGrid size={28} divisions={28} color="#1e1b4b" reducedMotion={reducedMotion} />
-      <DataStreams streamCount={8} particlesPerStream={24} height={18} spread={16} speed={1.1} color="#06b6d4" reducedMotion={reducedMotion} />
+      <AmbientGlow
+        color1={palette.glow1}
+        color2={palette.glow2}
+        intensity={0.6}
+        theme={theme}
+        reducedMotion={reducedMotion}
+      />
+      <TacticalGrid
+        size={28}
+        divisions={28}
+        centerColor={palette.primary}
+        gridColor={palette.gridColor}
+        reducedMotion={reducedMotion}
+      />
+      <DataStreams
+        streamCount={8}
+        particlesPerStream={25}
+        height={18}
+        spread={16}
+        speed={1.1}
+        color={palette.secondary}
+        theme={theme}
+        reducedMotion={reducedMotion}
+      />
     </group>
   );
 };
+
+export default DataGridScene;

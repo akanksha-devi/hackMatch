@@ -4,14 +4,16 @@ import * as THREE from 'three';
 
 export const DataStreams = ({
   streamCount = 8,
-  particlesPerStream = 25,
+  particlesPerStream = 26,
   height = 20,
-  spread = 14,
+  spread = 15,
   speed = 1.2,
   color = '#06b6d4',
+  theme = 'dark',
   reducedMotion = false,
 }) => {
   const pointsRef = useRef();
+  const isLight = theme === 'light';
 
   const totalParticles = streamCount * particlesPerStream;
 
@@ -68,6 +70,8 @@ export const DataStreams = ({
     geo.attributes.position.needsUpdate = true;
   });
 
+  const blending = isLight ? THREE.NormalBlending : THREE.AdditiveBlending;
+
   return (
     <points ref={pointsRef}>
       <bufferGeometry>
@@ -79,14 +83,16 @@ export const DataStreams = ({
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.06}
+        size={isLight ? 0.075 : 0.085}
         color={color}
         transparent
-        opacity={0.65}
+        opacity={isLight ? 0.7 : 0.85}
         sizeAttenuation
-        blending={THREE.AdditiveBlending}
+        blending={blending}
         depthWrite={false}
       />
     </points>
   );
 };
+
+export default DataStreams;

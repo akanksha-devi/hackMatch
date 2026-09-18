@@ -3,10 +3,14 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { AmbientGlow } from '../components/AmbientGlow';
 import { ParticleCluster } from '../components/ParticleCluster';
+import { SCENE_KEYS, getSceneThemePalette } from '../animationConfig';
 
-export const TeamAssemblyScene = ({ density = 1, reducedMotion = false }) => {
+export const TeamAssemblyScene = ({ density = 1, theme = 'dark', reducedMotion = false }) => {
   const pointsRef = useRef();
-  const count = Math.round(260 * density);
+  const palette = getSceneThemePalette(SCENE_KEYS.POST_REQUEST, theme);
+  const isLight = theme === 'light';
+
+  const count = Math.round(300 * density);
 
   const [positions, targets] = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -27,7 +31,7 @@ export const TeamAssemblyScene = ({ density = 1, reducedMotion = false }) => {
         origX: pos[i * 3],
         origY: pos[i * 3 + 1],
         origZ: pos[i * 3 + 2],
-        speed: 0.2 + Math.random() * 0.3,
+        speed: 0.2 + Math.random() * 0.35,
         progress: Math.random(),
       });
     }
@@ -57,31 +61,40 @@ export const TeamAssemblyScene = ({ density = 1, reducedMotion = false }) => {
 
   return (
     <group>
-      <AmbientGlow color1="#6366f1" color2="#38bdf8" intensity={0.6} reducedMotion={reducedMotion} />
+      <AmbientGlow
+        color1={palette.glow1}
+        color2={palette.glow2}
+        intensity={0.65}
+        theme={theme}
+        reducedMotion={reducedMotion}
+      />
       {/* Converging Inward Particle Streams */}
       <points ref={pointsRef}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
         </bufferGeometry>
         <pointsMaterial
-          size={0.06}
-          color="#38bdf8"
+          size={isLight ? 0.075 : 0.08}
+          color={palette.primary}
           transparent
-          opacity={0.8}
-          blending={THREE.AdditiveBlending}
+          opacity={isLight ? 0.75 : 0.88}
+          blending={isLight ? THREE.NormalBlending : THREE.AdditiveBlending}
           depthWrite={false}
         />
       </points>
       {/* Central Team Assembly Nexus */}
       <ParticleCluster
-        count={Math.round(140 * density)}
-        radius={2.0}
+        count={Math.round(180 * density)}
+        radius={2.4}
         coreRadius={0.4}
         speed={0.2}
-        color="#a855f7"
+        color={palette.secondary}
         position={[0, 0, -2]}
+        theme={theme}
         reducedMotion={reducedMotion}
       />
     </group>
   );
 };
+
+export default TeamAssemblyScene;

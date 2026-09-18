@@ -3,17 +3,21 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { AmbientGlow } from '../components/AmbientGlow';
 import { ParticleNetwork } from '../components/ParticleNetwork';
+import { SCENE_KEYS, getSceneThemePalette } from '../animationConfig';
 
-export const ConnectionFlowScene = ({ density = 1, reducedMotion = false }) => {
+export const ConnectionFlowScene = ({ density = 1, theme = 'dark', reducedMotion = false }) => {
   const flowRef = useRef();
-  const count = Math.round(180 * density);
+  const palette = getSceneThemePalette(SCENE_KEYS.MY_REQUESTS, theme);
+  const isLight = theme === 'light';
+
+  const count = Math.round(220 * density);
 
   const [positions, flowData] = useMemo(() => {
     const pos = new Float32Array(count * 3);
     const flows = [];
 
     for (let i = 0; i < count; i++) {
-      const u = (i / count) * 20 - 10;
+      const u = (i / count) * 22 - 11;
       pos[i * 3] = u;
       pos[i * 3 + 1] = Math.sin(u * 0.5) * 2;
       pos[i * 3 + 2] = (Math.random() - 0.5) * 4 - 3;
@@ -48,14 +52,21 @@ export const ConnectionFlowScene = ({ density = 1, reducedMotion = false }) => {
 
   return (
     <group>
-      <AmbientGlow color1="#0284c7" color2="#7c3aed" intensity={0.55} reducedMotion={reducedMotion} />
+      <AmbientGlow
+        color1={palette.glow1}
+        color2={palette.glow2}
+        intensity={0.6}
+        theme={theme}
+        reducedMotion={reducedMotion}
+      />
       <ParticleNetwork
-        nodeCount={Math.round(40 * density)}
-        connectionDistance={4.0}
-        spread={16}
-        nodeColor="#38bdf8"
-        lineColor="#818cf8"
+        nodeCount={Math.round(50 * density)}
+        connectionDistance={4.2}
+        spread={17}
+        nodeColor={palette.primary}
+        lineColor={palette.secondary}
         speed={0.03}
+        theme={theme}
         reducedMotion={reducedMotion}
       />
       {/* Dynamic Sinuous Flow Stream */}
@@ -64,14 +75,16 @@ export const ConnectionFlowScene = ({ density = 1, reducedMotion = false }) => {
           <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
         </bufferGeometry>
         <pointsMaterial
-          size={0.065}
-          color="#38bdf8"
+          size={isLight ? 0.08 : 0.085}
+          color={palette.primary}
           transparent
-          opacity={0.8}
-          blending={THREE.AdditiveBlending}
+          opacity={isLight ? 0.75 : 0.88}
+          blending={isLight ? THREE.NormalBlending : THREE.AdditiveBlending}
           depthWrite={false}
         />
       </points>
     </group>
   );
 };
+
+export default ConnectionFlowScene;
