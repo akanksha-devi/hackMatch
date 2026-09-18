@@ -20,6 +20,7 @@ import {
   BadgeCheck,
 } from 'lucide-react';
 import NotificationBell from '../../components/NotificationBell';
+import { PageTransition } from '../../animations';
 
 export const AdminLayout = () => {
   const { user, isSuperAdmin, isCollegeAdmin, collegeName, logout } = useAuth();
@@ -77,7 +78,7 @@ export const AdminLayout = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-gray-100 flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-[#07090e]/75 text-gray-100 flex flex-col md:flex-row font-sans relative z-10">
       {/* Mobile Top Nav */}
       <div className="md:hidden flex items-center justify-between p-4 bg-gray-950/80 border-b border-gray-800 sticky top-0 z-40 backdrop-blur-md">
         <div className="flex items-center gap-2">
@@ -223,7 +224,9 @@ export const AdminLayout = () => {
             </div>
           </div>
 
-          <Outlet />
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
         </div>
       </main>
     </div>

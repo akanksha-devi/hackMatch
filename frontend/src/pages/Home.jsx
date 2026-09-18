@@ -158,7 +158,7 @@ export const Home = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {hackathons.map((h) => (
-            <HackathonCard key={h.id} hackathon={h} />
+            <HackathonCard key={h._id || h.id} hackathon={h} />
           ))}
         </div>
       </section>

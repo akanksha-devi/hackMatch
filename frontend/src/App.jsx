@@ -31,13 +31,18 @@ import { AdminHackathons } from './pages/admin/AdminHackathons';
 import { AdminAuditLogs } from './pages/admin/AdminAuditLogs';
 import { AdminVerification } from './pages/admin/AdminVerification';
 
+// Animation Architecture
+import { AnimationBackground, PageTransition, AnimationProvider } from './animations';
+
 // Student Layout Wrapper (Header + Main + Footer)
 const StudentLayout = () => {
   return (
-    <div className="min-h-screen bg-[#07090e] text-gray-100 flex flex-col selection:bg-indigo-500 selection:text-white font-sans">
+    <div className="min-h-screen bg-[#07090e]/75 text-gray-100 flex flex-col selection:bg-indigo-500 selection:text-white font-sans relative z-10">
       <Navbar />
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Outlet />
+        <PageTransition>
+          <Outlet />
+        </PageTransition>
       </main>
       <Footer />
     </div>
@@ -47,18 +52,20 @@ const StudentLayout = () => {
 export default function App() {
   return (
     <AuthProvider>
-      <Routes>
-        {/* ================= ADMIN ROUTES ================= */}
-        <Route path="/admin/login" element={<AdminLogin />} />
+      <AnimationProvider>
+        <AnimationBackground isRoot />
+        <Routes>
+          {/* ================= ADMIN ROUTES ================= */}
+          <Route path="/admin/login" element={<AdminLogin />} />
 
-        <Route
-          path="/admin"
-          element={
-            <ProtectedAdminRoute>
-              <AdminLayout />
-            </ProtectedAdminRoute>
-          }
-        >
+          <Route
+            path="/admin"
+            element={
+              <ProtectedAdminRoute>
+                <AdminLayout />
+              </ProtectedAdminRoute>
+            }
+          >
           <Route index element={<AdminDashboard />} />
           <Route
             path="colleges"
@@ -149,6 +156,10 @@ export default function App() {
             }
           />
           <Route
+            path="/team-requests/create"
+            element={<Navigate to="/post-request" replace />}
+          />
+          <Route
             path="/my-requests"
             element={
               <ProtectedRoute>
@@ -185,6 +196,7 @@ export default function App() {
           />
         </Route>
       </Routes>
-    </AuthProvider>
+    </AnimationProvider>
+  </AuthProvider>
   );
 }

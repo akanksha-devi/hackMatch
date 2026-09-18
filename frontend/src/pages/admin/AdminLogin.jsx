@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Shield, ShieldAlert, Mail, Lock, ArrowRight, CheckCircle, School } from 'lucide-react';
+import { PageTransition } from '../../animations';
 
 export const AdminLogin = () => {
   const { login, logout, isAdmin } = useAuth();
@@ -41,9 +42,10 @@ export const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-[#07090e] font-sans">
-      <div className="w-full max-w-md space-y-6">
-        {/* Header */}
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-[#07090e]/75 font-sans relative z-10">
+      <PageTransition className="flex items-center justify-center w-full">
+        <div className="w-full max-w-md space-y-6">
+          {/* Header */}
         <div className="text-center space-y-2">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600/20 via-indigo-600/20 to-cyan-500/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center mx-auto shadow-xl shadow-indigo-500/10">
             <Shield className="w-7 h-7" />
@@ -149,6 +151,7 @@ export const AdminLogin = () => {
           </Link>
         </div>
       </div>
+      </PageTransition>
     </div>
   );
 };
