@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { 
-  getHackathons, 
-  createTeamRequest, 
-  getSuggestedMatches 
-} from '../services/storageService';
+import apiService from '../services/apiService';
 import { SkillTag } from '../components/SkillTag';
 import { UserCard } from '../components/UserCard';
+import { RequireVerified } from '../components/RequireVerified';
 import { 
   PlusCircle, 
   Trophy, 
@@ -17,7 +14,8 @@ import {
   Check, 
   Plus, 
   AlertCircle,
-  Sparkles
+  Sparkles,
+  School
 } from 'lucide-react';
 
 const COMMON_SKILLS = [
@@ -26,7 +24,7 @@ const COMMON_SKILLS = [
 ];
 
 export const PostTeamRequest = () => {
-  const { user } = useAuth();
+  const { user, collegeName } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const defaultHackathonId = searchParams.get('hackathonId') || '';
@@ -41,24 +39,47 @@ export const PostTeamRequest = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Suggested matches state calculated dynamically
+  // Suggested matches state calculated dynamically from the Smart Matching backend
   const [suggestedMatches, setSuggestedMatches] = useState([]);
+  const [isMatching, setIsMatching] = useState(false);
 
   useEffect(() => {
-    const list = getHackathons();
-    setHackathons(list);
-    if (!selectedHackathonId && list.length > 0) {
-      setSelectedHackathonId(list[0].id);
-    }
+    const fetchHackathons = async () => {
+      try {
+        const res = await apiService.getHackathons();
+        if (res.success && res.hackathons) {
+          setHackathons(res.hackathons);
+          if (!selectedHackathonId && res.hackathons.length > 0) {
+            setSelectedHackathonId(res.hackathons[0]._id || res.hackathons[0].id);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching hackathons:', err);
+      }
+    };
+    fetchHackathons();
   }, []);
 
-  // Recalculate skill match score in real-time as skillsNeeded change
+  // Recalculate skill match score in real-time from backend matching service
   useEffect(() => {
     if (skillsNeeded.length > 0 && user) {
-      const matches = getSuggestedMatches(skillsNeeded, user.id);
-      setSuggestedMatches(matches);
+      setIsMatching(true);
+      const timer = setTimeout(async () => {
+        try {
+          const res = await apiService.previewMatches(skillsNeeded);
+          if (res.success && res.matches) {
+            setSuggestedMatches(res.matches);
+          }
+        } catch (err) {
+          console.warn('Match preview error:', err.message);
+        } finally {
+          setIsMatching(false);
+        }
+      }, 300);
+      return () => clearTimeout(timer);
     } else {
       setSuggestedMatches([]);
+      setIsMatching(false);
     }
   }, [skillsNeeded, user]);
 
@@ -78,7 +99,7 @@ export const PostTeamRequest = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -95,9 +116,8 @@ export const PostTeamRequest = () => {
     setLoading(true);
 
     try {
-      createTeamRequest({
-        hackathonId: selectedHackathonId,
-        postedById: user.id,
+      await apiService.createTeamRequest({
+        hackathon: selectedHackathonId,
         title,
         description,
         skillsNeeded,
@@ -106,11 +126,14 @@ export const PostTeamRequest = () => {
 
       navigate('/my-requests');
     } catch (err) {
-      setError('Failed to post team request.');
+      setError(err.response?.data?.message || 'Failed to post team request.');
     } finally {
       setLoading(false);
     }
   };
+
+  const isStudent = user?.role === 'student';
+  const isVerified = user?.experienceVerificationStatus === 'Verified';
 
   return (
     <div className="space-y-8 pb-12">
@@ -125,7 +148,13 @@ export const PostTeamRequest = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {isStudent && !isVerified ? (
+        <RequireVerified
+          actionName="Team Request Creation"
+          description="Creating team requests requires college-verified experience. This builds trust between hackathon participants and ensures teams are led with authentic technical credentials."
+        />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Left Column: Form (7 cols) */}
         <div className="lg:col-span-7">
@@ -150,7 +179,7 @@ export const PostTeamRequest = () => {
                 className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
               >
                 {hackathons.map((h) => (
-                  <option key={h.id} value={h.id}>
+                  <option key={h._id || h.id} value={h._id || h.id}>
                     {h.title} ({h.mode})
                   </option>
                 ))}
@@ -312,23 +341,27 @@ export const PostTeamRequest = () => {
               <div className="space-y-4 max-h-[550px] overflow-y-auto pr-1">
                 {suggestedMatches.map((m) => (
                   <UserCard
-                    key={m.user.id}
+                    key={m.user?._id || m.user?.id}
                     user={m.user}
                     matchScore={m.matchScore}
-                    overlappingSkills={m.overlappingSkills}
+                    overlappingSkills={m.matchedSkills || m.overlappingSkills || []}
                   />
                 ))}
               </div>
             ) : (
               <div className="p-8 text-center text-xs text-gray-500 space-y-2 border border-dashed border-gray-800 rounded-2xl">
                 <Zap className="w-8 h-8 text-gray-600 mx-auto" />
-                <p>Select required skills on the left to see live teammate match suggestions.</p>
+                <p>
+                  {isMatching
+                    ? 'Finding compatible campus teammates...'
+                    : 'Select required skills on the left to see live teammate match suggestions.'}
+                </p>
               </div>
             )}
           </div>
         </div>
-
       </div>
-    </div>
-  );
+    )}
+  </div>
+);
 };

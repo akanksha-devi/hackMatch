@@ -1,17 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Trophy, Filter, Plus, Calendar, MapPin } from 'lucide-react';
-import { getHackathons, createHackathon } from '../services/storageService';
+import { Search, Trophy, Filter, Plus, Globe, Sparkles, Clock, Calendar, CheckCircle2, History, Loader2 } from 'lucide-react';
+import apiService from '../services/apiService';
 import { HackathonCard } from '../components/HackathonCard';
 import { useAuth } from '../hooks/useAuth';
+
+const TIMELINE_TABS = [
+  { id: 'All', label: 'All Hackathons', icon: Trophy },
+  { id: 'Upcoming', label: 'Upcoming', icon: Calendar },
+  { id: 'Closing Soon', label: 'Closing Soon', icon: Clock },
+  { id: 'Active', label: 'Active', icon: CheckCircle2 },
+  { id: 'Past', label: 'Past', icon: History },
+  { id: 'Recently Added', label: 'Recently Added', icon: Sparkles },
+];
+
+const ALL_TAGS = ['All', 'AI', 'Web Dev', 'Web3', 'Blockchain', 'UI/UX', 'Solidity', 'Python', 'IoT', 'Mobile'];
 
 export const Hackathons = () => {
   const { user } = useAuth();
   const [hackathons, setHackathons] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTimeline, setSelectedTimeline] = useState('All');
+  const [selectedSource, setSelectedSource] = useState('All');
   const [selectedMode, setSelectedMode] = useState('All');
   const [selectedTag, setSelectedTag] = useState('All');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createSubmitting, setCreateSubmitting] = useState(false);
 
   // New hackathon form state
   const [newTitle, setNewTitle] = useState('');
@@ -25,19 +40,41 @@ export const Hackathons = () => {
   const [newTagsInput, setNewTagsInput] = useState('AI, Web Dev');
   const [newDescription, setNewDescription] = useState('');
 
+  const loadHackathons = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = {};
+      if (selectedTimeline !== 'All') {
+        params.timeline = selectedTimeline;
+      } else {
+        params.status = 'All'; // Allow showing both active and past when All tab is selected
+      }
+
+      if (selectedSource !== 'All') {
+        params.source = selectedSource;
+      }
+
+      const res = await apiService.getHackathons(params);
+      if (res.success && res.hackathons) {
+        setHackathons(res.hackathons);
+      }
+    } catch (err) {
+      console.error('Failed to load hackathons:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedTimeline, selectedSource]);
+
   useEffect(() => {
     loadHackathons();
-  }, []);
-
-  const loadHackathons = () => {
-    setHackathons(getHackathons());
-  };
+  }, [loadHackathons]);
 
   const filteredHackathons = hackathons.filter((h) => {
     const matchesSearch =
-      h.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      h.organizer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      h.description.toLowerCase().includes(searchTerm.toLowerCase());
+      (h.title && h.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (h.organizer && h.organizer.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (h.description && h.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (h.location && h.location.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesMode = selectedMode === 'All' || h.mode === selectedMode;
     const matchesTag =
@@ -46,32 +83,35 @@ export const Hackathons = () => {
     return matchesSearch && matchesMode && matchesTag;
   });
 
-  const ALL_TAGS = ['All', 'AI', 'Web Dev', 'Web3', 'Blockchain', 'UI/UX', 'Solidity', 'Python', 'IoT'];
-
-  const handleCreateHackathon = (e) => {
+  const handleCreateHackathon = async (e) => {
     e.preventDefault();
+    setCreateSubmitting(true);
     const tagsArray = newTagsInput.split(',').map((t) => t.trim()).filter(Boolean);
 
-    createHackathon({
-      title: newTitle,
-      organizer: newOrganizer,
-      mode: newMode,
-      location: newLocation,
-      startDate: newStartDate,
-      endDate: newEndDate,
-      registrationDeadline: newRegistrationDeadline,
-      registrationLink: newRegistrationLink,
-      tags: tagsArray,
-      description: newDescription,
-      postedBy: user?.id || 'u1'
-    });
+    try {
+      await apiService.createHackathon({
+        title: newTitle,
+        organizer: newOrganizer,
+        mode: newMode,
+        location: newLocation,
+        startDate: newStartDate,
+        endDate: newEndDate,
+        registrationDeadline: newRegistrationDeadline,
+        registrationLink: newRegistrationLink,
+        tags: tagsArray,
+        description: newDescription,
+      });
 
-    setShowCreateModal(false);
-    // Reset form
-    setNewTitle('');
-    setNewOrganizer('');
-    setNewDescription('');
-    loadHackathons();
+      setShowCreateModal(false);
+      setNewTitle('');
+      setNewOrganizer('');
+      setNewDescription('');
+      await loadHackathons();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error creating hackathon');
+    } finally {
+      setCreateSubmitting(false);
+    }
   };
 
   return (
@@ -79,22 +119,49 @@ export const Hackathons = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-6">
         <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] uppercase tracking-wider font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
+              <Globe className="w-3 h-3" /> Real-Time External Sync
+            </span>
+          </div>
           <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
             <Trophy className="w-7 h-7 text-indigo-400" />
             Hackathons Directory
           </h1>
-          <p className="text-sm text-gray-400">Discover top hackathons and match with teammates</p>
+          <p className="text-sm text-gray-400">Discover top hackathons automatically synchronized from external sources & campus organizers.</p>
         </div>
 
         {user && (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="btn-glow px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all self-start sm:self-auto"
+            className="btn-glow px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all self-start sm:self-auto shrink-0"
           >
             <Plus className="w-4 h-4" />
             List a Hackathon
           </button>
         )}
+      </div>
+
+      {/* Timeline Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-gray-800/80">
+        {TIMELINE_TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = selectedTimeline === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setSelectedTimeline(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                isActive
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25 border border-indigo-400/40'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-900 border border-transparent'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Filter & Search Controls */}
@@ -106,9 +173,24 @@ export const Hackathons = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search hackathons by name, organizer, or topic..."
+            placeholder="Search hackathons by name, organizer, location, or topic..."
             className="w-full bg-gray-900/90 border border-gray-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 placeholder:text-gray-600"
           />
+        </div>
+
+        {/* Source Filter Dropdown */}
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <Globe className="w-4 h-4 text-gray-400 shrink-0" />
+          <select
+            value={selectedSource}
+            onChange={(e) => setSelectedSource(e.target.value)}
+            className="w-full md:w-auto bg-gray-900/90 border border-gray-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+          >
+            <option value="All">All Sources</option>
+            <option value="curated">Curated Feed</option>
+            <option value="external">External Only</option>
+            <option value="manual">Campus & Manual</option>
+          </select>
         </div>
 
         {/* Mode Dropdown */}
@@ -146,17 +228,30 @@ export const Hackathons = () => {
       </div>
 
       {/* Hackathons Grid */}
-      {filteredHackathons.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredHackathons.map((h) => (
-            <HackathonCard key={h.id} hackathon={h} />
-          ))}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs text-gray-400">Loading hackathons...</p>
+        </div>
+      ) : filteredHackathons.length > 0 ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between text-xs text-gray-400 px-1">
+            <span>Showing <strong className="text-white">{filteredHackathons.length}</strong> event{filteredHackathons.length !== 1 ? 's' : ''}</span>
+            {selectedTimeline !== 'All' && (
+              <span className="text-indigo-400 font-medium">Category: {selectedTimeline}</span>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredHackathons.map((h) => (
+              <HackathonCard key={h._id || h.id} hackathon={h} />
+            ))}
+          </div>
         </div>
       ) : (
         <div className="glass-panel p-12 rounded-3xl border border-gray-800 text-center space-y-4">
           <Trophy className="w-12 h-12 text-gray-600 mx-auto" />
           <h3 className="text-xl font-bold text-white">No Hackathons Found</h3>
-          <p className="text-sm text-gray-400">Try adjusting your filters or search keywords.</p>
+          <p className="text-sm text-gray-400">Try adjusting your category tab, source, or search keywords.</p>
         </div>
       )}
 
@@ -176,18 +271,18 @@ export const Hackathons = () => {
 
             <form onSubmit={handleCreateHackathon} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Title *</label>
+                <label className="text-xs font-semibold text-gray-300">Hackathon Title *</label>
                 <input
                   type="text"
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g. Smart India Hackathon 2026"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  placeholder="e.g. AI Innovation Hackathon"
+                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-gray-300">Organizer *</label>
                   <input
@@ -195,17 +290,16 @@ export const Hackathons = () => {
                     required
                     value={newOrganizer}
                     onChange={(e) => setNewOrganizer(e.target.value)}
-                    placeholder="e.g. AICTE / ETHGlobal"
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                    placeholder="e.g. Google Developer Group"
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
-
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-gray-300">Mode</label>
                   <select
                     value={newMode}
                     onChange={(e) => setNewMode(e.target.value)}
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                   >
                     <option value="Online">Online</option>
                     <option value="Offline">Offline</option>
@@ -215,92 +309,96 @@ export const Hackathons = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Location / Venue</label>
+                <label className="text-xs font-semibold text-gray-300">Location</label>
                 <input
                   type="text"
                   value={newLocation}
                   onChange={(e) => setNewLocation(e.target.value)}
-                  placeholder="e.g. Bengaluru / Online Worldwide"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  placeholder="e.g. Campus Auditorium / Virtual"
+                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-gray-300">Start Date</label>
+                  <label className="text-xs font-semibold text-gray-300">Start Date</label>
                   <input
                     type="date"
                     value={newStartDate}
                     onChange={(e) => setNewStartDate(e.target.value)}
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-2 py-1.5 text-xs text-white focus:outline-none"
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-gray-300">End Date</label>
+                  <label className="text-xs font-semibold text-gray-300">End Date</label>
                   <input
                     type="date"
                     value={newEndDate}
                     onChange={(e) => setNewEndDate(e.target.value)}
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-2 py-1.5 text-xs text-white focus:outline-none"
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-gray-300">Deadline</label>
+                  <label className="text-xs font-semibold text-gray-300">Registration Deadline</label>
                   <input
                     type="date"
                     value={newRegistrationDeadline}
                     onChange={(e) => setNewRegistrationDeadline(e.target.value)}
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-2 py-1.5 text-xs text-white focus:outline-none"
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-300">Registration Link</label>
+                  <input
+                    type="url"
+                    value={newRegistrationLink}
+                    onChange={(e) => setNewRegistrationLink(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Registration Link</label>
-                <input
-                  type="url"
-                  value={newRegistrationLink}
-                  onChange={(e) => setNewRegistrationLink(e.target.value)}
-                  placeholder="https://hackathon-website.com"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Tags (comma separated)</label>
+                <label className="text-xs font-semibold text-gray-300">Tags (comma-separated)</label>
                 <input
                   type="text"
                   value={newTagsInput}
                   onChange={(e) => setNewTagsInput(e.target.value)}
-                  placeholder="AI, Web3, Python"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  placeholder="AI, Web Dev, Python"
+                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-gray-300">Description</label>
                 <textarea
-                  rows={3}
+                  rows="3"
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
-                  placeholder="Details about tracks, prizes, and rules..."
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500 resize-none"
-                />
+                  placeholder="Tell students what this hackathon is about..."
+                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                ></textarea>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-800">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-xl border border-gray-700 text-gray-300 text-xs font-semibold"
+                  className="px-4 py-2 text-sm text-gray-400 hover:text-white"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"
+                  disabled={createSubmitting}
+                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-indigo-600/20 disabled:opacity-50 flex items-center gap-2"
                 >
-                  Save & Publish
+                  {createSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {createSubmitting ? 'Publishing...' : 'Publish Hackathon'}
                 </button>
               </div>
             </form>

@@ -13,7 +13,7 @@ import {
   Cpu,
   Boxes
 } from 'lucide-react';
-import { getHackathons, getTeamRequests, getUsers } from '../services/storageService';
+import apiService from '../services/apiService';
 import { HackathonCard } from '../components/HackathonCard';
 import { TeamRequestCard } from '../components/TeamRequestCard';
 import { UserCard } from '../components/UserCard';
@@ -25,9 +25,22 @@ export const Home = () => {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    setHackathons(getHackathons().slice(0, 3));
-    setTeamRequests(getTeamRequests().slice(0, 3));
-    setUsers(getUsers().slice(0, 3));
+    const fetchHomeData = async () => {
+      try {
+        const [hRes, trRes, uRes] = await Promise.all([
+          apiService.getHackathons().catch(() => ({ hackathons: [] })),
+          apiService.getTeamRequests().catch(() => ({ teamRequests: [] })),
+          apiService.getUsers().catch(() => ({ users: [] })),
+        ]);
+
+        if (hRes.hackathons) setHackathons(hRes.hackathons.slice(0, 3));
+        if (trRes.teamRequests) setTeamRequests(trRes.teamRequests.slice(0, 3));
+        if (uRes.users) setUsers(uRes.users.slice(0, 3));
+      } catch (err) {
+        console.error('Home data load notice:', err);
+      }
+    };
+    fetchHomeData();
   }, []);
 
   const POPULAR_SKILLS = ["React", "Python", "AI", "Solidity", "UI/UX", "Node.js", "PyTorch", "TypeScript"];
@@ -170,7 +183,7 @@ export const Home = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {teamRequests.map((req) => (
-            <TeamRequestCard key={req.id} request={req} />
+            <TeamRequestCard key={req._id || req.id} request={req} />
           ))}
         </div>
       </section>
@@ -195,7 +208,7 @@ export const Home = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {users.map((u) => (
-            <UserCard key={u.id} user={u} />
+            <UserCard key={u._id || u.id} user={u} />
           ))}
         </div>
       </section>

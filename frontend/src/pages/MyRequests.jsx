@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { 
-  getTeamRequests, 
-  getResponses, 
-  updateResponseStatus, 
-  updateTeamRequestStatus 
-} from '../services/storageService';
+import apiService from '../services/apiService';
 import { SkillTag } from '../components/SkillTag';
+import { MatchScoreBadge } from '../components/MatchScoreBadge';
+import { VerificationBadge } from '../components/VerificationBadge';
 import { 
   Inbox, 
   Send, 
@@ -17,7 +14,9 @@ import {
   MessageSquare, 
   Trophy,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Loader2,
+  ExternalLink
 } from 'lucide-react';
 
 export const MyRequests = () => {
@@ -26,45 +25,48 @@ export const MyRequests = () => {
 
   const [myRequests, setMyRequests] = useState([]);
   const [sentResponses, setSentResponses] = useState([]);
-  const [allResponses, setAllResponses] = useState([]);
+  const [receivedApplications, setReceivedApplications] = useState([]);
   const [expandedRequestId, setExpandedRequestId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadData();
   }, [user]);
 
-  const loadData = () => {
+  const loadData = async () => {
     if (!user) return;
-
-    // Requests created by logged-in user
-    const reqs = getTeamRequests();
-    const createdByMe = reqs.filter((r) => {
-      const posterId = typeof r.postedBy === 'object' ? r.postedBy?.id : r.postedBy;
-      return posterId === user.id;
-    });
-    setMyRequests(createdByMe);
-
-    // Responses
-    const responses = getResponses();
-    setAllResponses(responses);
-
-    // Sent responses
-    const sentByMe = responses.filter((res) => {
-      const respId = typeof res.respondent === 'object' ? res.respondent?.id : res.respondentId;
-      return respId === user.id;
-    });
-    setSentResponses(sentByMe);
+    setLoading(true);
+    try {
+      const res = await apiService.getMyResponses();
+      if (res.success) {
+        setMyRequests(res.myRequests || []);
+        setSentResponses(res.sentApplications || []);
+        setReceivedApplications(res.receivedApplications || []);
+      }
+    } catch (err) {
+      console.error('Error fetching responses data:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleStatusChange = (responseId, newStatus) => {
-    updateResponseStatus(responseId, newStatus);
-    loadData();
+  const handleStatusChange = async (responseId, newStatus) => {
+    try {
+      await apiService.updateResponseStatus(responseId, newStatus);
+      await loadData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error updating status');
+    }
   };
 
-  const handleToggleRequestStatus = (requestId, currentStatus) => {
+  const handleToggleRequestStatus = async (requestId, currentStatus) => {
     const nextStatus = currentStatus === 'Open' ? 'Closed' : 'Open';
-    updateTeamRequestStatus(requestId, nextStatus);
-    loadData();
+    try {
+      await apiService.updateTeamRequest(requestId, { status: nextStatus });
+      await loadData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error updating request');
+    }
   };
 
   const getStatusBadge = (st) => {
@@ -119,17 +121,26 @@ export const MyRequests = () => {
       </div>
 
       {/* Tab 1: Requests I Created */}
-      {activeTab === 'my-requests' && (
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs text-gray-400">Loading requests & applications...</p>
+        </div>
+      ) : activeTab === 'my-requests' ? (
         <div className="space-y-6">
           {myRequests.length > 0 ? (
             myRequests.map((req) => {
-              const responsesForThisReq = allResponses.filter(
-                (res) => res.teamRequestId === req.id || res.teamRequest?.id === req.id
+              const reqId = req._id || req.id;
+              const responsesForThisReq = receivedApplications.filter(
+                (res) => {
+                  const tReqId = res.teamRequest?._id || res.teamRequest?.id || res.teamRequest;
+                  return tReqId?.toString() === reqId?.toString();
+                }
               );
-              const isExpanded = expandedRequestId === req.id;
+              const isExpanded = expandedRequestId === reqId;
 
               return (
-                <div key={req.id} className="glass-panel p-6 rounded-3xl border border-gray-800 space-y-4">
+                <div key={reqId} className="glass-panel p-6 rounded-3xl border border-gray-800 space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
@@ -151,14 +162,14 @@ export const MyRequests = () => {
 
                     <div className="flex items-center gap-3">
                       <button
-                        onClick={() => handleToggleRequestStatus(req.id, req.status)}
+                        onClick={() => handleToggleRequestStatus(reqId, req.status)}
                         className="px-3 py-1.5 rounded-xl border border-gray-700 text-gray-300 text-xs font-semibold hover:bg-gray-800 transition-colors"
                       >
                         Mark as {req.status === 'Open' ? 'Closed' : 'Open'}
                       </button>
 
                       <button
-                        onClick={() => setExpandedRequestId(isExpanded ? null : req.id)}
+                        onClick={() => setExpandedRequestId(isExpanded ? null : reqId)}
                         className="px-3.5 py-1.5 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold flex items-center gap-1.5"
                       >
                         <MessageSquare className="w-3.5 h-3.5" />
@@ -186,10 +197,11 @@ export const MyRequests = () => {
                       {responsesForThisReq.length > 0 ? (
                         <div className="space-y-3">
                           {responsesForThisReq.map((res) => {
+                            const resId = res._id || res.id;
                             const respondentObj = typeof res.respondent === 'object' ? res.respondent : {};
                             return (
                               <div
-                                key={res.id}
+                                key={resId}
                                 className="p-4 rounded-2xl bg-gray-900/80 border border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                               >
                                 <div className="flex items-start gap-3">
@@ -199,17 +211,24 @@ export const MyRequests = () => {
                                     className="w-10 h-10 rounded-xl object-cover ring-1 ring-indigo-500/30 shrink-0"
                                   />
                                   <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
                                       <p className="text-sm font-bold text-white">{respondentObj.name || 'Developer'}</p>
                                       <span className="text-[10px] text-gray-400">
-                                        ({respondentObj.experienceLevel} Dev)
+                                        ({respondentObj.experienceLevel || 'Intermediate'} Dev)
                                       </span>
+                                      <VerificationBadge status={respondentObj.experienceVerificationStatus} />
+                                      {res.matchMetrics && res.matchMetrics.matchScore > 0 && (
+                                        <MatchScoreBadge
+                                          score={res.matchMetrics.matchScore}
+                                          matchCount={res.matchMetrics.matchedSkills?.length || 0}
+                                        />
+                                      )}
                                     </div>
                                     <p className="text-xs text-gray-300 leading-relaxed">{res.message}</p>
 
                                     {respondentObj.skills && (
                                       <div className="flex flex-wrap gap-1 pt-1">
-                                        {respondentObj.skills.slice(0, 4).map((sk) => (
+                                        {respondentObj.skills.slice(0, 5).map((sk) => (
                                           <SkillTag key={sk} name={sk} size="sm" />
                                         ))}
                                       </div>
@@ -225,13 +244,13 @@ export const MyRequests = () => {
                                   {res.status === 'Pending' && (
                                     <>
                                       <button
-                                        onClick={() => handleStatusChange(res.id, 'Accepted')}
+                                        onClick={() => handleStatusChange(resId, 'Accepted')}
                                         className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1 transition-all"
                                       >
                                         <CheckCircle2 className="w-3.5 h-3.5" /> Accept
                                       </button>
                                       <button
-                                        onClick={() => handleStatusChange(res.id, 'Rejected')}
+                                        onClick={() => handleStatusChange(resId, 'Rejected')}
                                         className="px-3 py-1.5 rounded-xl bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 text-xs font-semibold flex items-center gap-1 transition-all"
                                       >
                                         <XCircle className="w-3.5 h-3.5" /> Reject
@@ -259,16 +278,15 @@ export const MyRequests = () => {
             </div>
           )}
         </div>
-      )}
-
-      {/* Tab 2: Sent Applications */}
-      {activeTab === 'sent-responses' && (
+      ) : (
+        /* Tab 2: Sent Applications */
         <div className="space-y-4">
           {sentResponses.length > 0 ? (
             sentResponses.map((res) => {
+              const resId = res._id || res.id;
               const reqObj = typeof res.teamRequest === 'object' ? res.teamRequest : {};
               return (
-                <div key={res.id} className="glass-panel p-6 rounded-3xl border border-gray-800 space-y-3">
+                <div key={resId} className="glass-panel p-6 rounded-3xl border border-gray-800 space-y-3">
                   <div className="flex items-center justify-between gap-4 border-b border-gray-800 pb-3">
                     <div>
                       <span className="text-xs font-semibold text-indigo-400">

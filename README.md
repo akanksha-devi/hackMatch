@@ -1,6 +1,6 @@
-ss# ⚡ HackMatch — Hackathon Team & Skill Matching Platform
+# ⚡ HackMatch — Multi-College Hackathon Team & Skill Matching Platform
 
-> **Solve the *"I have an idea but no teammate with skill X"* problem for hackathon participants worldwide.**
+> **Solve the *"I have a hackathon idea but cannot find students with the required skills"* problem with verified campus isolation, smart skill matching, and role-based administration.**
 
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
@@ -14,381 +14,339 @@ ss# ⚡ HackMatch — Hackathon Team & Skill Matching Platform
 ## 📌 Table of Contents
 
 - [Overview](#-overview)
+- [Strict College Isolation Architecture](#-strict-college-isolation-architecture)
+- [Role-Based Access Control (RBAC)](#-role-based-access-control-rbac)
 - [Key Features](#-key-features)
-- [Tech Stack](#-tech-stack)
-- [Skill Matching Algorithm](#-skill-matching-algorithm)
-- [System Architecture](#-system-architecture)
+- [Smart Skill Matching Engine](#-smart-skill-matching-engine)
+- [Automatic Hackathon Discovery & Sync](#-automatic-hackathon-discovery--sync)
+- [Admin System & Console](#-admin-system--console)
 - [Database Models (Mongoose Schemas)](#-database-models-mongoose-schemas)
 - [REST API Endpoints](#-rest-api-endpoints)
-- [Project Directory Structure](#-project-directory-structure)
-- [Getting Started & Local Development](#-getting-started--local-development)
+- [Automated Verification & Isolation Tests](#-automated-verification--isolation-tests)
 - [Quick Demo Accounts](#-quick-demo-accounts)
-- [Roadmap & Stretch Goals](#-roadmap--stretch-goals)
+- [Local Development & Getting Started](#-local-development--getting-started)
+- [Vercel Deployment Guide](#-vercel-deployment-guide)
 
 ---
 
 ## 🌟 Overview
 
-**HackMatch** is a full-stack platform where developers, designers, and innovators create rich skill profiles, browse ongoing and upcoming hackathons, and post targeted **team requests** specifying required skill sets. 
+**HackMatch** is a production-ready, multi-college hackathon team formation platform. It allows college students to create developer profiles, showcase their technical stack, discover hackathons, post team requests, and find complementary teammates by skill set—**strictly within their own college institution**.
 
-The platform's built-in **Smart Matching Engine** computes skill overlap in real-time, ranks candidate developers, and provides an end-to-end request/response workflow to form balanced, multi-disciplinary hackathon squads.
-
-### 💡 Core Value Proposition
-- **No More Incomplete Teams**: Fixes the common issue where a team has 3 frontend devs but lacks a backend engineer, AI modeler, or UI/UX designer.
-- **Instant Skill Overlap Scoring**: Calculates exact percentage match and highlights common skills.
-- **Streamlined Recruitment**: Direct application flow with `Pending`, `Accepted`, and `Rejected` statuses.
+### 💡 The Core Problem It Solves
+1. **Unbalanced Teams**: Teams often have multiple frontend developers but lack a backend engineer, ML specialist, or UI/UX designer.
+2. **Campus Isolation**: Student teams competing in intra-college hackathons or representing their institution must only find and recruit teammates from their own verified campus.
+3. **Institutional Moderation**: College administrators need a dedicated console to oversee hackathon engagement, verify students, and enforce safety policies.
 
 ---
 
-## 🚀 Key Features
+## 🛡️ Strict College Isolation Architecture
 
-### 1. 🎯 Smart Real-Time Skill Matching
-- Dynamically intersects `skillsNeeded` with registered developers' skill sets.
-- Calculates matching score percentage and ranks developers by relevance.
-- Live **Suggested Matches Preview** updates side-by-side as you pick skills while composing a team request.
+HackMatch enforces **strict multi-college data isolation** at the database and API layer:
 
-### 2. 🏆 Hackathon Directory & Details
-- Browse active, upcoming, and past hackathons.
-- Filter by mode (**Online**, **Offline**, **Hybrid**), tags (**AI**, **Web3**, **GovTech**, **UI/UX**), or keyword search.
-- View countdown deadlines, organizers, official registration links, and all active team requests for each hackathon.
-- Authenticated users can list new hackathons directly.
-
-### 3. 📢 Team Request Posting & Discovery
-- Post project openings with title, description, team size needed, and multi-selected skill tags.
-- Interactive custom skill tag creation with auto-complete suggestions.
-- Toggle request status between **Open** and **Closed**.
-
-### 4. 📬 Application & Response Management (`/my-requests`)
-- **Requests I Created**: Accordion view of all applicant responses with one-click **Accept** or **Reject** actions.
-- **Applications I Sent**: Real-time status tracking (*Pending*, *Accepted*, *Rejected*) with sent message details.
-
-### 5. 🧑‍💻 Developer Profiles & Talent Search (`/users`)
-- Developer portfolio cards displaying avatar, experience level (*Beginner*, *Intermediate*, *Advanced*), bio, and skill tags.
-- Direct links to GitHub, LinkedIn, and portfolio websites.
-- Search talent by developer name, bio text, experience level, and skill filters.
-
-### 6. 🎨 High-Performance Dark Glassmorphism UI
-- Styled with modern Tailwind CSS v4, custom animated mesh ambient glows, and Plus Jakarta Sans typography.
-- Mobile-friendly responsive navigation drawer and interactive modals.
-- Persistent client-side data layer (`localStorage`) populated with rich initial seed datasets.
+1. **JWT-Derived Scoping**: The backend derives the user's `collegeId` strictly from the authenticated JWT session (`req.user.collegeId`). Client-supplied IDs in `req.body.collegeId` or `req.query.collegeId` are ignored or stripped.
+2. **Cross-College Protection**:
+   - Students can only query or browse developers registered in their own college.
+   - Direct URL navigation to another college student's profile (`GET /api/users/:id`) is blocked with **403 Forbidden**.
+   - Direct access to another college's team request (`GET /api/team-requests/:id`) is blocked with **403 Forbidden**.
+   - Cross-college applications (`POST /api/responses`) are strictly rejected with **403 Forbidden**.
+3. **Campus-Scoped Smart Matching**: The matching engine only evaluates candidate profiles where `collegeId === targetCollegeId`.
 
 ---
 
-## 🛠️ Tech Stack
+## 👥 Role-Based Access Control (RBAC)
 
-| Layer | Technology | Description |
+HackMatch implements three distinct privilege levels:
+
+| Role | Scope | Key Capabilities |
 |---|---|---|
-| **Frontend** | React 19 (Vite) | Lightning-fast reactive component architecture |
-| **Styling** | Tailwind CSS v4 | Cutting-edge utility-first CSS with modern `@theme` support |
-| **Icons** | Lucide React | Clean, modern developer iconography |
-| **Routing** | React Router v7 | Dynamic client-side routing & route guards |
-| **HTTP Client**| Axios | Configured instance with JWT request/response interceptors |
-| **Backend** | Node.js + Express.js | High-performance modular REST API |
-| **Database** | MongoDB + Mongoose | Document database with schema validation & references |
-| **Authentication** | JWT + bcryptjs | Secure access token issuance and password hashing |
+| **Super Admin** | Platform-Wide | Global overview, college onboarding/CRUD, assign college admins, inspect audit trails. |
+| **College Admin** | Single College | Campus dashboard, student activation/deactivation, team request moderation for their campus. |
+| **Student** | Single College | Profile creation, hackathon browsing, posting requests, live skill matching, sending/accepting applications. |
 
 ---
 
-## 🧠 Skill Matching Algorithm
+## 🧠 Smart Skill Matching Engine
 
-HackMatch employs a deterministic skill overlap calculation modeled after the MongoDB `$in` operator:
+HackMatch calculates skill overlap deterministically using set intersection:
 
 $$\text{Skill Match Score (\%)} = \left( \frac{|\text{User Skills} \cap \text{Skills Needed}|}{\max(|\text{Skills Needed}|, 1)} \right) \times 100$$
 
-### Matching Workflow:
-1. When creating or browsing a `TeamRequest`, the system extracts `skillsNeeded = ["React", "Python", "UI/UX"]`.
-2. Candidate developer profiles are scanned for overlapping skills (case-insensitive intersection).
-3. Overlap count and match percentage are computed.
-4. Candidates are sorted by:
-   - **Primary:** Highest overlap count ($\text{descending}$)
-   - **Secondary:** Highest match percentage ($\text{descending}$)
-5. Matching skills are visually highlighted on developer cards with active rings and badges.
+### Candidate Ranking Workflow:
+1. **College Filter**: Query all active students where `collegeId === user.collegeId` and `_id !== user._id`.
+2. **Skill Intersection**: Compute overlapping and missing skills for each candidate.
+3. **Relevance Sorting**:
+   - Primary: Highest match score percentage ($\text{descending}$)
+   - Secondary: Total number of overlapping skills ($\text{descending}$)
+4. **Live Match Preview**: While drafting a team request on `/post-request`, the matching engine dynamically returns candidate cards and overlap metrics before the request is published.
 
 ---
 
-## 🏗️ System Architecture
+## 🔄 Automatic Hackathon Discovery & Sync
+
+HackMatch includes an autonomous, production-ready **Hackathon Discovery & Sync Engine** that continuously sources, normalizes, deduplicates, and ingests real hackathons from external platforms without requiring administrators to manually create each listing.
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        React Frontend (Vite)                           │
-│  ┌──────────────┐  ┌───────────────────┐  ┌─────────────────────────┐  │
-│  │ Navbar/Pages │  │ Skill Match UI    │  │ AuthContext & Storage   │  │
-│  └──────┬───────┘  └─────────┬─────────┘  └────────────┬────────────┘  │
-└─────────┼────────────────────┼─────────────────────────┼───────────────┘
-          │                    │                         │
-          ▼                    ▼                         ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                      Express.js REST API (Node)                        │
-│  ┌──────────────┐  ┌───────────────────┐  ┌─────────────────────────┐  │
-│  │ /api/auth    │  │ /api/hackathons   │  │ /api/team-requests      │  │
-│  └──────┬───────┘  └─────────┬─────────┘  └────────────┬────────────┘  │
-└─────────┼────────────────────┼─────────────────────────┼───────────────┘
-          │                    │                         │
-          ▼                    ▼                         ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                     MongoDB Database (Mongoose)                        │
-│   (Users Collection)   (Hackathons)   (TeamRequests)   (Responses)     │
-└────────────────────────────────────────────────────────────────────────┘
+External Sources (Hack Club Public API, etc.)
+               ↓
+    Hackathon Sync Service
+               ↓
+       Normalize Fields
+               ↓
+    Deterministic Hash & Deduplicate
+               ↓
+   Upsert to MongoDB (isExternal: true)
+               ↓
+ Public Directory & Smart Skill Matching
 ```
+
+### Key Architectural Pillars:
+
+1. **Pluggable Adapter Pattern (`BaseAdapter`)**:
+   - Each external platform is encapsulated in a dedicated adapter class extending `BaseAdapter`.
+   - **`curatedFeedAdapter.js` (LIVE)**: Integrates directly with the public, permitted, machine-readable Hack Club Hackathons Directory API (`https://hackathons.hackclub.com/api/events/upcoming`), fetching real 2026/2027 global and collegiate hackathons.
+   - **`unstopAdapter.js` (DISABLED)**: Complies with platform terms. Requires official partnership API keys before activation. Unauthorized web scraping is strictly disallowed.
+   - **`devpostAdapter.js` (DISABLED)**: Devpost restricts automated scraping in their terms of service and requires enterprise API partner credentials.
+   - **`mlhAdapter.js` (DISABLED)**: MyMLH is an OAuth authorization provider and requires registered developer application keys.
+
+2. **Source Status Transparency**:
+   - The Super Admin panel monitors each adapter with real-time status badges:
+     - `LIVE`: Successfully fetching real data from active endpoints.
+     - `DISABLED`: Intentionally turned off due to missing credentials or platform terms.
+     - `UNAVAILABLE`: Remote endpoint unreachable or returning 5xx.
+     - `ERROR`: Runtime processing or parsing exception.
+
+3. **Deterministic Deduplication & Idempotency**:
+   - Primary identity matching via `{ source, externalId }`.
+   - Secondary identity fallback via generated slug `{ title, startDate }`.
+   - SHA-256 `contentHash` computed over core fields (`title`, `description`, `dates`, `location`, `link`). If the content hash is identical, the record is flagged as `SKIPPED`, avoiding unnecessary MongoDB writes.
+   - Preserves manual admin overrides: Admin edits (`visibility`, `collegeId`, `postedBy`, `manuallyOverridden: true`) are never overwritten by automated sync sweeps.
+
+4. **Lifecycle & Expiration Sweeper**:
+   - Sweeps events where `endDate < now` or `registrationDeadline < now`, transitioning `syncStatus = 'expired'` and `status = 'Inactive'`.
+
+5. **Scheduled & Manual Triggers**:
+   - **Automated Vercel Cron**: Scheduled daily at 04:00 UTC (`0 4 * * *`) via `vercel.json` and secured by `CRON_SECRET` bearer token validation on `GET /api/cron/sync-hackathons`.
+   - **Super Admin Manual Sync**: One-click instant sync from the Admin Console (`POST /api/admin/hackathons/sync`).
+   - **CLI Tooling**: Run `npm run sync:hackathons` directly in the terminal.
+
+6. **Adding New Source Adapters**:
+   To add a new platform:
+   1. Create `backend/src/services/hackathonSync/sources/myPlatformAdapter.js` extending `BaseAdapter`.
+   2. Implement `async fetchRawEvents()` to return an array of raw event objects.
+   3. Implement `normalize(raw)` to map raw properties to standard HackMatch fields (`title`, `description`, `externalId`, `externalUrl`, `startDate`, `endDate`, `registrationDeadline`, `mode`, `location`, `tags`).
+   4. Register the adapter in `backend/src/services/hackathonSync/index.js` under `this.adapters`.
+
+---
+
+## 🖥️ Admin System & Console (`/admin/*`)
+
+Administrators have access to a dedicated SaaS console:
+
+- **Overview (`/admin`)**: Institutional KPIs (Students count, Open Requests, Applications status).
+- **Campuses (`/admin/colleges`)**: Super Admin college management (Name, Code, Domain, Location, Active toggle).
+- **Students (`/admin/students`)**: Student directory with Activate/Deactivate moderation buttons.
+- **Team Requests (`/admin/team-requests`)**: Request moderation and status management.
+- **Hackathons (`/admin/hackathons`)**: Event directory creation and publishing.
+- **Audit Trail (`/admin/audit-logs`)**: Immutable security audit log tracking administrative actions.
 
 ---
 
 ## 🗄️ Database Models (Mongoose Schemas)
 
-### User
-```javascript
-{
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }, // bcrypt hashed
-  bio: { type: String },
-  skills: [{ type: String }], // e.g. ["React", "Node.js", "Python"]
-  experienceLevel: { type: String, enum: ["Beginner", "Intermediate", "Advanced"], default: "Intermediate" },
-  githubUrl: { type: String },
-  linkedinUrl: { type: String },
-  portfolioUrl: { type: String },
-  avatarUrl: { type: String },
-  createdAt: { type: Date, default: Date.now }
-}
-```
-
-### Hackathon
-```javascript
-{
-  title: { type: String, required: true },
-  description: { type: String },
-  organizer: { type: String },
-  mode: { type: String, enum: ["Online", "Offline", "Hybrid"], default: "Online" },
-  location: { type: String },
-  startDate: { type: Date },
-  endDate: { type: Date },
-  registrationDeadline: { type: Date },
-  registrationLink: { type: String },
-  tags: [{ type: String }], // e.g. ["AI", "Web3", "GovTech"]
-  postedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  createdAt: { type: Date, default: Date.now }
-}
-```
-
-### TeamRequest
-```javascript
-{
-  hackathon: { type: mongoose.Schema.Types.ObjectId, ref: 'Hackathon', required: true },
-  postedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  title: { type: String, required: true },
-  description: { type: String },
-  skillsNeeded: [{ type: String, required: true }],
-  teamSizeNeeded: { type: Number, default: 1 },
-  status: { type: String, enum: ["Open", "Closed"], default: "Open" },
-  createdAt: { type: Date, default: Date.now }
-}
-```
-
-### Response
-```javascript
-{
-  teamRequest: { type: mongoose.Schema.Types.ObjectId, ref: 'TeamRequest', required: true },
-  respondent: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  message: { type: String },
-  status: { type: String, enum: ["Pending", "Accepted", "Rejected"], default: "Pending" },
-  createdAt: { type: Date, default: Date.now }
-}
-```
+- **College**: `name`, `code`, `emailDomain`, `logo`, `location`, `description`, `status` (*Active/Inactive*).
+- **User**: `name`, `email`, `password` (bcrypt), `collegeId` (ref College), `role` (*student/collegeAdmin/superAdmin*), `bio`, `skills`, `experienceLevel`, URLs, `status` (*Active/Inactive*).
+- **Hackathon**: `title`, `description`, `organizer`, `mode`, `location`, `startDate`, `endDate`, `registrationDeadline`, `registrationLink`, `tags`, `visibility` (*Global/College*), `collegeId`, `source` (*manual/curated/unstop/devpost/mlh*), `externalId`, `externalUrl`, `isExternal`, `syncStatus`, `contentHash`, `lastSyncedAt`, `firstSeenAt`, `manuallyOverridden`.
+- **HackathonSyncLog**: `startedAt`, `completedAt`, `status`, `triggeredBy`, `source`, `fetchedCount`, `createdCount`, `updatedCount`, `expiredCount`, `skippedCount`, `errorCount`, `sources` (per-source breakdowns), `errors`.
+- **TeamRequest**: `hackathon` (ref Hackathon), `postedBy` (ref User), `collegeId` (ref College), `title`, `description`, `skillsNeeded`, `teamSizeNeeded`, `status` (*Open/Closed*).
+- **Response**: `teamRequest` (ref TeamRequest), `respondent` (ref User), `collegeId` (ref College), `message`, `status` (*Pending/Accepted/Rejected*).
+- **ExperienceVerification**: `user` (ref User), `collegeId` (ref College), `requestedLevel`, `status` (*Pending/Verified/Rejected*), links, proof description, review notes, timestamps.
+- **Notification**: `recipient` (ref User), `actor` (ref User), `collegeId` (ref College), `type` (11 notification event types), `title`, `message`, `link`, `isRead`, `metadata`.
+- **AuditLog**: `actor`, `role`, `action`, `targetType`, `targetId`, `collegeId`, `details`, `timestamp`.
 
 ---
 
 ## 📡 REST API Endpoints
 
-### Auth (`/api/auth`)
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| `POST` | `/api/auth/signup` | Register new user & hash password | No |
-| `POST` | `/api/auth/login` | Authenticate & return JWT token | No |
-| `GET` | `/api/auth/me` | Fetch logged-in user profile | Yes |
+### Authentication (`/api/auth`)
+- `POST /api/auth/signup` — Register student with verified active college
+- `POST /api/auth/login` — Sign in and receive JWT token
+- `GET /api/auth/me` — Hydrate current user session and college info
 
-### Users (`/api/users`)
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| `GET` | `/api/users` | List / search users (`?skill=`, `?experienceLevel=`) | Yes |
-| `GET` | `/api/users/:id` | Get single user public profile | Yes |
-| `PUT` | `/api/users/:id` | Update own user profile | Yes |
+### Colleges (`/api/colleges`)
+- `GET /api/colleges` — List colleges (enriched with dynamic `studentCount` and `adminCount`)
+- `POST /api/colleges` — Onboard new college (*Super Admin*)
+- `PATCH /api/colleges/:id/status` — Toggle college active status (*Super Admin*)
+
+### Students & Users (`/api/users`)
+- `GET /api/users` — List developers in user's college
+- `GET /api/users/:id` — View developer profile (*403 if different college*)
+- `PUT /api/users/:id` — Update developer profile (strictly protects `role`, `collegeId`, resets verification on level change)
+- `POST /api/users/avatar/signature` — Get HMAC-SHA1 signed Cloudinary upload credentials
+- `PATCH /api/users/avatar` — Save Cloudinary avatar URL & publicId
+- `DELETE /api/users/avatar` — Remove profile avatar from Cloudinary & database
+
+### Experience Verification (`/api/experience-verifications`)
+- `POST /api/experience-verifications` — Submit verification request (creates admin notifications)
+- `GET /api/experience-verifications/my` — Get current student's verification status
+- `GET /api/experience-verifications/requests` — View pending requests for college (*College Admin*)
+- `PATCH /api/experience-verifications/:id/review` — Approve or reject verification request
+
+### Notifications (`/api/notifications`)
+- `GET /api/notifications` — Get recipient-isolated notifications with unread count
+- `PATCH /api/notifications/:id/read` — Mark single notification as read
+- `PATCH /api/notifications/read-all` — Mark all notifications as read for current user
 
 ### Hackathons (`/api/hackathons`)
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| `GET` | `/api/hackathons` | List hackathons (`?mode=`, `?tag=`, `?search=`) | No |
-| `GET` | `/api/hackathons/:id` | Get single hackathon details | No |
-| `POST` | `/api/hackathons` | Create a hackathon listing | Yes |
-| `PUT` | `/api/hackathons/:id` | Edit hackathon (owner only) | Yes |
-| `DELETE`| `/api/hackathons/:id` | Delete hackathon (owner only) | Yes |
+- `GET /api/hackathons` — List hackathons with timeline filter (`Upcoming`, `Closing Soon`, `Active`, `Past`, `Recently Added`), source filter (`all`, `manual`, `curated`), mode, and search keyword
+- `GET /api/hackathons/:id` — Single hackathon details
+- `POST /api/hackathons` — Create hackathon listing
 
-### Team Requests (`/api/team-requests`)
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| `GET` | `/api/team-requests` | List team requests (`?hackathon=`, `?skill=`) | Yes |
-| `GET` | `/api/team-requests/:id` | Get single team request details | Yes |
-| `POST` | `/api/team-requests` | Create team request & trigger skill matcher | Yes |
-| `PUT` | `/api/team-requests/:id` | Edit or toggle Open/Closed status | Yes |
-| `DELETE`| `/api/team-requests/:id` | Delete team request (owner only) | Yes |
+### Scheduled Tasks & Crons (`/api/cron`)
+- `GET /api/cron/sync-hackathons` — Automated external hackathon sync (secured with `Bearer CRON_SECRET`)
 
-### Responses (`/api/responses`)
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| `POST` | `/api/responses` | Send application response to a team request | Yes |
-| `GET` | `/api/responses/my` | Get sent and received responses | Yes |
-| `PUT` | `/api/responses/:id` | Accept or reject an applicant response | Yes |
+### Team Requests & Matching (`/api/team-requests`)
+- `GET /api/team-requests` — List campus team requests
+- `POST /api/team-requests` — Create team request (*auto-derives collegeId, strictly enforces 403 VERIFICATION_REQUIRED for unverified/pending/rejected students*)
+- `POST /api/team-requests/preview-matches` — Live candidate match preview
+- `GET /api/team-requests/:id/matches` — Smart matching query for a request
 
----
+### Applications (`/api/responses`)
+- `POST /api/responses` — Apply to team request (*strictly enforces 403 VERIFICATION_REQUIRED, cross-college blocked*)
+- `GET /api/responses/my` — Get sent and received applications with match metrics
+- `PUT /api/responses/:id` — Accept or reject an application
 
-## 📁 Project Directory Structure
-
-```
-hackmatch/
-├── backend/
-│   ├── src/
-│   │   ├── config/
-│   │   │   └── db.js                 # MongoDB connection setup
-│   │   ├── models/
-│   │   │   ├── User.js               # User Mongoose schema
-│   │   │   ├── Hackathon.js          # Hackathon listing schema
-│   │   │   ├── TeamRequest.js        # Team request schema
-│   │   │   └── Response.js           # Team application response schema
-│   │   ├── controllers/
-│   │   │   ├── authController.js
-│   │   │   ├── userController.js
-│   │   │   ├── hackathonController.js
-│   │   │   ├── teamRequestController.js
-│   │   │   └── responseController.js
-│   │   ├── routes/
-│   │   │   ├── authRoutes.js
-│   │   │   ├── userRoutes.js
-│   │   │   ├── hackathonRoutes.js
-│   │   │   ├── teamRequestRoutes.js
-│   │   │   └── responseRoutes.js
-│   │   ├── middleware/
-│   │   │   ├── authMiddleware.js     # JWT Bearer verification
-│   │   │   ├── errorMiddleware.js    # Global error response handler
-│   │   │   └── validateMiddleware.js # Input validation
-│   │   ├── utils/
-│   │   │   └── generateToken.js
-│   │   └── app.js                    # Express app & CORS configuration
-│   ├── server.js                     # Server launcher
-│   ├── .env.example
-│   └── package.json
-│
-├── frontend/
-│   ├── src/
-│   │   ├── api/
-│   │   │   └── axiosInstance.js      # Axios client with interceptors
-│   │   ├── components/
-│   │   │   ├── Navbar.jsx            # Sticky responsive navigation & dropdown
-│   │   │   ├── Footer.jsx            # Platform footer with quick links
-│   │   │   ├── HackathonCard.jsx     # Hackathon display card
-│   │   │   ├── UserCard.jsx          # Profile snapshot & match badge
-│   │   │   ├── SkillTag.jsx          # Color-coded interactive skill pill
-│   │   │   ├── TeamRequestCard.jsx   # Request card with respond trigger
-│   │   │   ├── MatchScoreBadge.jsx   # Percentage overlap pill
-│   │   │   └── ProtectedRoute.jsx    # Authentication route guard
-│   │   ├── pages/
-│   │   │   ├── Home.jsx              # Hero, stats, featured hackathons
-│   │   │   ├── Login.jsx             # Auth page with 1-click demo accounts
-│   │   │   ├── Signup.jsx            # Profile creation with multi-skill tagger
-│   │   │   ├── Hackathons.jsx        # Hackathon directory with filters & modal
-│   │   │   ├── HackathonDetail.jsx   # Single hackathon view + team requests
-│   │   │   ├── PostTeamRequest.jsx   # Post request with live matching preview
-│   │   │   ├── BrowseUsers.jsx       # Talent discovery search
-│   │   │   ├── Profile.jsx           # User portfolio view
-│   │   │   ├── EditProfile.jsx       # Profile editor
-│   │   │   ├── MyRequests.jsx        # Request management & applicant acceptance
-│   │   │   └── Dashboard.jsx         # Summary stats & recommended teammates
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx       # Auth provider & state management
-│   │   ├── hooks/
-│   │   │   └── useAuth.js            # Auth custom hook
-│   │   ├── services/
-│   │   │   ├── mockData.js           # Seed datasets for standalone testing
-│   │   │   └── storageService.js     # Persistent state & skill matching logic
-│   │   ├── App.jsx                   # Routes configuration
-│   │   ├── index.css                 # Tailwind CSS v4 & custom glass styling
-│   │   └── main.jsx                  # Entry point
-│   ├── vite.config.js
-│   └── package.json
-│
-└── README.md
-```
+### Administration (`/api/admin`)
+- `GET /api/admin/dashboard` — Platform-wide or campus-scoped KPIs (including automated sync metrics)
+- `GET /api/admin/students` — Student directory with filter controls
+- `PATCH /api/admin/students/:id/status` — Activate or deactivate student account
+- `GET /api/admin/team-requests` — Moderate team posts
+- `GET /api/admin/colleges/:id/admins` — List college administrators (*Super Admin*)
+- `POST /api/admin/colleges/:id/admins` — Assign college administrator (*Super Admin*)
+- `PATCH /api/admin/colleges/:id/admins/:adminId` — Demote/deactivate admin with Last Admin Protection
+- `GET /api/admin/hackathons/sync-status` — Inspect adapter health (`LIVE`, `DISABLED`, `UNAVAILABLE`, `ERROR`) & sync history (*Super Admin*)
+- `POST /api/admin/hackathons/sync` — Trigger immediate manual hackathon sync across all sources (*Super Admin*)
+- `GET /api/admin/audit-logs` — Administrative audit history
 
 ---
 
-## 💻 Getting Started & Local Development
+## 🧪 Automated Verification & Isolation Tests
 
-### Prerequisites
-- **Node.js**: v18.0 or higher
-- **npm**: v9.0 or higher
-- **MongoDB** *(Optional for local database mode)*: Local MongoDB or MongoDB Atlas URI
-
----
-
-### Step 1: Run Frontend
+HackMatch includes an automated test suite verifying all **130 security, verification, notification, isolation, and automated discovery guarantees**:
 
 ```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start Vite development server
-npm run dev
-```
-
-Open **[http://localhost:5173](http://localhost:5173)** in your browser.
-
----
-
-### Step 2: Run Backend (Optional)
-
-```bash
-# Navigate to backend directory
 cd backend
-
-# Install dependencies
-npm install
-
-# Setup environment variables
-cp .env.example .env
-
-# Start server
-npm run dev # or node server.js
+npm test
+# Or run individual suites:
+npm run test:isolation  # 80 core isolation & security tests
+npm run test:sync       # 50 hackathon sync & idempotency tests
 ```
 
-The backend server will run at **[http://localhost:5000](http://localhost:5000)**.
+### Verified Isolation & Security Guarantees:
+- ✅ Student user discovery strictly filtered to user's college
+- ✅ Direct access to other college profiles returns 403
+- ✅ Team requests scoped to user's college
+- ✅ Direct access to other college requests returns 403
+- ✅ Cross-college application submissions rejected with 403
+- ✅ Smart skill matching engine restricted to candidate's college
+- ✅ Immutability of sensitive fields on self-update (`role`, `collegeId`, `status`)
+- ✅ Modifying experience level automatically resets verification status to `Unverified`
+- ✅ Dynamic college student and admin count aggregations
+- ✅ Last Admin Protection prevents orphan colleges
+- ✅ Cloudinary secure upload signatures without leaking API secret
+- ✅ Full experience verification lifecycle and campus review isolation
+- ✅ Trust notification delivery for students, college admins, and super admins
+- ✅ Strict notification query ownership (`req.user._id`) and isolation
+- ✅ Team request creation & applications strictly blocked with 403 `VERIFICATION_REQUIRED` for non-verified students
 
 ---
 
 ## 🔑 Quick Demo Accounts
 
-To test the application instantly without manual registration, 1-click quick login buttons are available on the [Login Page](http://localhost:5173/login):
+The database comes pre-seeded with test accounts across 3 demo colleges:
 
-| User | Email | Password | Role / Skills |
-|---|---|---|---|
-| **Alex Rivera** | `alex@example.com` | `password123` | Full-Stack (React, Node.js, Express, MongoDB) |
-| **Priya Sharma** | `priya@example.com` | `password123` | AI Engineer (Python, PyTorch, Gemini API) |
-| **Sophia Martinez** | `sophia@example.com` | `password123` | UI/UX Designer (Figma, Design Systems, Tailwind) |
+| Account Type | College | Email | Password | Status |
+|---|---|---|---|---|
+| **Super Admin** | Platform-Wide | `superadmin@hackmatch.com` | `Admin@123` | Platform Access |
+| **College Admin** | KIET Group of Institutions | `admin@kiet.edu` | `Admin@123` | Campus Admin |
+| **Student (Alex)** | KIET (Full-Stack) | `alex@example.com` | `password123` | Verified (Advanced) |
+| **Student (Priya)** | KIET (AI Specialist) | `priya@example.com` | `password123` | Unverified (Ready to verify) |
+| **Student (Sophia)**| KIET (UI/UX Designer) | `sophia@example.com` | `password123` | Pending Verification |
+| **Student (Rahul)** | ABC Tech | `rahul@example.com` | `password123` | Rejected Verification |
+| **Student (Aman)**  | XYZ University | `aman@example.com` | `password123` | Active Student |
 
 ---
 
-## 🔮 Roadmap & Stretch Goals
+## 💻 Local Development & Getting Started
 
-- [ ] **Real-Time Team Chat**: Socket.io integration for instant direct messages between matched team members.
-- [ ] **Email Notifications**: Automated alerts when a team request receives a response or an application is accepted.
-- [ ] **Skill Endorsements**: Peer validations and endorsements on developer profiles.
-- [ ] **Cloudinary Integration**: Direct image uploads for user profile avatars and hackathon banners.
-- [ ] **Advanced Matching v2**: Machine learning vector embeddings for semantic project and skill matching.
+### 1. One-Click Launch (Windows)
+Double-click `start_demo.bat` to automatically seed the database and launch both the Express backend (port 5000) and Vite frontend (port 5173).
+
+### 2. Manual Launch
+```bash
+# Terminal 1: Backend
+cd backend
+npm install
+npm run seed     # Seeds demo colleges, users, hackathons, and verifications
+node server.js
+
+# Terminal 2: Frontend
+cd frontend
+npm install
+npm run dev
+```
+
+*Note: The backend automatically boots an embedded in-memory MongoDB instance if local MongoDB (`127.0.0.1:27017`) is not running.*
+
+---
+
+## 🚀 Vercel & MongoDB Atlas Deployment Guide
+
+HackMatch is production-ready for deployment to **Vercel** and **MongoDB Atlas**:
+
+### 1. MongoDB Atlas Setup
+1. Create a free cluster on [MongoDB Atlas](https://www.mongodb.com/atlas).
+2. Create a database user and whitelist `0.0.0.0/0` (or Vercel IP ranges).
+3. Copy your connection string:
+   ```
+   mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/hackmatch?retryWrites=true&w=majority
+   ```
+
+### 2. Vercel Configuration
+The repository includes `vercel.json` configured for unified monorepo deployment:
+- Builds `backend/api/index.js` using `@vercel/node`
+- Builds `frontend/` using `@vercel/static-build` with `distDir: "dist"`
+- Routes `/api/(.*)` to backend serverless function
+- Routes all frontend paths to `frontend/index.html` (SPA routing)
+
+### 3. Environment Variables (Vercel Project Settings)
+Configure the following in **Vercel Project Settings $\rightarrow$ Environment Variables**:
+
+| Variable | Description | Example |
+|---|---|---|
+| `MONGODB_URI` | MongoDB Atlas Connection String | `mongodb+srv://user:pass@cluster.mongodb.net/hackmatch` |
+| `JWT_SECRET` | Strong JWT signing secret | `your-production-jwt-secret-key-32-chars-min` |
+| `CLIENT_URL` | Deployed Frontend URL for CORS | `https://your-hackmatch.vercel.app` |
+| `NODE_ENV` | Environment mode | `production` |
+| `ADMIN_EMAIL` | Initial Super Admin email | `superadmin@hackmatch.com` |
+| `ADMIN_PASSWORD` | Initial Super Admin password | `Admin@123` |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary Cloud Name (optional for avatars) | `your_cloud_name` |
+| `CLOUDINARY_API_KEY` | Cloudinary API Key | `your_api_key` |
+| `CLOUDINARY_API_SECRET` | Cloudinary API Secret | `your_api_secret` |
+| `CRON_SECRET` | Bearer secret for automated sync `/api/cron/sync-hackathons` | `your-secure-cron-secret-key` |
+| `SYNC_CURATED_FEED_ENABLED` | Toggle Hack Club open feed sync adapter | `true` |
+| `SYNC_UNSTOP_ENABLED` | Toggle Unstop adapter (requires partner API) | `false` |
+| `SYNC_DEVPOST_ENABLED` | Toggle Devpost adapter (requires partner API) | `false` |
+| `SYNC_MLH_ENABLED` | Toggle MLH adapter (requires OAuth app) | `false` |
+| `VITE_API_URL` | Frontend API URL | `/api` |
+
+### 4. Deploying
+```bash
+# Push to GitHub and import the repository into Vercel, or use the Vercel CLI:
+vercel --prod
+```
 
 ---
 
 ## 📄 License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-# hackMatch
-Smart hackathon team formation platform based on skill and interest matching.
+This project is licensed under the MIT License.

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Trophy, MessageSquare, Clock, ArrowRight } from 'lucide-react';
 import { SkillTag } from './SkillTag';
+import { VerificationBadge } from './VerificationBadge';
 
 export const TeamRequestCard = ({ request, onRespond = null }) => {
   const {
@@ -31,7 +32,7 @@ export const TeamRequestCard = ({ request, onRespond = null }) => {
         {/* Top bar: Hackathon Tag & Status */}
         <div className="flex items-center justify-between gap-2 mb-3">
           <Link
-            to={`/hackathons/${hackathonObj.id}`}
+            to={`/hackathons/${hackathonObj._id || hackathonObj.id}`}
             className="text-xs font-semibold text-indigo-400 hover:underline flex items-center gap-1.5 truncate"
           >
             <Trophy className="w-3.5 h-3.5 shrink-0" />
@@ -82,7 +83,10 @@ export const TeamRequestCard = ({ request, onRespond = null }) => {
             className="w-7 h-7 rounded-lg object-cover ring-1 ring-indigo-500/30 shrink-0"
           />
           <div className="truncate">
-            <p className="text-xs font-semibold text-gray-200 truncate">{userObj.name || 'Anonymous'}</p>
+            <div className="flex items-center gap-1.5 truncate">
+              <p className="text-xs font-semibold text-gray-200 truncate">{userObj.name || 'Anonymous'}</p>
+              <VerificationBadge status={userObj.experienceVerificationStatus} />
+            </div>
             <p className="text-[10px] text-gray-500 flex items-center gap-1">
               <Clock className="w-3 h-3" /> {formatDate(createdAt)}
             </p>
@@ -106,7 +110,7 @@ export const TeamRequestCard = ({ request, onRespond = null }) => {
             </button>
           ) : (
             <Link
-              to={`/hackathons/${hackathonObj.id}`}
+              to={`/hackathons/${hackathonObj._id || hackathonObj.id}`}
               className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
             >
               Details <ArrowRight className="w-3.5 h-3.5" />

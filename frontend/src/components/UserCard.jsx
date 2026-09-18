@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Code2, Share2, Globe, ExternalLink, Mail } from 'lucide-react';
 import { SkillTag } from './SkillTag';
 import { MatchScoreBadge } from './MatchScoreBadge';
+import { VerificationBadge } from './VerificationBadge';
 
 export const UserCard = ({ user, matchScore = 0, overlappingSkills = [], onInvite = null }) => {
   const {
@@ -28,6 +29,9 @@ export const UserCard = ({ user, matchScore = 0, overlappingSkills = [], onInvit
     }
   };
 
+  const userId = user._id || user.id;
+  const userCollege = user.collegeId?.name || user.college?.name || user.collegeName;
+
   return (
     <div className="glass-panel glass-panel-hover rounded-2xl p-6 flex flex-col justify-between border border-gray-800/80 relative group">
       <div>
@@ -40,14 +44,22 @@ export const UserCard = ({ user, matchScore = 0, overlappingSkills = [], onInvit
               className="w-12 h-12 rounded-xl object-cover ring-2 ring-indigo-500/30 group-hover:ring-indigo-500/70 transition-all"
             />
             <div>
-              <Link to={`/users/${id}`}>
+              <Link to={`/profile/${userId}`}>
                 <h4 className="font-bold text-white group-hover:text-indigo-300 transition-colors text-base">
                   {name}
                 </h4>
               </Link>
-              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${getExpBadge(experienceLevel)}`}>
-                {experienceLevel}
-              </span>
+              <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${getExpBadge(experienceLevel)}`}>
+                  {experienceLevel}
+                </span>
+                <VerificationBadge status={user.experienceVerificationStatus} />
+                {userCollege && (
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 truncate max-w-[120px]">
+                    🏫 {userCollege}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -132,7 +144,7 @@ export const UserCard = ({ user, matchScore = 0, overlappingSkills = [], onInvit
           </button>
         ) : (
           <Link
-            to={`/users/${id}`}
+            to={`/profile/${userId}`}
             className="text-xs font-semibold text-gray-400 hover:text-white flex items-center gap-1 transition-colors"
           >
             View Profile <ExternalLink className="w-3.5 h-3.5" />

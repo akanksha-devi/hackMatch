@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { 
-  getTeamRequests, 
-  getResponses, 
-  getSuggestedMatches, 
-  getHackathons 
-} from '../services/storageService';
+import apiService from '../services/apiService';
 import { SkillTag } from '../components/SkillTag';
 import { UserCard } from '../components/UserCard';
 import { 
@@ -19,44 +14,61 @@ import {
   Sparkles, 
   ArrowRight,
   CheckCircle2,
-  Send
+  Send,
+  School,
+  ShieldCheck
 } from 'lucide-react';
 
 export const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, collegeName } = useAuth();
   const [myRequestsCount, setMyRequestsCount] = useState(0);
   const [myResponsesCount, setMyResponsesCount] = useState(0);
   const [acceptedCount, setAcceptedCount] = useState(0);
   const [recommendedMatches, setRecommendedMatches] = useState([]);
   const [recentHackathons, setRecentHackathons] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    const loadDashboardData = async () => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        const [respRes, hackRes] = await Promise.all([
+          apiService.getMyResponses().catch(() => ({ success: false })),
+          apiService.getHackathons().catch(() => ({ success: false })),
+        ]);
 
-    // Requests count
-    const reqs = getTeamRequests();
-    const myReqs = reqs.filter((r) => {
-      const pId = typeof r.postedBy === 'object' ? r.postedBy?.id : r.postedBy;
-      return pId === user.id;
-    });
-    setMyRequestsCount(myReqs.length);
+        if (respRes.success) {
+          const myReqs = respRes.myRequests || [];
+          const sent = respRes.sentApplications || [];
+          setMyRequestsCount(myReqs.length);
+          setMyResponsesCount(sent.length);
+          setAcceptedCount(sent.filter((s) => s.status === 'Accepted').length);
+        }
 
-    // Responses sent & accepted count
-    const responses = getResponses();
-    const mySent = responses.filter((res) => {
-      const respId = typeof res.respondent === 'object' ? res.respondent?.id : res.respondentId;
-      return respId === user.id;
-    });
-    setMyResponsesCount(mySent.length);
-    setAcceptedCount(mySent.filter((s) => s.status === 'Accepted').length);
+        if (hackRes.success && hackRes.hackathons) {
+          setRecentHackathons(hackRes.hackathons.slice(0, 2));
+        }
 
-    // Compute recommended matches based on user's own skills
-    if (user.skills && user.skills.length > 0) {
-      const matches = getSuggestedMatches(user.skills, user.id);
-      setRecommendedMatches(matches.slice(0, 3));
-    }
+        // Live recommended teammate matches based on user's own skills
+        if (user.skills && user.skills.length > 0) {
+          try {
+            const matchRes = await apiService.previewMatches(user.skills);
+            if (matchRes.success && matchRes.matches) {
+              setRecommendedMatches(matchRes.matches.slice(0, 3));
+            }
+          } catch (e) {
+            console.warn('Recommendation load notice:', e.message);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading dashboard data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    setRecentHackathons(getHackathons().slice(0, 2));
+    loadDashboardData();
   }, [user]);
 
   return (
@@ -67,10 +79,16 @@ export const Dashboard = () => {
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
                 Dashboard Overview
               </span>
+              {collegeName && (
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 flex items-center gap-1">
+                  <School className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Campus: {collegeName}</span>
+                </span>
+              )}
               <span className="text-xs text-gray-400 font-medium">Welcome back!</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-white">
@@ -155,10 +173,10 @@ export const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {recommendedMatches.map((m) => (
               <UserCard
-                key={m.user.id}
+                key={m.user?._id || m.user?.id}
                 user={m.user}
                 matchScore={m.matchScore}
-                overlappingSkills={m.overlappingSkills}
+                overlappingSkills={m.matchedSkills || m.overlappingSkills || []}
               />
             ))}
           </div>
@@ -181,7 +199,7 @@ export const Dashboard = () => {
               className="w-full p-3 rounded-xl bg-gray-900 border border-gray-800 hover:border-indigo-500/50 flex items-center justify-between text-xs text-gray-200 font-semibold transition-all group"
             >
               <span className="flex items-center gap-2">
-                <PlusCircle className="w-4 h-4 text-indigo-400" /> Post Team Request
+                <PlusCircle className="w-4 h-4 text-indigo-400" /> Post a Team Request
               </span>
               <ArrowRight className="w-4 h-4 text-gray-500 group-hover:translate-x-1 transition-transform" />
             </Link>
@@ -230,23 +248,30 @@ export const Dashboard = () => {
           </div>
 
           <div className="space-y-3">
-            {recentHackathons.map((h) => (
-              <div
-                key={h.id}
-                className="p-4 rounded-2xl bg-gray-900/60 border border-gray-800 flex items-center justify-between gap-4"
-              >
-                <div>
-                  <h4 className="font-bold text-white text-sm">{h.title}</h4>
-                  <p className="text-xs text-gray-400">{h.organizer} • {h.mode}</p>
-                </div>
-                <Link
-                  to={`/hackathons/${h.id}`}
-                  className="px-3.5 py-1.5 rounded-xl bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600 hover:text-white border border-indigo-500/30 text-xs font-semibold transition-all"
-                >
-                  View Details
-                </Link>
-              </div>
-            ))}
+            {recentHackathons.length > 0 ? (
+              recentHackathons.map((h) => {
+                const hId = h._id || h.id;
+                return (
+                  <div
+                    key={hId}
+                    className="p-4 rounded-2xl bg-gray-900/60 border border-gray-800 flex items-center justify-between gap-4"
+                  >
+                    <div>
+                      <h4 className="font-bold text-white text-sm">{h.title}</h4>
+                      <p className="text-xs text-gray-400">{h.organizer} • {h.mode}</p>
+                    </div>
+                    <Link
+                      to={`/hackathons/${hId}`}
+                      className="px-3.5 py-1.5 rounded-xl bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600 hover:text-white border border-indigo-500/30 text-xs font-semibold transition-all"
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-xs text-gray-500 italic py-2">No hackathons listed yet.</p>
+            )}
           </div>
         </div>
       </div>

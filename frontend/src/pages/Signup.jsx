@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Zap, Mail, Lock, User, Code, AlertCircle, Plus, Check, ArrowRight } from 'lucide-react';
+import { Zap, Mail, Lock, User, Code, AlertCircle, Plus, Check, ArrowRight, School } from 'lucide-react';
 import { SkillTag } from '../components/SkillTag';
+import apiService from '../services/apiService';
 
 const SUGGESTED_SKILLS = [
   "React", "Python", "Node.js", "AI", "PyTorch", "UI/UX", 
@@ -16,6 +17,9 @@ export const Signup = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [collegeId, setCollegeId] = useState('');
+  const [colleges, setColleges] = useState([]);
+  const [collegesLoading, setCollegesLoading] = useState(true);
   const [bio, setBio] = useState('');
   const [experienceLevel, setExperienceLevel] = useState('Intermediate');
   const [skills, setSkills] = useState(["React", "Node.js"]);
@@ -25,6 +29,25 @@ export const Signup = () => {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchColleges = async () => {
+      try {
+        const res = await apiService.getColleges();
+        if (res.success && res.colleges) {
+          setColleges(res.colleges);
+          if (res.colleges.length > 0) {
+            setCollegeId(res.colleges[0]._id || res.colleges[0].id);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading colleges:', err);
+      } finally {
+        setCollegesLoading(false);
+      }
+    };
+    fetchColleges();
+  }, []);
 
   const toggleSkill = (skill) => {
     if (skills.includes(skill)) {
@@ -46,6 +69,11 @@ export const Signup = () => {
     e.preventDefault();
     setError('');
 
+    if (!collegeId) {
+      setError('Please select your College / University.');
+      return;
+    }
+
     if (skills.length === 0) {
       setError('Please select at least one skill to complete your hacker profile.');
       return;
@@ -58,6 +86,7 @@ export const Signup = () => {
         name,
         email,
         password,
+        collegeId,
         bio,
         experienceLevel,
         skills,
@@ -124,6 +153,40 @@ export const Signup = () => {
                   className="w-full bg-gray-900/90 border border-gray-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 placeholder:text-gray-600"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* College / Institution Selector */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-gray-300 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <School className="w-3.5 h-3.5 text-indigo-400" />
+                Select Your College / University *
+              </span>
+              <span className="text-[11px] text-gray-400 font-normal">
+                Strict college-scoped team matching
+              </span>
+            </label>
+            <div className="relative">
+              <select
+                required
+                value={collegeId}
+                onChange={(e) => setCollegeId(e.target.value)}
+                disabled={collegesLoading}
+                className="w-full bg-gray-900/90 border border-gray-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+              >
+                {collegesLoading ? (
+                  <option value="">Loading institutions...</option>
+                ) : colleges.length === 0 ? (
+                  <option value="">No active colleges available</option>
+                ) : (
+                  colleges.map((c) => (
+                    <option key={c._id || c.id} value={c._id || c.id}>
+                      {c.name} ({c.code || c.name})
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
           </div>
 
