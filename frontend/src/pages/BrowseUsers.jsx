@@ -4,6 +4,7 @@ import { Search, Users, Filter, Code, School, ShieldCheck } from 'lucide-react';
 import apiService from '../services/apiService';
 import { useAuth } from '../hooks/useAuth';
 import { UserCard } from '../components/UserCard';
+import { SpatialPanel, SpatialDropdown } from '../components/spatial';
 
 const SKILL_FILTERS = [
   'All', 'React', 'Python', 'Node.js', 'AI', 'PyTorch', 
@@ -89,7 +90,7 @@ export const BrowseUsers = () => {
       </div>
 
       {/* Filter Bar */}
-      <div className="glass-panel p-4 rounded-2xl border border-gray-800 flex flex-col md:flex-row items-center gap-4">
+      <SpatialPanel className="border border-gray-800 flex flex-col md:flex-row items-center gap-4">
         {/* Search Input */}
         <div className="relative flex-1 w-full">
           <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -98,41 +99,41 @@ export const BrowseUsers = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search developers by name, bio, or domain..."
-            className="w-full bg-gray-900/90 border border-gray-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 placeholder:text-gray-600"
+            className="w-full spatial-input rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none placeholder:text-gray-500"
           />
         </div>
 
         {/* Experience Level Dropdown */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <Filter className="w-4 h-4 text-gray-400 shrink-0" />
-          <select
+        <div className="w-full md:w-56">
+          <SpatialDropdown
             value={selectedExp}
             onChange={(e) => setSelectedExp(e.target.value)}
-            className="w-full md:w-auto bg-gray-900/90 border border-gray-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-indigo-500"
-          >
-            <option value="All">All Experience Levels</option>
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
-          </select>
+            icon={Filter}
+            options={[
+              { value: 'All', label: 'All Experience Levels' },
+              { value: 'Beginner', label: 'Beginner' },
+              { value: 'Intermediate', label: 'Intermediate' },
+              { value: 'Advanced', label: 'Advanced' },
+            ]}
+          />
         </div>
 
         {/* Verification Status Filter */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-          <select
+        <div className="w-full md:w-52">
+          <SpatialDropdown
             value={selectedVerif}
             onChange={(e) => setSelectedVerif(e.target.value)}
-            className="w-full md:w-auto bg-gray-900/90 border border-gray-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-indigo-500"
-          >
-            <option value="All">All Trust States</option>
-            <option value="Verified">✓ Verified Only</option>
-            <option value="Pending">⏳ Pending</option>
-            <option value="Unverified">⚠ Unverified</option>
-            <option value="Rejected">✕ Rejected</option>
-          </select>
+            icon={ShieldCheck}
+            options={[
+              { value: 'All', label: 'All Trust States' },
+              { value: 'Verified', label: '✓ Verified Only' },
+              { value: 'Pending', label: '⏳ Pending' },
+              { value: 'Unverified', label: '⚠ Unverified' },
+              { value: 'Rejected', label: '✕ Rejected' },
+            ]}
+          />
         </div>
-      </div>
+      </SpatialPanel>
 
       {/* Skill Pills filter */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none text-xs">

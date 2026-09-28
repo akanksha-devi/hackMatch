@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import apiService from '../../services/apiService';
 import { SkillTag } from '../../components/SkillTag';
 import { useAuth } from '../../hooks/useAuth';
+import { SpatialModal, SpatialDatePicker, SpatialDropdown, SpatialButton } from '../../components/spatial';
 import {
   Trophy,
   Plus,
@@ -424,156 +425,146 @@ export const AdminHackathons = () => {
         )}
       </div>
 
-      {/* Publish Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="glass-panel w-full max-w-lg p-6 sm:p-8 rounded-3xl border border-gray-800 space-y-5 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-              <h3 className="text-xl font-bold text-white">Publish Hackathon</h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-white text-lg font-bold"
-              >
-                ×
-              </button>
-            </div>
-
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Title *</label>
-                <input
-                  type="text"
-                  required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. National Smart Hackathon 2026"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">Organizer *</label>
-                  <input
-                    type="text"
-                    required
-                    value={organizer}
-                    onChange={(e) => setNewOrganizer ? setNewOrganizer(e.target.value) : setOrganizer(e.target.value)}
-                    placeholder="e.g. IEEE Student Branch"
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">Mode</label>
-                  <select
-                    value={mode}
-                    onChange={(e) => setMode(e.target.value)}
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
-                  >
-                    <option value="Online">Online</option>
-                    <option value="Offline">Offline</option>
-                    <option value="Hybrid">Hybrid</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Location</label>
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Campus Auditorium / Online"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">Start Date</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">End Date</label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">Registration Deadline</label>
-                  <input
-                    type="date"
-                    value={registrationDeadline}
-                    onChange={(e) => setRegistrationDeadline(e.target.value)}
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">Registration Link</label>
-                  <input
-                    type="url"
-                    value={registrationLink}
-                    onChange={(e) => setRegistrationLink(e.target.value)}
-                    placeholder="https://..."
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Tags (comma-separated)</label>
-                <input
-                  type="text"
-                  value={tagsInput}
-                  onChange={(e) => setTagsInput(e.target.value)}
-                  placeholder="AI, Web Dev, Mobile"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Description</label>
-                <textarea
-                  rows="3"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Details about prize pool, problem statements..."
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
-                ></textarea>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-800">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-sm text-gray-400 hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-amber-600/20 disabled:opacity-50 flex items-center gap-2"
-                >
-                  {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {submitting ? 'Publishing...' : 'Publish Hackathon'}
-                </button>
-              </div>
-            </form>
+      {/* Publish Spatial Modal */}
+      <SpatialModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Publish Hackathon"
+        subtitle="Create an official campus or external hackathon entry."
+        icon={Trophy}
+        maxWidth="max-w-2xl"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowModal(false)}
+              className="px-4 py-2 text-sm text-gray-400 hover:text-white dark:hover:text-white light:hover:text-slate-900 transition-colors"
+            >
+              Cancel
+            </button>
+            <SpatialButton
+              type="submit"
+              form="admin-create-hackathon-form"
+              disabled={submitting}
+              loading={submitting}
+              variant="primary"
+            >
+              Publish Hackathon
+            </SpatialButton>
+          </>
+        }
+      >
+        <form id="admin-create-hackathon-form" onSubmit={handleCreate} className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700">Title *</label>
+            <input
+              type="text"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. National Smart Hackathon 2026"
+              className="w-full spatial-input rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
+            />
           </div>
-        </div>
-      )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700">Organizer *</label>
+              <input
+                type="text"
+                required
+                value={organizer}
+                onChange={(e) => setNewOrganizer ? setNewOrganizer(e.target.value) : setOrganizer(e.target.value)}
+                placeholder="e.g. IEEE Student Branch"
+                className="w-full spatial-input rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1">
+              <SpatialDropdown
+                label="Mode"
+                value={mode}
+                onChange={(e) => setMode(e.target.value)}
+                options={['Online', 'Offline', 'Hybrid']}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700">Location</label>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Campus Auditorium / Online"
+              className="w-full spatial-input rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <SpatialDatePicker
+                label="Start Date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                placeholder="Select start date"
+              />
+            </div>
+            <div className="space-y-1">
+              <SpatialDatePicker
+                label="End Date"
+                value={endDate}
+                minDate={startDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                placeholder="Select end date"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <SpatialDatePicker
+                label="Registration Deadline"
+                value={registrationDeadline}
+                maxDate={startDate || undefined}
+                onChange={(e) => setRegistrationDeadline(e.target.value)}
+                placeholder="Select deadline"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700">Registration Link</label>
+              <input
+                type="url"
+                value={registrationLink}
+                onChange={(e) => setRegistrationLink(e.target.value)}
+                placeholder="https://..."
+                className="w-full spatial-input rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700">Tags (comma-separated)</label>
+            <input
+              type="text"
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              placeholder="AI, Web Dev, Mobile"
+              className="w-full spatial-input rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700">Description</label>
+            <textarea
+              rows="3"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Details about prize pool, problem statements..."
+              className="w-full spatial-input rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none resize-none"
+            ></textarea>
+          </div>
+        </form>
+      </SpatialModal>
     </div>
   );
 };

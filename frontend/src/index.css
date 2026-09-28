@@ -96,6 +96,115 @@ nav, aside, main, .glass-panel {
   box-shadow: 0 16px 35px -8px rgba(99, 102, 241, 0.22), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
 }
 
+/* ===================================================
+   SPATIAL UI DESIGN SYSTEM FOUNDATIONS
+   =================================================== */
+
+/* Z-Index Hierarchy Layering */
+.z-bg { z-index: 0; }
+.z-webgl { z-index: 10; }
+.z-content { z-index: 20; }
+.z-dropdown { z-index: 30; }
+.z-popover { z-index: 35; }
+.z-modal { z-index: 40; }
+.z-critical { z-index: 50; }
+
+.z-35 { z-index: 35; }
+
+/* Base Spatial Surface */
+.spatial-surface {
+  position: relative;
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 220ms ease,
+              border-color 220ms ease,
+              background-color 220ms ease;
+}
+
+/* Glass Appearance */
+.spatial-glass {
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.spatial-panel {
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.spatial-card {
+  background: rgba(15, 23, 42, 0.60);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Interactive Controls (Dropdowns, Date Pickers, Inputs) */
+.spatial-control {
+  background: rgba(15, 23, 42, 0.70);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+.spatial-control:hover {
+  background: rgba(22, 34, 58, 0.80);
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+.spatial-input {
+  background: rgba(15, 23, 42, 0.70);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 180ms ease;
+}
+
+.spatial-input:focus {
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 16px -2px rgba(99, 102, 241, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Spatial Elevations */
+.spatial-flat {
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.3);
+}
+
+.spatial-raised {
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+.spatial-floating {
+  box-shadow: 0 16px 38px -10px rgba(0, 0, 0, 0.6), 0 6px 12px -4px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+.spatial-overlay {
+  box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.75), 0 10px 20px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Spatial Hover Depth Lift */
+.spatial-hover-lift:hover {
+  transform: translateY(-3px);
+  border-color: rgba(99, 102, 241, 0.40);
+  box-shadow: 0 18px 40px -10px rgba(99, 102, 241, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.10);
+}
+
+/* Glow Highlights */
+.spatial-glow-indigo {
+  box-shadow: 0 0 25px -4px rgba(99, 102, 241, 0.35);
+}
+.spatial-glow-cyan {
+  box-shadow: 0 0 25px -4px rgba(6, 182, 212, 0.35);
+}
+.spatial-glow-violet {
+  box-shadow: 0 0 25px -4px rgba(139, 92, 246, 0.35);
+}
+
 /* Glow button variants */
 .btn-glow {
   position: relative;
@@ -324,4 +433,56 @@ nav, aside, main, .glass-panel {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* Spatial UI Light Mode Overrides */
+.light .spatial-glass,
+.light .spatial-panel,
+.light .spatial-card {
+  background: rgba(255, 255, 255, 0.74);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(203, 213, 225, 0.75);
+}
+
+.light .spatial-control {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(203, 213, 225, 0.85);
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+}
+
+.light .spatial-control:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(99, 102, 241, 0.45);
+}
+
+.light .spatial-input {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(203, 213, 225, 0.85);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.light .spatial-flat {
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.04);
+}
+
+.light .spatial-raised {
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 4px 6px -2px rgba(15, 23, 42, 0.02), inset 0 1px 0 0 rgba(255, 255, 255, 0.85);
+}
+
+.light .spatial-floating {
+  box-shadow: 0 16px 35px -8px rgba(15, 23, 42, 0.08), 0 6px 12px -4px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 #ffffff;
+}
+
+.light .spatial-overlay {
+  box-shadow: 0 24px 45px -10px rgba(15, 23, 42, 0.12), 0 10px 20px -5px rgba(15, 23, 42, 0.06), inset 0 1px 0 0 #ffffff;
+}
+
+.light .spatial-hover-lift:hover {
+  transform: translateY(-3px);
+  border-color: rgba(99, 102, 241, 0.45);
+  box-shadow: 0 16px 35px -8px rgba(99, 102, 241, 0.14), inset 0 1px 0 0 #ffffff;
+}
+
 

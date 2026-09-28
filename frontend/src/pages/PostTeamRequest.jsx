@@ -5,6 +5,7 @@ import apiService from '../services/apiService';
 import { SkillTag } from '../components/SkillTag';
 import { UserCard } from '../components/UserCard';
 import { RequireVerified } from '../components/RequireVerified';
+import { SpatialDropdown } from '../components/spatial';
 import { 
   PlusCircle, 
   Trophy, 
@@ -168,27 +169,25 @@ export const PostTeamRequest = () => {
 
             {/* Target Hackathon */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
+              <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700 flex items-center gap-1.5">
                 <Trophy className="w-4 h-4 text-indigo-400" />
                 Select Target Hackathon *
               </label>
-              <select
+              <SpatialDropdown
                 required
                 value={selectedHackathonId}
                 onChange={(e) => setSelectedHackathonId(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-              >
-                {hackathons.map((h) => (
-                  <option key={h._id || h.id} value={h._id || h.id}>
-                    {h.title} ({h.mode})
-                  </option>
-                ))}
-              </select>
+                options={hackathons.map((h) => ({
+                  value: h._id || h.id,
+                  label: `${h.title} (${h.mode})`,
+                }))}
+                placeholder="Select target hackathon..."
+              />
             </div>
 
             {/* Request Title */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-300">
+              <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700">
                 Request Headline / Title *
               </label>
               <input
@@ -197,7 +196,7 @@ export const PostTeamRequest = () => {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Need PyTorch ML dev & UI designer for Smart India Hackathon"
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 placeholder:text-gray-600"
+                className="w-full spatial-input rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none placeholder:text-gray-500"
               />
             </div>
 

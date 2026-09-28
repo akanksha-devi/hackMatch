@@ -4,6 +4,7 @@ import { Search, Trophy, Filter, Plus, Globe, Sparkles, Clock, Calendar, CheckCi
 import apiService from '../services/apiService';
 import { HackathonCard } from '../components/HackathonCard';
 import { useAuth } from '../hooks/useAuth';
+import { SpatialPanel, SpatialDropdown, SpatialModal, SpatialDatePicker, SpatialButton } from '../components/spatial';
 
 const TIMELINE_TABS = [
   { id: 'All', label: 'All Hackathons', icon: Trophy },
@@ -165,7 +166,7 @@ export const Hackathons = () => {
       </div>
 
       {/* Filter & Search Controls */}
-      <div className="glass-panel p-4 rounded-2xl border border-gray-800 flex flex-col md:flex-row items-center gap-4">
+      <SpatialPanel className="border border-gray-800 flex flex-col md:flex-row items-center gap-4">
         {/* Search Bar */}
         <div className="relative flex-1 w-full">
           <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -174,40 +175,40 @@ export const Hackathons = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search hackathons by name, organizer, location, or topic..."
-            className="w-full bg-gray-900/90 border border-gray-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 placeholder:text-gray-600"
+            className="w-full spatial-input rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none placeholder:text-gray-500"
           />
         </div>
 
         {/* Source Filter Dropdown */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <Globe className="w-4 h-4 text-gray-400 shrink-0" />
-          <select
+        <div className="w-full md:w-48">
+          <SpatialDropdown
             value={selectedSource}
             onChange={(e) => setSelectedSource(e.target.value)}
-            className="w-full md:w-auto bg-gray-900/90 border border-gray-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-          >
-            <option value="All">All Sources</option>
-            <option value="curated">Curated Feed</option>
-            <option value="external">External Only</option>
-            <option value="manual">Campus & Manual</option>
-          </select>
+            icon={Globe}
+            options={[
+              { value: 'All', label: 'All Sources' },
+              { value: 'curated', label: 'Curated Feed' },
+              { value: 'external', label: 'External Only' },
+              { value: 'manual', label: 'Campus & Manual' },
+            ]}
+          />
         </div>
 
         {/* Mode Dropdown */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <Filter className="w-4 h-4 text-gray-400 shrink-0" />
-          <select
+        <div className="w-full md:w-40">
+          <SpatialDropdown
             value={selectedMode}
             onChange={(e) => setSelectedMode(e.target.value)}
-            className="w-full md:w-auto bg-gray-900/90 border border-gray-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-          >
-            <option value="All">All Modes</option>
-            <option value="Online">Online</option>
-            <option value="Offline">Offline</option>
-            <option value="Hybrid">Hybrid</option>
-          </select>
+            icon={Filter}
+            options={[
+              { value: 'All', label: 'All Modes' },
+              { value: 'Online', label: 'Online' },
+              { value: 'Offline', label: 'Offline' },
+              { value: 'Hybrid', label: 'Hybrid' },
+            ]}
+          />
         </div>
-      </div>
+      </SpatialPanel>
 
       {/* Tag Filters */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none text-xs">
@@ -255,156 +256,146 @@ export const Hackathons = () => {
         </div>
       )}
 
-      {/* Create Hackathon Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="glass-panel w-full max-w-lg p-6 sm:p-8 rounded-3xl border border-gray-800 space-y-5 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-              <h3 className="text-xl font-bold text-white">List a New Hackathon</h3>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="text-gray-400 hover:text-white text-lg font-bold"
-              >
-                ×
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateHackathon} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Hackathon Title *</label>
-                <input
-                  type="text"
-                  required
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g. AI Innovation Hackathon"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">Organizer *</label>
-                  <input
-                    type="text"
-                    required
-                    value={newOrganizer}
-                    onChange={(e) => setNewOrganizer(e.target.value)}
-                    placeholder="e.g. Google Developer Group"
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">Mode</label>
-                  <select
-                    value={newMode}
-                    onChange={(e) => setNewMode(e.target.value)}
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="Online">Online</option>
-                    <option value="Offline">Offline</option>
-                    <option value="Hybrid">Hybrid</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Location</label>
-                <input
-                  type="text"
-                  value={newLocation}
-                  onChange={(e) => setNewLocation(e.target.value)}
-                  placeholder="e.g. Campus Auditorium / Virtual"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">Start Date</label>
-                  <input
-                    type="date"
-                    value={newStartDate}
-                    onChange={(e) => setNewStartDate(e.target.value)}
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">End Date</label>
-                  <input
-                    type="date"
-                    value={newEndDate}
-                    onChange={(e) => setNewEndDate(e.target.value)}
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">Registration Deadline</label>
-                  <input
-                    type="date"
-                    value={newRegistrationDeadline}
-                    onChange={(e) => setNewRegistrationDeadline(e.target.value)}
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">Registration Link</label>
-                  <input
-                    type="url"
-                    value={newRegistrationLink}
-                    onChange={(e) => setNewRegistrationLink(e.target.value)}
-                    placeholder="https://..."
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Tags (comma-separated)</label>
-                <input
-                  type="text"
-                  value={newTagsInput}
-                  onChange={(e) => setNewTagsInput(e.target.value)}
-                  placeholder="AI, Web Dev, Python"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Description</label>
-                <textarea
-                  rows="3"
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                  placeholder="Tell students what this hackathon is about..."
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-                ></textarea>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-800">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-sm text-gray-400 hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={createSubmitting}
-                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-indigo-600/20 disabled:opacity-50 flex items-center gap-2"
-                >
-                  {createSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {createSubmitting ? 'Publishing...' : 'Publish Hackathon'}
-                </button>
-              </div>
-            </form>
+      {/* Create Hackathon Spatial Modal */}
+      <SpatialModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="List a New Hackathon"
+        subtitle="Publish a hackathon for your campus and community."
+        icon={Trophy}
+        maxWidth="max-w-2xl"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowCreateModal(false)}
+              className="px-4 py-2 text-sm text-gray-400 hover:text-white dark:hover:text-white light:hover:text-slate-900 transition-colors"
+            >
+              Cancel
+            </button>
+            <SpatialButton
+              type="submit"
+              form="create-hackathon-form"
+              disabled={createSubmitting}
+              loading={createSubmitting}
+              variant="primary"
+            >
+              Publish Hackathon
+            </SpatialButton>
+          </>
+        }
+      >
+        <form id="create-hackathon-form" onSubmit={handleCreateHackathon} className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700">Hackathon Title *</label>
+            <input
+              type="text"
+              required
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="e.g. AI Innovation Hackathon"
+              className="w-full spatial-input rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
+            />
           </div>
-        </div>
-      )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700">Organizer *</label>
+              <input
+                type="text"
+                required
+                value={newOrganizer}
+                onChange={(e) => setNewOrganizer(e.target.value)}
+                placeholder="e.g. Google Developer Group"
+                className="w-full spatial-input rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1">
+              <SpatialDropdown
+                label="Mode"
+                value={newMode}
+                onChange={(e) => setNewMode(e.target.value)}
+                options={['Online', 'Offline', 'Hybrid']}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700">Location</label>
+            <input
+              type="text"
+              value={newLocation}
+              onChange={(e) => setNewLocation(e.target.value)}
+              placeholder="e.g. Campus Auditorium / Virtual"
+              className="w-full spatial-input rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <SpatialDatePicker
+                label="Start Date"
+                value={newStartDate}
+                onChange={(e) => setNewStartDate(e.target.value)}
+                placeholder="Select start date"
+              />
+            </div>
+            <div className="space-y-1">
+              <SpatialDatePicker
+                label="End Date"
+                value={newEndDate}
+                minDate={newStartDate}
+                onChange={(e) => setNewEndDate(e.target.value)}
+                placeholder="Select end date"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <SpatialDatePicker
+                label="Registration Deadline"
+                value={newRegistrationDeadline}
+                maxDate={newStartDate || undefined}
+                onChange={(e) => setNewRegistrationDeadline(e.target.value)}
+                placeholder="Select deadline"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700">Registration Link</label>
+              <input
+                type="url"
+                value={newRegistrationLink}
+                onChange={(e) => setNewRegistrationLink(e.target.value)}
+                placeholder="https://..."
+                className="w-full spatial-input rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700">Tags (comma-separated)</label>
+            <input
+              type="text"
+              value={newTagsInput}
+              onChange={(e) => setNewTagsInput(e.target.value)}
+              placeholder="AI, Web Dev, Python"
+              className="w-full spatial-input rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700">Description</label>
+            <textarea
+              rows="3"
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              placeholder="Tell students what this hackathon is about..."
+              className="w-full spatial-input rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none resize-none"
+            ></textarea>
+          </div>
+        </form>
+      </SpatialModal>
     </div>
   );
 };

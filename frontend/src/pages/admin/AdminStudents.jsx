@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import apiService from '../../services/apiService';
 import { SkillTag } from '../../components/SkillTag';
+import { SpatialPanel, SpatialDropdown } from '../../components/spatial';
 import {
   Users,
   Search,
@@ -94,7 +95,7 @@ export const AdminStudents = () => {
       </div>
 
       {/* Filter Toolbar */}
-      <div className="glass-panel p-4 rounded-2xl border border-gray-800 flex flex-col md:flex-row items-center gap-3">
+      <SpatialPanel className="border border-gray-800 flex flex-col md:flex-row items-center gap-3">
         {/* Search */}
         <div className="relative flex-1 w-full">
           <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -103,43 +104,42 @@ export const AdminStudents = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search students by name, email, or skill..."
-            className="w-full bg-gray-900 border border-gray-800 rounded-xl pl-10 pr-4 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
+            className="w-full spatial-input rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none placeholder:text-gray-500"
           />
         </div>
 
         {/* SuperAdmin College Filter Dropdown */}
         {isSuperAdmin && (
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <School className="w-4 h-4 text-gray-400 shrink-0" />
-            <select
+          <div className="w-full md:w-56">
+            <SpatialDropdown
               value={selectedCollegeFilter}
               onChange={(e) => setSelectedCollegeFilter(e.target.value)}
-              className="w-full md:w-auto bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
-            >
-              <option value="">All Campuses</option>
-              {colleges.map((c) => (
-                <option key={c._id || c.id} value={c._id || c.id}>
-                  {c.name} ({c.code})
-                </option>
-              ))}
-            </select>
+              icon={School}
+              options={[
+                { value: '', label: 'All Campuses' },
+                ...colleges.map((c) => ({
+                  value: c._id || c.id,
+                  label: `${c.name} (${c.code})`,
+                })),
+              ]}
+            />
           </div>
         )}
 
         {/* Status Filter */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <Filter className="w-4 h-4 text-gray-400 shrink-0" />
-          <select
+        <div className="w-full md:w-44">
+          <SpatialDropdown
             value={selectedStatusFilter}
             onChange={(e) => setSelectedStatusFilter(e.target.value)}
-            className="w-full md:w-auto bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
-          >
-            <option value="All">All Statuses</option>
-            <option value="Active">Active Only</option>
-            <option value="Inactive">Inactive Only</option>
-          </select>
+            icon={Filter}
+            options={[
+              { value: 'All', label: 'All Statuses' },
+              { value: 'Active', label: 'Active Only' },
+              { value: 'Inactive', label: 'Inactive Only' },
+            ]}
+          />
         </div>
-      </div>
+      </SpatialPanel>
 
       {/* Students Table */}
       <div className="glass-panel rounded-3xl border border-gray-800 overflow-hidden">
