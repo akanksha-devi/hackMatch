@@ -216,7 +216,7 @@ export const SpatialDatePicker = ({
   const displayValue = formatDisplayDate(value);
 
   return (
-    <div ref={containerRef} className={`relative w-full ${className}`}>
+    <div ref={containerRef} className={`relative w-full ${isOpen ? 'z-30' : ''} ${className}`}>
       {label && (
         <label className="block text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700 mb-1.5">
           {label} {required && <span className="text-rose-500">*</span>}
@@ -242,7 +242,7 @@ export const SpatialDatePicker = ({
             <button
               type="button"
               onClick={handleClear}
-              className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-slate-200 transition-colors"
+              className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-slate-200 transition-colors cursor-pointer"
               title="Clear date"
             >
               <X className="w-3.5 h-3.5" />
@@ -254,7 +254,7 @@ export const SpatialDatePicker = ({
       {/* Floating Spatial Calendar Popup */}
       {isOpen && (
         <div
-          className="absolute left-0 sm:left-auto right-auto top-full mt-2 w-72 sm:w-80 p-4 rounded-2xl spatial-overlay spatial-glass border border-white/10 dark:border-white/10 light:border-slate-300 shadow-2xl z-35 animate-in fade-in zoom-in-95 duration-200"
+          className="absolute left-0 sm:left-auto right-auto top-full mt-2 w-72 sm:w-80 p-4 rounded-2xl bg-slate-900/98 dark:bg-slate-900/98 light:bg-white/98 backdrop-blur-2xl border border-white/10 dark:border-white/10 light:border-slate-200 shadow-2xl z-35 animate-in fade-in zoom-in-95 duration-200"
           style={{ transformOrigin: 'top left' }}
         >
           {/* Calendar Header */}
@@ -325,7 +325,7 @@ export const SpatialDatePicker = ({
                 >
                   {cell.day}
                   {cell.isToday && !cell.isSelected && (
-                    <span className="absolute bottom-1 w-1 h-1 rounded-full bg-indigo-400 dark:bg-indigo-400 light:text-indigo-600" />
+                    <span className="absolute bottom-1 w-1 h-1 rounded-full bg-indigo-400 dark:bg-indigo-400 light:bg-indigo-600" />
                   )}
                 </button>
               );

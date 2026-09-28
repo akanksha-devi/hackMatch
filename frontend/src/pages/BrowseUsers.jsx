@@ -90,7 +90,7 @@ export const BrowseUsers = () => {
       </div>
 
       {/* Filter Bar */}
-      <SpatialPanel className="border border-gray-800 flex flex-col md:flex-row items-center gap-4">
+      <SpatialPanel className="border border-gray-800 flex flex-col md:flex-row items-center gap-4 relative z-20">
         {/* Search Input */}
         <div className="relative flex-1 w-full">
           <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import apiService from '../services/apiService';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../context/ThemeContext';
 
 const getNotificationIcon = (type) => {
   switch (type) {
@@ -59,6 +60,8 @@ const formatTimeAgo = (dateString) => {
 
 export const NotificationBell = ({ isLight = false }) => {
   const { user } = useAuth();
+  const { resolvedTheme } = useTheme();
+  const isLightMode = isLight || resolvedTheme === 'light';
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -174,10 +177,12 @@ export const NotificationBell = ({ isLight = false }) => {
       <button
         type="button"
         onClick={handleToggle}
-        className={`relative p-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 shrink-0 ${
+        className={`relative p-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 shrink-0 cursor-pointer ${
           isOpen
-            ? 'bg-slate-800 text-indigo-400'
-            : isLight
+            ? isLightMode
+              ? 'bg-slate-200 text-indigo-600'
+              : 'bg-slate-800 text-indigo-400'
+            : isLightMode
             ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
         }`}
@@ -186,7 +191,7 @@ export const NotificationBell = ({ isLight = false }) => {
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-indigo-600 rounded-full shadow-lg shadow-indigo-500/50 animate-pulse border-2 border-slate-950">
+          <span className={`absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-indigo-600 rounded-full shadow-lg shadow-indigo-500/50 animate-pulse border-2 ${isLightMode ? 'border-white' : 'border-slate-950'}`}>
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -194,13 +199,31 @@ export const NotificationBell = ({ isLight = false }) => {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-slate-800 shadow-2xl shadow-black/80 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div
+          className={`absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl backdrop-blur-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 border ${
+            isLightMode
+              ? 'bg-white/95 border-slate-200 shadow-slate-300/60 text-slate-900'
+              : 'bg-slate-900/95 border-slate-800 shadow-black/80 text-slate-100'
+          }`}
+        >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-800 bg-slate-950/60">
+          <div
+            className={`flex items-center justify-between px-4 py-3.5 border-b ${
+              isLightMode
+                ? 'border-slate-100 bg-slate-50/80 text-slate-900'
+                : 'border-slate-800 bg-slate-950/60 text-slate-100'
+            }`}
+          >
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-100 text-sm">Notifications</span>
+              <span className="font-semibold text-sm">Notifications</span>
               {unreadCount > 0 && (
-                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                <span
+                  className={`px-2 py-0.5 text-xs font-semibold rounded-full border ${
+                    isLightMode
+                      ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                      : 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30'
+                  }`}
+                >
                   {unreadCount} new
                 </span>
               )}
@@ -208,7 +231,11 @@ export const NotificationBell = ({ isLight = false }) => {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1 font-medium"
+                className={`text-xs transition-colors flex items-center gap-1 font-medium cursor-pointer ${
+                  isLightMode
+                    ? 'text-indigo-600 hover:text-indigo-800'
+                    : 'text-indigo-400 hover:text-indigo-300'
+                }`}
               >
                 <Check className="w-3.5 h-3.5" />
                 Mark all read
@@ -217,40 +244,90 @@ export const NotificationBell = ({ isLight = false }) => {
           </div>
 
           {/* List of Notifications */}
-          <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-800/60">
+          <div
+            className={`max-h-[380px] overflow-y-auto divide-y ${
+              isLightMode ? 'divide-slate-100' : 'divide-slate-800/60'
+            }`}
+          >
             {loading ? (
-              <div className="py-8 text-center text-slate-400 text-xs">
+              <div
+                className={`py-8 text-center text-xs ${
+                  isLightMode ? 'text-slate-500' : 'text-slate-400'
+                }`}
+              >
                 <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                 Loading updates...
               </div>
             ) : notifications.length === 0 ? (
-              <div className="py-10 text-center text-slate-400">
-                <Bell className="w-8 h-8 mx-auto mb-2 text-slate-600 stroke-[1.5]" />
-                <p className="text-sm font-medium text-slate-300">No notifications yet</p>
-                <p className="text-xs text-slate-400 mt-0.5">We'll alert you on important team & verification events.</p>
+              <div className="py-10 text-center">
+                <Bell
+                  className={`w-8 h-8 mx-auto mb-2 stroke-[1.5] ${
+                    isLightMode ? 'text-slate-400' : 'text-slate-600'
+                  }`}
+                />
+                <p
+                  className={`text-sm font-medium ${
+                    isLightMode ? 'text-slate-700' : 'text-slate-300'
+                  }`}
+                >
+                  No notifications yet
+                </p>
+                <p
+                  className={`text-xs mt-0.5 ${
+                    isLightMode ? 'text-slate-500' : 'text-slate-400'
+                  }`}
+                >
+                  We'll alert you on important team & verification events.
+                </p>
               </div>
             ) : (
               notifications.map((notif) => (
                 <div
                   key={notif._id}
                   onClick={() => handleNotificationClick(notif)}
-                  className={`flex items-start gap-3 p-3.5 hover:bg-slate-800/60 cursor-pointer transition-colors text-left ${
-                    !notif.isRead ? 'bg-indigo-950/20' : ''
+                  className={`flex items-start gap-3 p-3.5 cursor-pointer transition-colors text-left ${
+                    isLightMode
+                      ? `${!notif.isRead ? 'bg-indigo-50/60' : ''} hover:bg-slate-50`
+                      : `${!notif.isRead ? 'bg-indigo-950/20' : ''} hover:bg-slate-800/60`
                   }`}
                 >
-                  <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-750 shrink-0 mt-0.5">
+                  <div
+                    className={`p-2 rounded-xl shrink-0 mt-0.5 border ${
+                      isLightMode
+                        ? 'bg-slate-100 border-slate-200'
+                        : 'bg-slate-800/80 border-slate-700'
+                    }`}
+                  >
                     {getNotificationIcon(notif.type)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1 mb-0.5">
-                      <p className={`text-xs font-semibold truncate ${!notif.isRead ? 'text-white' : 'text-slate-300'}`}>
+                      <p
+                        className={`text-xs font-semibold truncate ${
+                          !notif.isRead
+                            ? isLightMode
+                              ? 'text-slate-900 font-bold'
+                              : 'text-white'
+                            : isLightMode
+                            ? 'text-slate-700'
+                            : 'text-slate-300'
+                        }`}
+                      >
                         {notif.title}
                       </p>
-                      <span className="text-[11px] text-slate-400 shrink-0">
+                      <span
+                        className={`text-[11px] shrink-0 ${
+                          isLightMode ? 'text-slate-500' : 'text-slate-400'
+                        }`}
+                      >
                         {formatTimeAgo(notif.createdAt)}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                    <p
+                      className={`text-xs line-clamp-2 leading-relaxed ${
+                        isLightMode ? 'text-slate-600' : 'text-slate-400'
+                      }`}
+                    >
                       {notif.message}
                     </p>
                   </div>
@@ -263,11 +340,21 @@ export const NotificationBell = ({ isLight = false }) => {
           </div>
 
           {/* Footer */}
-          <div className="p-2.5 border-t border-slate-800 bg-slate-950/80 text-center">
+          <div
+            className={`p-2.5 border-t text-center ${
+              isLightMode
+                ? 'border-slate-100 bg-slate-50/90'
+                : 'border-slate-800 bg-slate-950/80'
+            }`}
+          >
             <Link
               to="/notifications"
               onClick={() => setIsOpen(false)}
-              className="inline-flex items-center justify-center gap-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors w-full py-1.5 rounded-lg hover:bg-indigo-950/30"
+              className={`inline-flex items-center justify-center gap-1.5 text-xs font-medium transition-colors w-full py-1.5 rounded-lg ${
+                isLightMode
+                  ? 'text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50'
+                  : 'text-indigo-400 hover:text-indigo-300 hover:bg-indigo-950/30'
+              }`}
             >
               <span>View full notification center</span>
               <ArrowRight className="w-3.5 h-3.5" />

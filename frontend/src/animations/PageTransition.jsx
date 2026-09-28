@@ -9,6 +9,7 @@ import { useLocation } from 'react-router-dom';
 export const PageTransition = ({ children, className = '' }) => {
   const location = useLocation();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [transitionDone, setTransitionDone] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -20,10 +21,17 @@ export const PageTransition = ({ children, className = '' }) => {
   useEffect(() => {
     // Reset and trigger smooth entry on route change
     setIsLoaded(false);
-    const timer = requestAnimationFrame(() => {
+    setTransitionDone(false);
+    const rAf = requestAnimationFrame(() => {
       setIsLoaded(true);
     });
-    return () => cancelAnimationFrame(timer);
+    const timer = setTimeout(() => {
+      setTransitionDone(true);
+    }, 550);
+    return () => {
+      cancelAnimationFrame(rAf);
+      clearTimeout(timer);
+    };
   }, [location.pathname]);
 
   if (prefersReducedMotion) {
@@ -37,6 +45,7 @@ export const PageTransition = ({ children, className = '' }) => {
           ? 'opacity-100 translate-y-0 filter-none'
           : 'opacity-0 translate-y-2.5'
       } ${className}`}
+      style={transitionDone ? { transform: 'none' } : undefined}
     >
       {children}
     </div>

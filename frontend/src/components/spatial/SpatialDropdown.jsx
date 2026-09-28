@@ -123,7 +123,7 @@ export const SpatialDropdown = ({
   return (
     <div
       ref={containerRef}
-      className={`relative inline-block text-left w-full md:w-auto ${className}`}
+      className={`relative inline-block text-left w-full md:w-auto ${isOpen ? 'z-30' : ''} ${className}`}
       onKeyDown={handleKeyDown}
     >
       {label && (
@@ -157,7 +157,7 @@ export const SpatialDropdown = ({
 
         <ChevronDown
           className={`w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0 ${
-            isOpen ? 'rotate-180 text-indigo-400' : ''
+            isOpen ? 'rotate-180 text-indigo-400 dark:text-indigo-400 light:text-indigo-600' : ''
           }`}
         />
       </button>
@@ -169,7 +169,7 @@ export const SpatialDropdown = ({
           role="listbox"
           className={`absolute ${
             align === 'right' ? 'right-0' : 'left-0'
-          } mt-2 w-full min-w-[200px] max-h-64 overflow-y-auto rounded-2xl spatial-overlay spatial-glass border border-white/10 dark:border-white/10 light:border-slate-300 p-1.5 shadow-2xl z-35 animate-in fade-in zoom-in-95 duration-180 scrollbar-thin`}
+          } mt-2 w-full min-w-[200px] max-h-64 overflow-y-auto rounded-2xl bg-slate-900/98 dark:bg-slate-900/98 light:bg-white/98 backdrop-blur-2xl border border-white/10 dark:border-white/10 light:border-slate-200 p-1.5 shadow-2xl z-35 animate-in fade-in zoom-in-95 duration-180 scrollbar-thin ${panelClassName}`}
           style={{
             transformOrigin: 'top',
           }}
@@ -188,10 +188,10 @@ export const SpatialDropdown = ({
                 onMouseEnter={() => setHighlightedIndex(idx)}
                 className={`flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm cursor-pointer transition-colors duration-150 select-none ${
                   isSelected
-                    ? 'bg-indigo-600/20 text-indigo-300 dark:text-indigo-300 light:text-indigo-700 font-semibold'
+                    ? 'bg-indigo-600/20 text-indigo-300 dark:text-indigo-300 light:text-indigo-700 light:bg-indigo-50/90 font-semibold'
                     : isHighlighted
-                    ? 'bg-white/10 dark:bg-white/10 light:bg-slate-100 text-white dark:text-white light:text-slate-900'
-                    : 'text-gray-300 dark:text-gray-300 light:text-slate-700 hover:bg-white/5 dark:hover:bg-white/5 light:hover:bg-slate-50'
+                    ? 'bg-white/10 dark:bg-white/10 light:bg-slate-100 text-white dark:text-white light:text-slate-900 font-medium'
+                    : 'text-gray-300 dark:text-gray-300 light:text-slate-700 hover:bg-white/5 dark:hover:bg-white/5 light:hover:bg-slate-100'
                 }`}
               >
                 <div className="flex items-center gap-2 truncate">
