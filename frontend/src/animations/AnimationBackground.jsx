@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { SCENE_KEYS, PAGE_SCENE_MAP, getSceneForRoute, getDeviceProfile } from './animationConfig';
@@ -37,6 +37,34 @@ const checkWebGLSupport = () => {
     return false;
   }
 };
+
+/**
+ * Error boundary for Canvas and 3D scenes to prevent app white screens
+ */
+class AnimationErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.warn('[AnimationBackground] WebGL caught render error:', error, errorInfo);
+    if (this.props.onError) {
+      this.props.onError(error);
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || null;
+    }
+    return this.props.children;
+  }
+}
 
 /**
  * Cinematic 3D Camera Drift & Spatial Cursor Parallax
@@ -246,28 +274,33 @@ export const AnimationBackground = ({
       style={{ opacity: effectiveOpacity }}
       aria-hidden="true"
     >
-      <Canvas
-        camera={{ position: [0, 0, 10], fov: 60 }}
-        dpr={deviceProfile.dpr}
-        gl={{
-          antialias: false,
-          alpha: true,
-          powerPreference: 'high-performance',
-          preserveDrawingBuffer: false,
-        }}
+      <AnimationErrorBoundary
+        fallback={<CSSAmbientFallback opacity={effectiveOpacity} theme={resolvedTheme} />}
         onError={() => setHasError(true)}
       >
-        <CameraDrift reducedMotion={reducedMotion} />
-        <Suspense fallback={null}>
-          <SceneRenderer
-            activeSceneKey={activeSceneKey}
-            density={deviceProfile.particleMultiplier}
-            theme={resolvedTheme}
-            reducedMotion={reducedMotion}
-          />
-          <EnergyCore position={[0, 0, -2]} />
-        </Suspense>
-      </Canvas>
+        <Canvas
+          camera={{ position: [0, 0, 10], fov: 60 }}
+          dpr={deviceProfile.dpr}
+          gl={{
+            antialias: false,
+            alpha: true,
+            powerPreference: 'high-performance',
+            preserveDrawingBuffer: false,
+          }}
+          onError={() => setHasError(true)}
+        >
+          <CameraDrift reducedMotion={reducedMotion} />
+          <Suspense fallback={null}>
+            <SceneRenderer
+              activeSceneKey={activeSceneKey}
+              density={deviceProfile.particleMultiplier}
+              theme={resolvedTheme}
+              reducedMotion={reducedMotion}
+            />
+            <EnergyCore position={[0, 0, -2]} />
+          </Suspense>
+        </Canvas>
+      </AnimationErrorBoundary>
     </div>
   );
 };
