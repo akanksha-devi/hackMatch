@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const MONTHS = [
@@ -42,6 +44,8 @@ const formatDisplayDate = (str) => {
 
 /**
  * SpatialDatePicker - Custom floating glass calendar replacing native browser date pickers.
+ * Features viewport-anchored portal rendering, smart upward/downward flip positioning,
+ * and high-contrast WCAG-compliant Light and Dark mode themes.
  */
 export const SpatialDatePicker = ({
   value = '',
@@ -55,8 +59,13 @@ export const SpatialDatePicker = ({
   required = false,
   className = '',
 }) => {
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === 'light';
+
   const [isOpen, setIsOpen] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 310, openUpward: false });
   const containerRef = useRef(null);
+  const popupRef = useRef(null);
 
   const initialParsed = useMemo(() => parseDateString(value), [value]);
   const today = useMemo(() => new Date(), []);
@@ -132,12 +141,66 @@ export const SpatialDatePicker = ({
     notifyChange('');
   };
 
+  // Close when a modal or other major overlay requests it
+  useEffect(() => {
+    const handleClosePopovers = () => setIsOpen(false);
+    window.addEventListener('close-all-popovers', handleClosePopovers);
+    return () => window.removeEventListener('close-all-popovers', handleClosePopovers);
+  }, []);
+
+  const updateCoords = useCallback(() => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const calendarHeight = 345;
+    const calendarWidth = Math.min(310, window.innerWidth - 24);
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    const openUpward = spaceBelow < calendarHeight && spaceAbove > spaceBelow;
+
+    let top = openUpward ? rect.top - calendarHeight - 8 : rect.bottom + 8;
+    if (top < 10) top = 10;
+    if (top + calendarHeight > window.innerHeight - 10) {
+      top = Math.max(10, window.innerHeight - calendarHeight - 10);
+    }
+
+    let left = rect.left;
+    if (left + calendarWidth > window.innerWidth - 12) {
+      left = window.innerWidth - calendarWidth - 12;
+    }
+    if (left < 12) left = 12;
+
+    setCoords({ top, left, width: calendarWidth, openUpward });
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    updateCoords();
+
+    const handleScrollOrResize = () => {
+      updateCoords();
+    };
+
+    window.addEventListener('scroll', handleScrollOrResize, true);
+    window.addEventListener('resize', handleScrollOrResize);
+
+    return () => {
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [isOpen, updateCoords]);
+
   // Close calendar when clicking outside or pressing Escape
   useEffect(() => {
     if (!isOpen) return;
 
     const handleOutsideClick = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target) &&
+        popupRef.current &&
+        !popupRef.current.contains(e.target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -174,9 +237,6 @@ export const SpatialDatePicker = ({
     }
 
     // Days in current month
-    const minParsed = minDate ? parseDateString(minDate) : null;
-    const maxParsed = maxDate ? parseDateString(maxDate) : null;
-
     for (let d = 1; d <= daysInCurrentMonth; d++) {
       const dateStr = toDateString(viewYear, viewMonth, d);
       const isSelected = value === dateStr;
@@ -218,7 +278,7 @@ export const SpatialDatePicker = ({
   return (
     <div ref={containerRef} className={`relative w-full ${isOpen ? 'z-30' : ''} ${className}`}>
       {label && (
-        <label className="block text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700 mb-1.5">
+        <label className={`block text-xs font-semibold mb-1.5 ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
           {label} {required && <span className="text-rose-500">*</span>}
         </label>
       )}
@@ -226,13 +286,21 @@ export const SpatialDatePicker = ({
       {/* Input Trigger Button */}
       <div
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
-        className={`w-full flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 outline-none spatial-control ${
-          isOpen ? 'ring-2 ring-indigo-500/40 border-indigo-500/60 shadow-lg shadow-indigo-500/10' : ''
+        className={`w-full flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 outline-none ${
+          isLight
+            ? 'bg-white hover:bg-slate-50 border border-slate-200 text-slate-900 shadow-sm'
+            : 'bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/80 text-white shadow-md'
+        } ${
+          isOpen
+            ? isLight
+              ? 'ring-2 ring-indigo-500/30 border-indigo-500'
+              : 'ring-2 ring-indigo-500/40 border-indigo-500/60 shadow-lg shadow-indigo-500/10'
+            : ''
         } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-500/40'}`}
       >
         <div className="flex items-center gap-2.5 truncate">
-          <CalendarIcon className="w-4 h-4 text-indigo-400 dark:text-indigo-400 light:text-indigo-600 shrink-0" />
-          <span className={`truncate ${value ? 'text-white dark:text-white light:text-slate-900 font-medium' : 'text-gray-500 dark:text-gray-500 light:text-slate-400'}`}>
+          <CalendarIcon className={`w-4 h-4 shrink-0 ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`} />
+          <span className={`truncate ${value ? (isLight ? 'text-slate-900 font-semibold' : 'text-white font-medium') : (isLight ? 'text-slate-400' : 'text-gray-500')}`}>
             {displayValue || placeholder}
           </span>
         </div>
@@ -242,7 +310,9 @@ export const SpatialDatePicker = ({
             <button
               type="button"
               onClick={handleClear}
-              className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-slate-200 transition-colors cursor-pointer"
+              className={`p-1 rounded-md transition-colors cursor-pointer ${
+                isLight ? 'text-slate-400 hover:text-slate-800 hover:bg-slate-100' : 'text-gray-400 hover:text-white hover:bg-white/10'
+              }`}
               title="Clear date"
             >
               <X className="w-3.5 h-3.5" />
@@ -251,15 +321,24 @@ export const SpatialDatePicker = ({
         </div>
       </div>
 
-      {/* Floating Spatial Calendar Popup */}
-      {isOpen && (
+      {/* Viewport-Anchored Portal Calendar Popup */}
+      {isOpen && typeof document !== 'undefined' && createPortal(
         <div
-          className="absolute left-0 sm:left-auto right-auto top-full mt-2 w-72 sm:w-80 p-4 rounded-2xl bg-slate-900/98 dark:bg-slate-900/98 light:bg-white/98 backdrop-blur-2xl border border-white/10 dark:border-white/10 light:border-slate-200 shadow-2xl z-35 animate-in fade-in zoom-in-95 duration-200"
-          style={{ transformOrigin: 'top left' }}
+          ref={popupRef}
+          className={`fixed p-4 rounded-2xl shadow-2xl z-[70] transition-all duration-150 select-none ${
+            isLight
+              ? 'bg-white border border-slate-200 shadow-slate-300/60 text-slate-900'
+              : 'bg-slate-900 border border-slate-700/80 shadow-black/80 text-slate-100'
+          }`}
+          style={{
+            top: coords.top,
+            left: coords.left,
+            width: coords.width,
+          }}
         >
           {/* Calendar Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-white/10 dark:border-white/10 light:border-slate-200 mb-3">
-            <span className="text-sm font-bold text-white dark:text-white light:text-slate-900">
+          <div className={`flex items-center justify-between pb-3 border-b mb-3 ${isLight ? 'border-slate-100' : 'border-slate-800'}`}>
+            <span className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
               {MONTHS[viewMonth]} {viewYear}
             </span>
 
@@ -267,7 +346,11 @@ export const SpatialDatePicker = ({
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-slate-200 transition-colors"
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  isLight
+                    ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
                 title="Previous month"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -275,7 +358,11 @@ export const SpatialDatePicker = ({
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-slate-200 transition-colors"
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  isLight
+                    ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
                 title="Next month"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -288,7 +375,9 @@ export const SpatialDatePicker = ({
             {WEEKDAYS.map((wd) => (
               <span
                 key={wd}
-                className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 light:text-slate-500 py-1"
+                className={`text-[11px] font-bold py-1 uppercase tracking-wider ${
+                  isLight ? 'text-slate-500' : 'text-slate-400'
+                }`}
               >
                 {wd}
               </span>
@@ -302,7 +391,9 @@ export const SpatialDatePicker = ({
                 return (
                   <div
                     key={idx}
-                    className="h-8 flex items-center justify-center text-xs text-gray-600 dark:text-gray-600 light:text-slate-300 select-none"
+                    className={`h-8 flex items-center justify-center text-xs select-none ${
+                      isLight ? 'text-slate-300' : 'text-slate-600'
+                    }`}
                   >
                     {cell.day}
                   </div>
@@ -315,17 +406,21 @@ export const SpatialDatePicker = ({
                   type="button"
                   disabled={cell.disabled}
                   onClick={() => !cell.disabled && handleSelectDay(cell.day)}
-                  className={`h-8 w-8 mx-auto rounded-lg text-xs font-medium flex items-center justify-center transition-all duration-150 relative select-none ${
+                  className={`h-8 w-8 mx-auto rounded-lg text-xs font-semibold flex items-center justify-center transition-all duration-150 relative select-none ${
                     cell.isSelected
-                      ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold shadow-md shadow-indigo-500/30'
+                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-500/30'
                       : cell.disabled
-                      ? 'opacity-25 cursor-not-allowed text-gray-500'
-                      : 'text-gray-200 dark:text-gray-200 light:text-slate-800 hover:bg-white/15 dark:hover:bg-white/15 light:hover:bg-slate-200 cursor-pointer'
+                      ? isLight
+                        ? 'text-slate-300 cursor-not-allowed'
+                        : 'text-slate-600 cursor-not-allowed'
+                      : isLight
+                      ? 'text-slate-800 hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer'
+                      : 'text-slate-200 hover:bg-slate-800 hover:text-white cursor-pointer'
                   }`}
                 >
                   {cell.day}
                   {cell.isToday && !cell.isSelected && (
-                    <span className="absolute bottom-1 w-1 h-1 rounded-full bg-indigo-400 dark:bg-indigo-400 light:bg-indigo-600" />
+                    <span className={`absolute bottom-1 w-1 h-1 rounded-full ${isLight ? 'bg-indigo-600' : 'bg-indigo-400'}`} />
                   )}
                 </button>
               );
@@ -333,11 +428,15 @@ export const SpatialDatePicker = ({
           </div>
 
           {/* Footer Quick Actions */}
-          <div className="flex items-center justify-between pt-3 mt-3 border-t border-white/10 dark:border-white/10 light:border-slate-200 text-xs">
+          <div className={`flex items-center justify-between pt-3 mt-3 border-t text-xs ${isLight ? 'border-slate-100' : 'border-slate-800'}`}>
             <button
               type="button"
               onClick={handleSelectToday}
-              className="text-indigo-400 hover:text-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300 light:text-indigo-600 light:hover:text-indigo-700 font-semibold px-2 py-1 rounded hover:bg-indigo-500/10 transition-colors"
+              className={`font-semibold px-2 py-1 rounded transition-colors cursor-pointer ${
+                isLight
+                  ? 'text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50'
+                  : 'text-indigo-400 hover:text-indigo-300 hover:bg-slate-800'
+              }`}
             >
               Today
             </button>
@@ -346,13 +445,18 @@ export const SpatialDatePicker = ({
               <button
                 type="button"
                 onClick={handleClear}
-                className="text-gray-400 hover:text-white dark:hover:text-white light:text-slate-500 light:hover:text-slate-800 px-2 py-1 rounded hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-slate-200 transition-colors"
+                className={`px-2 py-1 rounded transition-colors cursor-pointer ${
+                  isLight
+                    ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
               >
                 Clear
               </button>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

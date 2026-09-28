@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
  * SpatialModal - Viewport-anchored floating glass modal rendered via React Portal.
  * Breaks out of ancestor transforms/overflows to guarantee true viewport centering,
- * backdrop blur, internal scrolling, and body scroll locking.
+ * backdrop blur, internal scrolling, and jitter-free body scroll locking.
  */
 export const SpatialModal = ({
   isOpen = false,
@@ -19,20 +20,22 @@ export const SpatialModal = ({
   preventBackdropClose = false,
   className = '',
 }) => {
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === 'light';
   const modalRef = useRef(null);
 
-  // Lock body scroll while modal is active
+  // Lock body scroll and coordinate floating popovers
   useEffect(() => {
     if (!isOpen) return;
 
-    const originalOverflow = document.body.style.overflow;
-    const originalPaddingRight = document.body.style.paddingRight;
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    // Close any open floating menus (notifications, profile, dropdowns, calendars)
+    window.dispatchEvent(new CustomEvent('close-all-popovers'));
 
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+
+    document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
-    if (scrollbarWidth > 0) {
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-    }
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && onClose) {
@@ -43,8 +46,8 @@ export const SpatialModal = ({
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      document.body.style.overflow = originalOverflow;
-      document.body.style.paddingRight = originalPaddingRight;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.overflow = originalBodyOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
@@ -53,13 +56,15 @@ export const SpatialModal = ({
 
   const modalNode = (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 overflow-hidden animate-in fade-in duration-200"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 overflow-hidden select-none"
       aria-modal="true"
       role="dialog"
     >
       {/* Translucent Animated Backdrop */}
       <div
-        className="fixed inset-0 bg-black/70 dark:bg-black/75 light:bg-slate-900/40 backdrop-blur-md transition-opacity duration-300"
+        className={`fixed inset-0 modal-backdrop-anim transition-opacity duration-300 ${
+          isLight ? 'bg-slate-900/40 backdrop-blur-md' : 'bg-black/75 backdrop-blur-md'
+        }`}
         onClick={() => {
           if (!preventBackdropClose && onClose) onClose();
         }}
@@ -69,27 +74,41 @@ export const SpatialModal = ({
       {/* Floating Spatial Modal Shell */}
       <div
         ref={modalRef}
-        className={`w-full ${maxWidth} max-h-[85vh] sm:max-h-[82vh] flex flex-col rounded-3xl bg-slate-900/98 dark:bg-slate-900/98 light:bg-white/98 backdrop-blur-2xl border border-white/10 dark:border-white/10 light:border-slate-300 shadow-2xl shadow-black/60 relative z-10 overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-3 duration-250 ${className}`}
+        className={`w-full ${maxWidth} max-h-[85vh] sm:max-h-[82vh] flex flex-col rounded-3xl modal-shell-anim shadow-2xl relative z-10 overflow-hidden ${
+          isLight
+            ? 'bg-white border border-slate-200 text-slate-900 shadow-slate-400/30'
+            : 'bg-slate-900/98 border border-white/10 text-white shadow-black/80'
+        } ${className}`}
       >
         {/* Top Decorative Ambient Accent Line */}
-        <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 opacity-80 shrink-0" />
+        <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 opacity-90 shrink-0" />
 
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 dark:border-white/10 light:border-slate-200/80 shrink-0">
+        <div
+          className={`flex items-center justify-between px-6 py-4 border-b shrink-0 ${
+            isLight ? 'border-slate-100 bg-slate-50/50' : 'border-white/10 bg-white/[0.02]'
+          }`}
+        >
           <div className="flex items-center gap-3">
             {Icon && (
-              <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 dark:text-indigo-400 light:text-indigo-600">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                  isLight
+                    ? 'bg-indigo-50 border border-indigo-200 text-indigo-600'
+                    : 'bg-indigo-500/10 border border-indigo-500/20 text-indigo-400'
+                }`}
+              >
                 <Icon className="w-5 h-5" />
               </div>
             )}
             <div>
               {title && (
-                <h3 className="text-lg sm:text-xl font-bold text-white dark:text-white light:text-slate-900 leading-tight">
+                <h3 className={`text-lg sm:text-xl font-bold leading-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   {title}
                 </h3>
               )}
               {subtitle && (
-                <p className="text-xs text-gray-400 dark:text-gray-400 light:text-slate-500 mt-0.5">
+                <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
                   {subtitle}
                 </p>
               )}
@@ -99,7 +118,11 @@ export const SpatialModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl text-gray-400 hover:text-white dark:hover:text-white light:hover:text-slate-900 hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-slate-100 transition-colors cursor-pointer"
+            className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
+              isLight
+                ? 'text-slate-400 hover:text-slate-800 hover:bg-slate-100'
+                : 'text-gray-400 hover:text-white hover:bg-white/10'
+            }`}
             title="Close modal (Esc)"
             aria-label="Close"
           >
@@ -108,13 +131,17 @@ export const SpatialModal = ({
         </div>
 
         {/* Scrollable Modal Content */}
-        <div className="p-6 overflow-y-auto flex-1 scrollbar-thin space-y-4">
+        <div className="p-6 overflow-y-auto flex-1 scrollbar-thin space-y-4 select-text">
           {children}
         </div>
 
         {/* Optional Sticky Footer Actions */}
         {footer && (
-          <div className="px-6 py-4 border-t border-white/10 dark:border-white/10 light:border-slate-200/80 bg-white/[0.02] dark:bg-white/[0.02] light:bg-slate-50/80 shrink-0 flex items-center justify-end gap-3">
+          <div
+            className={`px-6 py-4 border-t shrink-0 flex items-center justify-end gap-3 ${
+              isLight ? 'border-slate-100 bg-slate-50/70' : 'border-white/10 bg-white/[0.02]'
+            }`}
+          >
             {footer}
           </div>
         )}

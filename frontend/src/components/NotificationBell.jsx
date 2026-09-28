@@ -121,15 +121,21 @@ export const NotificationBell = ({ isLight = false }) => {
     };
   }, [user]);
 
-  // Close dropdown on click outside
+  // Close dropdown on click outside or when popovers are dismissed globally
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
+    const handleClosePopovers = () => setIsOpen(false);
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    window.addEventListener('close-all-popovers', handleClosePopovers);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('close-all-popovers', handleClosePopovers);
+    };
   }, []);
 
   const handleToggle = () => {
