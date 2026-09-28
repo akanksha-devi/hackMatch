@@ -2,6 +2,8 @@ import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ThemeTransitionProvider } from './context/ThemeTransitionContext';
+import { ThemeRipple } from './components/ThemeRipple';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -53,10 +55,12 @@ const StudentLayout = () => {
 export default function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <AnimationProvider>
-          <AnimationBackground isRoot />
-          <Routes>
+      <ThemeTransitionProvider>
+        <AuthProvider>
+          <AnimationProvider>
+            <AnimationBackground isRoot />
+            <ThemeRipple />
+            <Routes>
           {/* ================= ADMIN ROUTES ================= */}
           <Route path="/admin/login" element={<AdminLogin />} />
 
@@ -197,9 +201,10 @@ export default function App() {
             }
           />
         </Route>
-        </Routes>
-      </AnimationProvider>
-    </AuthProvider>
-  </ThemeProvider>
+          </Routes>
+          </AnimationProvider>
+        </AuthProvider>
+      </ThemeTransitionProvider>
+    </ThemeProvider>
   );
 }

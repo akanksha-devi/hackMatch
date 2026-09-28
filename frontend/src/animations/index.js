@@ -10,6 +10,7 @@ export { ParticleNetwork } from './components/ParticleNetwork';
 export { FloatingOrbs } from './components/FloatingOrbs';
 export { DataStreams } from './components/DataStreams';
 export { AmbientGlow } from './components/AmbientGlow';
+export { EnergyCore } from './components/EnergyCore';
 
 // Scenes
 export { ParticleUniverseScene } from './scenes/ParticleUniverseScene';

@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { SCENE_KEYS, PAGE_SCENE_MAP, getSceneForRoute, getDeviceProfile } from './animationConfig';
 import { useTheme } from '../context/ThemeContext';
+import { useThemeTransition } from '../context/ThemeTransitionContext';
 
 // Import all 10 scenes
 import { ParticleUniverseScene } from './scenes/ParticleUniverseScene';
@@ -15,6 +16,9 @@ import { ConnectionFlowScene } from './scenes/ConnectionFlowScene';
 import { DataUniverseScene } from './scenes/DataUniverseScene';
 import { DataGridScene } from './scenes/DataGridScene';
 import { PortalScene } from './scenes/PortalScene';
+
+// Energy Core Component
+import { EnergyCore } from './components/EnergyCore';
 
 import { useAnimation } from './AnimationContext';
 
@@ -39,11 +43,19 @@ const checkWebGLSupport = () => {
  * Gently pans and pitches camera for natural spatial depth and multi-plane parallax
  */
 const CameraDrift = ({ reducedMotion }) => {
+  const { transitionRef } = useThemeTransition();
+
   useFrame((state) => {
     if (reducedMotion) return;
     const t = state.clock.getElapsedTime();
-    state.camera.position.x = Math.sin(t * 0.12) * 0.75;
-    state.camera.position.y = Math.cos(t * 0.08) * 0.45;
+    const meta = transitionRef?.current;
+    const isTransitionActive = meta && meta.active && meta.collapseAmount > 0.001;
+
+    // During transition peak, damp camera movement to focus smoothly on Energy Core
+    const damp = isTransitionActive ? Math.max(0.2, 1 - meta.collapseAmount * 0.75) : 1;
+
+    state.camera.position.x = Math.sin(t * 0.12) * 0.75 * damp;
+    state.camera.position.y = Math.cos(t * 0.08) * 0.45 * damp;
     state.camera.lookAt(0, 0, 0);
   });
   return null;
@@ -220,6 +232,7 @@ export const AnimationBackground = ({
             theme={resolvedTheme}
             reducedMotion={reducedMotion}
           />
+          <EnergyCore position={[0, 0, -2]} />
         </Suspense>
       </Canvas>
     </div>

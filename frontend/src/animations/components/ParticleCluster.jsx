@@ -1,6 +1,7 @@
 import React, { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useThemeTransition } from '../../context/ThemeTransitionContext';
 
 export const ParticleCluster = ({
   count = 260,
@@ -14,6 +15,7 @@ export const ParticleCluster = ({
   reducedMotion = false,
 }) => {
   const clusterRef = useRef();
+  const { transitionRef } = useThemeTransition();
   const isLight = theme === 'light';
 
   const [positions, orbitalData] = useMemo(() => {
@@ -37,10 +39,33 @@ export const ParticleCluster = ({
   }, [count, radius, coreRadius]);
 
   useFrame((state) => {
-    if (reducedMotion || !clusterRef.current) return;
+    if (!clusterRef.current) return;
     const time = state.clock.getElapsedTime();
-    clusterRef.current.rotation.y = time * speed;
-    clusterRef.current.rotation.z = Math.sin(time * speed * 0.5) * 0.16;
+    const meta = transitionRef?.current;
+    const isTransitionActive = meta && meta.active && meta.collapseAmount > 0.001;
+
+    if (!reducedMotion) {
+      clusterRef.current.rotation.y = time * speed;
+      clusterRef.current.rotation.z = Math.sin(time * speed * 0.5) * 0.16;
+    }
+
+    if (isTransitionActive) {
+      const c = meta.collapseAmount; // 0 to 1
+      // Organic pull toward center nexus
+      clusterRef.current.position.x = position[0] * (1 - c * 0.85);
+      clusterRef.current.position.y = position[1] * (1 - c * 0.85);
+      clusterRef.current.position.z = position[2] * (1 - c * 0.85) - c * 2;
+
+      let s = 1 - c * 0.45;
+      if (meta.progress > 0.6 && meta.progress < 0.95) {
+        const p = (meta.progress - 0.6) / 0.35;
+        s += Math.sin(p * Math.PI) * 0.22;
+      }
+      clusterRef.current.scale.set(s, s, s);
+    } else {
+      clusterRef.current.position.set(position[0], position[1], position[2]);
+      clusterRef.current.scale.set(1, 1, 1);
+    }
   });
 
   const blending = isLight ? THREE.NormalBlending : THREE.AdditiveBlending;
