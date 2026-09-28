@@ -17,9 +17,9 @@ const Orb = ({
   useFrame((state) => {
     if (reducedMotion || !meshRef.current) return;
     const t = state.clock.getElapsedTime() * speed + offset;
-    meshRef.current.position.y = position[1] + Math.sin(t) * 0.5;
-    meshRef.current.position.x = position[0] + Math.cos(t * 0.7) * 0.4;
-    const pulse = 1 + Math.sin(t * 1.3) * 0.1;
+    meshRef.current.position.y = position[1] + Math.sin(t) * 0.6;
+    meshRef.current.position.x = position[0] + Math.cos(t * 0.7) * 0.45;
+    const pulse = 1 + Math.sin(t * 1.1) * 0.09;
     meshRef.current.scale.set(scale * pulse, scale * pulse, scale * pulse);
   });
 
@@ -29,7 +29,7 @@ const Orb = ({
       <meshBasicMaterial
         color={color}
         transparent
-        opacity={isLight ? 0.12 : 0.22}
+        opacity={isLight ? 0.28 : 0.22}
         blending={isLight ? THREE.NormalBlending : THREE.AdditiveBlending}
         depthWrite={false}
       />
@@ -39,9 +39,9 @@ const Orb = ({
 
 export const FloatingOrbs = ({
   orbs = [
-    { position: [-7, 4, -7], scale: 2.8, color: '#4f46e5', speed: 0.35, offset: 0 },
-    { position: [8, -3, -9], scale: 3.4, color: '#06b6d4', speed: 0.28, offset: 2 },
-    { position: [0, 6, -11], scale: 4.2, color: '#8b5cf6', speed: 0.22, offset: 4 },
+    { position: [-8, 4, -8], scale: 3.2, color: '#4f46e5', speed: 0.28, offset: 0 },
+    { position: [9, -3, -10], scale: 3.8, color: '#06b6d4', speed: 0.22, offset: 2 },
+    { position: [0, 7, -12], scale: 4.5, color: '#8b5cf6', speed: 0.18, offset: 4 },
   ],
   theme = 'dark',
   reducedMotion = false,

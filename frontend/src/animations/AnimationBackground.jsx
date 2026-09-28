@@ -39,11 +39,12 @@ const checkWebGLSupport = () => {
 };
 
 /**
- * Cinematic 3D Camera Drift
+ * Cinematic 3D Camera Drift & Spatial Cursor Parallax
  * Gently pans and pitches camera for natural spatial depth and multi-plane parallax
  */
 const CameraDrift = ({ reducedMotion }) => {
   const { transitionRef } = useThemeTransition();
+  const cameraPosRef = useRef({ x: 0, y: 0 });
 
   useFrame((state) => {
     if (reducedMotion) return;
@@ -54,8 +55,27 @@ const CameraDrift = ({ reducedMotion }) => {
     // During transition peak, damp camera movement to focus smoothly on Energy Core
     const damp = isTransitionActive ? Math.max(0.2, 1 - meta.collapseAmount * 0.75) : 1;
 
-    state.camera.position.x = Math.sin(t * 0.12) * 0.75 * damp;
-    state.camera.position.y = Math.cos(t * 0.08) * 0.45 * damp;
+    // Normalized cursor coordinates (-1 to 1)
+    const cursor = (typeof window !== 'undefined' && window.__hackmatchCursor) || state.pointer;
+    const cx = cursor ? cursor.x : 0;
+    const cy = cursor ? cursor.y : 0;
+
+    // Subtle spatial cursor parallax (cursor right -> camera shifts slightly left)
+    const parallaxX = -cx * 0.85;
+    const parallaxY = -cy * 0.55;
+
+    // Ambient low-frequency drift
+    const driftX = Math.sin(t * 0.1) * 0.65;
+    const driftY = Math.cos(t * 0.07) * 0.4;
+
+    const targetX = (driftX + parallaxX) * damp;
+    const targetY = (driftY + parallaxY) * damp;
+
+    cameraPosRef.current.x += (targetX - cameraPosRef.current.x) * 0.045;
+    cameraPosRef.current.y += (targetY - cameraPosRef.current.y) * 0.045;
+
+    state.camera.position.x = cameraPosRef.current.x;
+    state.camera.position.y = cameraPosRef.current.y;
     state.camera.lookAt(0, 0, 0);
   });
   return null;
@@ -186,6 +206,19 @@ export const AnimationBackground = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // 4. Global window pointer tracking for seamless spatial parallax
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handlePointerMove = (e) => {
+      window.__hackmatchCursor = {
+        x: (e.clientX / window.innerWidth) * 2 - 1,
+        y: -(e.clientY / window.innerHeight) * 2 + 1,
+      };
+    };
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    return () => window.removeEventListener('pointermove', handlePointerMove);
+  }, []);
+
   const reducedMotion = forcedReducedMotion !== undefined ? forcedReducedMotion : systemReducedMotion;
 
   // Resolve target scene
@@ -199,8 +232,8 @@ export const AnimationBackground = ({
     return getSceneForRoute(location?.pathname || '/');
   }, [animCtx?.scene, scene, location?.pathname]);
 
-  // Dynamic opacity based on theme if not explicitly overridden
-  const effectiveOpacity = opacity !== undefined ? opacity : (resolvedTheme === 'light' ? 0.7 : 0.85);
+  // Dynamic opacity based on theme: keep both Dark and Light modes clearly visible and luminous
+  const effectiveOpacity = opacity !== undefined ? opacity : (resolvedTheme === 'light' ? 0.9 : 0.9);
 
   // Fallback to CSS animation if WebGL is unavailable or encountered an error
   if (!webGLSupported || hasError) {

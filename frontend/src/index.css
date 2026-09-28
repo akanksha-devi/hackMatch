@@ -76,12 +76,13 @@ nav, aside, main, .glass-panel {
     radial-gradient(at 50% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 50%);
 }
 
-/* Glassmorphism Cards */
+/* Glassmorphism Cards with Spatial UI Depth */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.65);
+  background: rgba(15, 23, 42, 0.60);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
 }
 
 .glass-panel-hover {
@@ -89,10 +90,10 @@ nav, aside, main, .glass-panel {
 }
 
 .glass-panel-hover:hover {
-  background: rgba(30, 41, 59, 0.75);
-  border-color: rgba(99, 102, 241, 0.35);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px -10px rgba(99, 102, 241, 0.2);
+  background: rgba(30, 41, 59, 0.72);
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 35px -8px rgba(99, 102, 241, 0.22), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Glow button variants */
@@ -182,29 +183,36 @@ nav, aside, main, .glass-panel {
 
 /* Navigation & Layout */
 .light nav.sticky {
-  background-color: rgba(255, 255, 255, 0.88) !important;
-  border-bottom-color: rgba(226, 232, 240, 0.9) !important;
-  box-shadow: 0 4px 20px -5px rgba(15, 23, 42, 0.05);
+  background-color: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-bottom-color: rgba(226, 232, 240, 0.85) !important;
+  box-shadow: 0 4px 20px -5px rgba(15, 23, 42, 0.04);
 }
 
 .light aside {
-  background-color: rgba(255, 255, 255, 0.94) !important;
-  border-right-color: rgba(226, 232, 240, 0.9) !important;
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-right-color: rgba(226, 232, 240, 0.85) !important;
 }
 
 .light .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(203, 213, 225, 0.7);
-  box-shadow: 0 4px 25px -4px rgba(15, 23, 42, 0.06);
+  background: rgba(255, 255, 255, 0.74);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(203, 213, 225, 0.75);
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 4px 6px -2px rgba(15, 23, 42, 0.02), inset 0 1px 0 0 rgba(255, 255, 255, 0.85);
 }
 
 .light .glass-panel-hover:hover {
-  background: rgba(255, 255, 255, 0.98);
-  border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 12px 30px -8px rgba(99, 102, 241, 0.15);
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(99, 102, 241, 0.45);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 35px -8px rgba(99, 102, 241, 0.14), inset 0 1px 0 0 #ffffff;
 }
 
-/* Surface backgrounds */
+/* Surface backgrounds: Airy translucency so background spatial 3D world shines through */
 .light .bg-gray-950,
 .light .bg-gray-950\/90,
 .light .bg-gray-950\/80,
@@ -214,10 +222,16 @@ nav, aside, main, .glass-panel {
 .light .bg-gray-900\/60,
 .light .bg-slate-900,
 .light .bg-slate-900\/90,
-.light .bg-\[\#07090e\]\/75,
-.light .bg-\[\#07090e\]\/90,
 .light .bg-\[\#0b0f17\] {
-  background-color: rgba(255, 255, 255, 0.92);
+  background-color: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Main page backdrop wrappers: 70% translucency allows particles & atmospheric glow to be clearly seen */
+.light .bg-\[\#07090e\]\/75,
+.light .bg-\[\#07090e\]\/90 {
+  background-color: rgba(248, 250, 252, 0.70) !important;
 }
 
 .light .bg-gray-800\/60,
