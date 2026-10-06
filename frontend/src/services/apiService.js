@@ -243,6 +243,15 @@ export const apiService = {
     const res = await axiosInstance.post('/admin/hackathons/sync', data);
     return res.data;
   },
+
+  // === Universal Search ===
+  search: async (query, signal = null) => {
+    const res = await axiosInstance.get('/search', {
+      params: { q: query },
+      signal,
+    });
+    return res.data;
+  },
 };
 
 export default apiService;

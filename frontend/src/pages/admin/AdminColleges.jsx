@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import apiService from '../../services/apiService';
+import { useTheme } from '../../context/ThemeContext';
+import { SpatialPanel, SpatialModal, SpatialButton, SpatialInput, SpatialTextarea } from '../../components/spatial';
+import { StatusBadge } from '../../components/StatusBadge';
+import { Avatar } from '../../components/Avatar';
 import {
   Building2,
   Plus,
@@ -23,6 +27,8 @@ import {
 } from 'lucide-react';
 
 export const AdminColleges = () => {
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === 'light';
   const [colleges, setColleges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -234,49 +240,51 @@ export const AdminColleges = () => {
   return (
     <div className="space-y-8 pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-6">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-6 ${
+        isLight ? 'border-slate-200' : 'border-gray-800'
+      }`}>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2.5">
-            <Building2 className="w-8 h-8 text-purple-400" />
+          <h1 className={`text-2xl sm:text-3xl font-extrabold flex items-center gap-2.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            <Building2 className="w-8 h-8 text-purple-500" />
             College & Campus Institutions
           </h1>
-          <p className="text-xs sm:text-sm text-gray-400 mt-1">
+          <p className={`text-xs sm:text-sm mt-1 ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
             Super Admin multi-tenant management: campuses, real-time student/admin metrics, and administrator governance.
           </p>
         </div>
 
-        <button
+        <SpatialButton
+          variant="primary"
+          size="md"
           onClick={() => setShowCreateModal(true)}
-          className="btn-glow px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 text-white font-bold text-xs flex items-center gap-1.5 hover:brightness-110 transition-all shrink-0"
+          icon={Plus}
         >
-          <Plus className="w-4 h-4" /> Onboard College
-        </button>
+          Onboard College
+        </SpatialButton>
       </div>
 
       {/* Search Bar */}
-      <div className="glass-panel p-4 rounded-2xl border border-gray-800 flex items-center gap-3">
-        <Search className="w-4 h-4 text-gray-500 shrink-0" />
-        <input
-          type="text"
+      <div>
+        <SpatialInput
+          icon={Search}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Filter campuses by name, institution code, or email domain..."
-          className="w-full bg-transparent text-sm text-white focus:outline-none placeholder:text-gray-600"
         />
       </div>
 
       {/* Colleges Table */}
-      <div className="glass-panel rounded-3xl border border-gray-800 overflow-hidden">
+      <SpatialPanel padding="none" className="overflow-hidden">
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-xs text-gray-400">Loading campus institutions...</p>
+            <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Loading campus institutions...</p>
           </div>
         ) : filteredColleges.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-gray-800 bg-gray-950/40 text-gray-400">
+                <tr className={`border-b ${isLight ? 'border-slate-200 bg-slate-50 text-slate-600' : 'border-gray-800 bg-gray-950/40 text-gray-400'}`}>
                   <th className="py-3.5 px-6 font-semibold">Campus Name</th>
                   <th className="py-3.5 px-4 font-semibold">Code</th>
                   <th className="py-3.5 px-4 font-semibold">Students</th>
@@ -286,82 +294,83 @@ export const AdminColleges = () => {
                   <th className="py-3.5 px-6 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800/60">
+              <tbody className={`divide-y ${isLight ? 'divide-slate-200' : 'divide-gray-800/60'}`}>
                 {filteredColleges.map((col) => {
                   const colId = col._id || col.id;
                   const isActive = col.status === 'Active';
                   return (
-                    <tr key={colId} className="hover:bg-gray-900/40 transition-colors">
-                      <td className="py-4 px-6 font-bold text-white flex items-center gap-2.5">
-                        <School className="w-4 h-4 text-indigo-400 shrink-0" />
+                    <tr key={colId} className={`transition-colors ${isLight ? 'hover:bg-slate-50/80' : 'hover:bg-gray-900/40'}`}>
+                      <td className={`py-4 px-6 font-bold flex items-center gap-2.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                        <School className="w-4 h-4 text-indigo-500 shrink-0" />
                         <div>
                           <span>{col.name}</span>
                           {col.description && (
-                            <p className="text-[11px] text-gray-500 font-normal line-clamp-1 max-w-xs">
+                            <p className={`text-[11px] font-normal line-clamp-1 max-w-xs ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>
                               {col.description}
                             </p>
                           )}
                         </div>
                       </td>
-                      <td className="py-4 px-4 font-mono font-bold text-indigo-300">
+                      <td className={`py-4 px-4 font-mono font-bold ${isLight ? 'text-indigo-700' : 'text-indigo-300'}`}>
                         {col.code}
                       </td>
                       <td className="py-4 px-4">
-                        <span className="inline-flex items-center gap-1 font-bold text-cyan-300 bg-cyan-950/50 px-2 py-0.5 rounded-lg border border-cyan-500/20">
-                          <Users className="w-3 h-3 text-cyan-400" />
+                        <span className={`inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-lg border ${
+                          isLight
+                            ? 'text-cyan-800 bg-cyan-50 border-cyan-200'
+                            : 'text-cyan-300 bg-cyan-950/50 border-cyan-500/20'
+                        }`}>
+                          <Users className="w-3 h-3 text-cyan-500" />
                           {col.studentCount ?? 0}
                         </span>
                       </td>
                       <td className="py-4 px-4">
-                        <span className="inline-flex items-center gap-1 font-bold text-purple-300 bg-purple-950/50 px-2 py-0.5 rounded-lg border border-purple-500/20">
-                          <Shield className="w-3 h-3 text-purple-400" />
+                        <span className={`inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-lg border ${
+                          isLight
+                            ? 'text-purple-800 bg-purple-50 border-purple-200'
+                            : 'text-purple-300 bg-purple-950/50 border-purple-500/20'
+                        }`}>
+                          <Shield className="w-3 h-3 text-purple-500" />
                           {col.adminCount ?? 0}
                         </span>
                       </td>
-                      <td className="py-4 px-4 text-gray-300">
+                      <td className={`py-4 px-4 ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
                         {col.emailDomain ? (
-                          <span className="font-mono text-cyan-300">@{col.emailDomain}</span>
+                          <span className={`font-mono ${isLight ? 'text-cyan-700' : 'text-cyan-300'}`}>@{col.emailDomain}</span>
                         ) : (
-                          <span className="text-gray-500 italic">Any domain</span>
+                          <span className={`${isLight ? 'text-slate-400' : 'text-gray-500'} italic`}>Any domain</span>
                         )}
                       </td>
                       <td className="py-4 px-4">
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] border ${
-                            isActive
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                              : 'bg-red-500/10 text-red-400 border-red-500/30'
-                          }`}
-                        >
-                          {col.status}
-                        </span>
+                        <StatusBadge status={col.status} size="sm" />
                       </td>
                       <td className="py-4 px-6 text-right space-x-2">
-                        <button
+                        <SpatialButton
+                          variant="secondary"
+                          size="sm"
                           onClick={() => openManageAdmins(col)}
-                          className="px-3 py-1.5 rounded-xl bg-purple-600/20 text-purple-300 hover:bg-purple-600 hover:text-white border border-purple-500/30 text-xs font-semibold transition-all inline-flex items-center gap-1"
+                          icon={Shield}
                         >
-                          <Shield className="w-3 h-3" /> Manage Admins
-                        </button>
-                        <button
+                          Manage Admins
+                        </SpatialButton>
+                        <SpatialButton
+                          variant="primary"
+                          size="sm"
                           onClick={() => {
                             setSelectedCollegeForAdmin(col);
                             setShowAdminModal(true);
                           }}
-                          className="px-3 py-1.5 rounded-xl bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600 hover:text-white border border-indigo-500/30 text-xs font-semibold transition-all"
+                          icon={Plus}
                         >
-                          + Add Admin
-                        </button>
-                        <button
+                          Add Admin
+                        </SpatialButton>
+                        <SpatialButton
+                          variant={isActive ? 'danger' : 'outline'}
+                          size="sm"
                           onClick={() => handleToggleStatus(colId)}
-                          className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
-                            isActive
-                              ? 'border-amber-500/30 text-amber-300 hover:bg-amber-500/10'
-                              : 'border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10'
-                          }`}
                         >
                           {isActive ? 'Deactivate' : 'Activate'}
-                        </button>
+                        </SpatialButton>
                       </td>
                     </tr>
                   );
@@ -370,376 +379,344 @@ export const AdminColleges = () => {
             </table>
           </div>
         ) : (
-          <div className="p-12 text-center text-gray-500 space-y-2">
-            <Building2 className="w-10 h-10 text-gray-600 mx-auto" />
+          <div className={`p-12 text-center space-y-2 ${isLight ? 'text-slate-400' : 'text-gray-500'}`}>
+            <Building2 className={`w-10 h-10 mx-auto ${isLight ? 'text-slate-300' : 'text-gray-600'}`} />
             <p>No campuses match your search filter.</p>
           </div>
         )}
-      </div>
+      </SpatialPanel>
 
       {/* MANAGE ADMINS MODAL / DRAWER */}
-      {showManageAdminsModal && managingCollege && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="glass-panel w-full max-w-2xl p-6 sm:p-8 rounded-3xl border border-gray-800 space-y-6 max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+      <SpatialModal
+        isOpen={showManageAdminsModal && !!managingCollege}
+        onClose={() => setShowManageAdminsModal(false)}
+        title="Manage Administrators"
+        subtitle={managingCollege ? `Institution: ${managingCollege.name} (${managingCollege.code})` : ''}
+        icon={Shield}
+        maxWidth="max-w-2xl"
+      >
+        <div className="space-y-6">
+          {/* Alert / Notification banners */}
+          {manageAdminError && (
+            <div className={`p-4 rounded-2xl border text-xs flex items-start gap-3 ${
+              isLight ? 'bg-red-50 border-red-200 text-red-800' : 'bg-red-950/40 border-red-500/30 text-red-300'
+            }`}>
+              <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-xl font-extrabold text-white flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-purple-400" />
-                  Manage Administrators
-                </h3>
-                <p className="text-xs text-gray-400 mt-1">
-                  Institution: <strong className="text-white">{managingCollege.name}</strong> ({managingCollege.code})
-                </p>
+                <h4 className={`font-bold ${isLight ? 'text-red-900' : 'text-red-200'}`}>Action Blocked: Last Admin Protection</h4>
+                <p className="mt-0.5">{manageAdminError}</p>
               </div>
-              <button
-                onClick={() => setShowManageAdminsModal(false)}
-                className="text-gray-400 hover:text-white font-bold text-2xl"
-              >
-                ×
-              </button>
+            </div>
+          )}
+
+          {manageAdminSuccess && (
+            <div className={`p-3.5 rounded-2xl border text-xs flex items-center gap-2 ${
+              isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+            }`}>
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+              <span>{manageAdminSuccess}</span>
+            </div>
+          )}
+
+          {/* Top stats & Quick Add */}
+          <div className={`flex items-center justify-between p-4 rounded-2xl border ${
+            isLight ? 'bg-slate-50 border-slate-200' : 'bg-gray-900/60 border-gray-800/80'
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-300 font-extrabold">
+                {collegeAdmins.length}
+              </div>
+              <div>
+                <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Assigned Administrators</div>
+                <div className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {collegeAdmins.filter((a) => a.status === 'Active').length} Active / {collegeAdmins.length} Total
+                </div>
+              </div>
             </div>
 
-            {/* Alert / Notification banners */}
-            {manageAdminError && (
-              <div className="p-4 rounded-2xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs flex items-start gap-3">
-                <ShieldAlert className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-bold text-red-200">Action Blocked: Last Admin Protection</h4>
-                  <p className="mt-0.5 text-red-300/90">{manageAdminError}</p>
-                </div>
+            <SpatialButton
+              variant="primary"
+              size="sm"
+              icon={UserPlus}
+              onClick={() => {
+                setSelectedCollegeForAdmin(managingCollege);
+                setShowAdminModal(true);
+              }}
+            >
+              Assign Admin
+            </SpatialButton>
+          </div>
+
+          {/* Admins Table */}
+          <div className={`border rounded-2xl overflow-hidden ${
+            isLight ? 'border-slate-200 bg-white' : 'border-gray-800/80 bg-gray-950/30'
+          }`}>
+            {loadingAdmins ? (
+              <div className="p-12 text-center text-gray-400 flex flex-col items-center gap-2">
+                <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-xs">Loading campus administrators...</span>
+              </div>
+            ) : collegeAdmins.length > 0 ? (
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className={`border-b ${isLight ? 'border-slate-200 bg-slate-50 text-slate-600' : 'border-gray-800 bg-gray-900/50 text-gray-400'}`}>
+                    <th className="py-3 px-4 font-semibold">Administrator</th>
+                    <th className="py-3 px-4 font-semibold">Status</th>
+                    <th className="py-3 px-4 font-semibold">Joined</th>
+                    <th className="py-3 px-4 font-semibold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className={`divide-y ${isLight ? 'divide-slate-200' : 'divide-gray-800/60'}`}>
+                  {collegeAdmins.map((adm) => {
+                    const isActive = adm.status === 'Active';
+                    return (
+                      <tr key={adm._id} className={`transition-colors ${isLight ? 'hover:bg-slate-50' : 'hover:bg-gray-900/40'}`}>
+                        <td className="py-3.5 px-4 font-medium flex items-center gap-3">
+                          <Avatar
+                            src={adm.avatarUrl}
+                            name={adm.name}
+                            size="sm"
+                          />
+                          <div>
+                            <div className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{adm.name}</div>
+                            <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>{adm.email}</div>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <StatusBadge status={adm.status} size="sm" />
+                        </td>
+                        <td className={`py-3.5 px-4 ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
+                          {new Date(adm.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="py-3.5 px-4 text-right space-x-2">
+                          <SpatialButton
+                            variant={isActive ? 'outline' : 'primary'}
+                            size="sm"
+                            onClick={() => handleToggleAdminStatus(adm._id, adm.status)}
+                            title={isActive ? 'Deactivate administrator' : 'Activate administrator'}
+                          >
+                            {isActive ? 'Deactivate' : 'Activate'}
+                          </SpatialButton>
+                          <SpatialButton
+                            variant="danger"
+                            size="sm"
+                            icon={Trash2}
+                            onClick={() => handleDemoteAdmin(adm._id, adm.name)}
+                            title="Demote administrator to student profile"
+                          >
+                            Remove
+                          </SpatialButton>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <div className={`p-8 text-center space-y-1 ${isLight ? 'text-slate-400' : 'text-gray-500'}`}>
+                <ShieldAlert className="w-8 h-8 mx-auto" />
+                <p className="text-xs">No administrators assigned to this campus yet.</p>
               </div>
             )}
+          </div>
 
-            {manageAdminSuccess && (
-              <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>{manageAdminSuccess}</span>
-              </div>
-            )}
-
-            {/* Top stats & Quick Add */}
-            <div className="flex items-center justify-between bg-gray-900/60 p-4 rounded-2xl border border-gray-800/80">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-300 font-extrabold">
-                  {collegeAdmins.length}
-                </div>
-                <div>
-                  <div className="text-xs text-gray-400">Assigned Administrators</div>
-                  <div className="text-sm font-bold text-white">
-                    {collegeAdmins.filter((a) => a.status === 'Active').length} Active / {collegeAdmins.length} Total
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => {
-                  setSelectedCollegeForAdmin(managingCollege);
-                  setShowAdminModal(true);
-                }}
-                className="btn-glow px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all"
-              >
-                <UserPlus className="w-3.5 h-3.5" /> + Assign Admin
-              </button>
-            </div>
-
-            {/* Admins Table */}
-            <div className="border border-gray-800/80 rounded-2xl overflow-hidden bg-gray-950/30">
-              {loadingAdmins ? (
-                <div className="p-12 text-center text-gray-400 flex flex-col items-center gap-2">
-                  <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-xs">Loading campus administrators...</span>
-                </div>
-              ) : collegeAdmins.length > 0 ? (
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-gray-800 bg-gray-900/50 text-gray-400">
-                      <th className="py-3 px-4 font-semibold">Administrator</th>
-                      <th className="py-3 px-4 font-semibold">Status</th>
-                      <th className="py-3 px-4 font-semibold">Joined</th>
-                      <th className="py-3 px-4 font-semibold text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-800/60">
-                    {collegeAdmins.map((adm) => {
-                      const isActive = adm.status === 'Active';
-                      return (
-                        <tr key={adm._id} className="hover:bg-gray-900/40 transition-colors">
-                          <td className="py-3.5 px-4 font-medium text-white flex items-center gap-3">
-                            <img
-                              src={
-                                adm.avatarUrl ||
-                                'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'
-                              }
-                              alt={adm.name}
-                              className="w-8 h-8 rounded-full object-cover border border-gray-700"
-                            />
-                            <div>
-                              <div className="font-bold text-white">{adm.name}</div>
-                              <div className="text-[11px] text-gray-400">{adm.email}</div>
-                            </div>
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <span
-                              className={`px-2 py-0.5 rounded-full font-bold text-[10px] border ${
-                                isActive
-                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                                  : 'bg-red-500/10 text-red-400 border-red-500/30'
-                              }`}
-                            >
-                              {adm.status}
-                            </span>
-                          </td>
-                          <td className="py-3.5 px-4 text-gray-400">
-                            {new Date(adm.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="py-3.5 px-4 text-right space-x-2">
-                            <button
-                              onClick={() => handleToggleAdminStatus(adm._id, adm.status)}
-                              className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all ${
-                                isActive
-                                  ? 'border-amber-500/30 text-amber-300 hover:bg-amber-500/10'
-                                  : 'border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10'
-                              }`}
-                              title={isActive ? 'Deactivate administrator' : 'Activate administrator'}
-                            >
-                              {isActive ? 'Deactivate' : 'Activate'}
-                            </button>
-                            <button
-                              onClick={() => handleDemoteAdmin(adm._id, adm.name)}
-                              className="px-2.5 py-1 rounded-lg border border-red-500/30 text-red-300 hover:bg-red-500/20 text-[11px] font-semibold transition-all inline-flex items-center gap-1"
-                              title="Demote administrator to student profile"
-                            >
-                              <Trash2 className="w-3 h-3 text-red-400" />
-                              Remove
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="p-8 text-center text-gray-500 space-y-1">
-                  <ShieldAlert className="w-8 h-8 text-gray-600 mx-auto" />
-                  <p className="text-xs">No administrators assigned to this campus yet.</p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={() => setShowManageAdminsModal(false)}
-                className="px-5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold"
-              >
-                Done
-              </button>
-            </div>
+          <div className="flex justify-end pt-2">
+            <SpatialButton
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowManageAdminsModal(false)}
+            >
+              Done
+            </SpatialButton>
           </div>
         </div>
-      )}
+      </SpatialModal>
 
       {/* Onboard New College Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="glass-panel w-full max-w-md p-6 rounded-3xl border border-gray-800 space-y-5">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-purple-400" />
-                Onboard New Campus Institution
-              </h3>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="text-gray-400 hover:text-white font-bold text-lg"
-              >
-                ×
-              </button>
+      <SpatialModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Onboard New Campus Institution"
+        icon={Building2}
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-5">
+          {modalSuccess && (
+            <div className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
+              isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+            }`}>
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+              <span>{modalSuccess}</span>
+            </div>
+          )}
+          {modalError && (
+            <div className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
+              isLight ? 'bg-red-50 border-red-200 text-red-800' : 'bg-red-500/10 border-red-500/30 text-red-400'
+            }`}>
+              <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+              <span>{modalError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleCreateCollege} className="space-y-4">
+            <div className="space-y-1">
+              <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>Full Institution Name *</label>
+              <SpatialInput
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Indian Institute of Technology Delhi"
+              />
             </div>
 
-            {modalSuccess && (
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs">
-                {modalSuccess}
-              </div>
-            )}
-            {modalError && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
-                {modalError}
-              </div>
-            )}
-
-            <form onSubmit={handleCreateCollege} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Full Institution Name *</label>
-                <input
-                  type="text"
+                <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>Code / Abbr *</label>
+                <SpatialInput
                   required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Indian Institute of Technology Delhi"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">Code / Abbr *</label>
-                  <input
-                    type="text"
-                    required
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder="e.g. IITD"
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-purple-500 uppercase"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">Email Domain</label>
-                  <input
-                    type="text"
-                    value={emailDomain}
-                    onChange={(e) => setEmailDomain(e.target.value)}
-                    placeholder="iitd.ac.in"
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Location</label>
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="New Delhi, India"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="e.g. IITD"
+                  className="uppercase"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Description</label>
-                <textarea
-                  rows={2}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Premier engineering institute..."
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-purple-500 resize-none"
+                <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>Email Domain</label>
+                <SpatialInput
+                  value={emailDomain}
+                  onChange={(e) => setEmailDomain(e.target.value)}
+                  placeholder="iitd.ac.in"
                 />
               </div>
+            </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-800">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-xl border border-gray-700 text-gray-300 text-xs font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold flex items-center gap-1.5"
-                >
-                  {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  Save Institution
-                </button>
-              </div>
-            </form>
-          </div>
+            <div className="space-y-1">
+              <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>Location</label>
+              <SpatialInput
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="New Delhi, India"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>Description</label>
+              <SpatialTextarea
+                rows={2}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Premier engineering institute..."
+              />
+            </div>
+
+            <div className={`flex items-center justify-end gap-3 pt-3 border-t ${isLight ? 'border-slate-200' : 'border-gray-800'}`}>
+              <SpatialButton
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCreateModal(false)}
+              >
+                Cancel
+              </SpatialButton>
+              <SpatialButton
+                type="submit"
+                variant="primary"
+                size="sm"
+                loading={submitting}
+              >
+                Save Institution
+              </SpatialButton>
+            </div>
+          </form>
         </div>
-      )}
+      </SpatialModal>
 
       {/* Add College Admin Modal */}
-      {showAdminModal && selectedCollegeForAdmin && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="glass-panel w-full max-w-md p-6 rounded-3xl border border-gray-800 space-y-5">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-indigo-400" />
-                Assign College Admin
-              </h3>
-              <button
-                onClick={() => setShowAdminModal(false)}
-                className="text-gray-400 hover:text-white font-bold text-lg"
-              >
-                ×
-              </button>
+      <SpatialModal
+        isOpen={showAdminModal && !!selectedCollegeForAdmin}
+        onClose={() => setShowAdminModal(false)}
+        title="Assign College Admin"
+        icon={UserPlus}
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-5">
+          <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
+            Create an administrator account scoped strictly to{' '}
+            <strong className={isLight ? 'text-slate-900' : 'text-white'}>{selectedCollegeForAdmin?.name}</strong>.
+          </p>
+
+          {modalSuccess && (
+            <div className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
+              isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+            }`}>
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+              <span>{modalSuccess}</span>
+            </div>
+          )}
+          {modalError && (
+            <div className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
+              isLight ? 'bg-red-50 border-red-200 text-red-800' : 'bg-red-500/10 border-red-500/30 text-red-400'
+            }`}>
+              <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+              <span>{modalError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleCreateCollegeAdmin} className="space-y-4">
+            <div className="space-y-1">
+              <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>Admin Full Name *</label>
+              <SpatialInput
+                required
+                value={adminName}
+                onChange={(e) => setAdminName(e.target.value)}
+                placeholder="Prof. Sharma"
+              />
             </div>
 
-            <p className="text-xs text-gray-400">
-              Create an administrator account scoped strictly to{' '}
-              <strong className="text-white">{selectedCollegeForAdmin.name}</strong>.
-            </p>
+            <div className="space-y-1">
+              <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>Official Email *</label>
+              <SpatialInput
+                type="email"
+                required
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                placeholder={`admin@${selectedCollegeForAdmin?.emailDomain || 'college.edu'}`}
+              />
+            </div>
 
-            {modalSuccess && (
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs">
-                {modalSuccess}
-              </div>
-            )}
-            {modalError && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
-                {modalError}
-              </div>
-            )}
+            <div className="space-y-1">
+              <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>Temporary Password *</label>
+              <SpatialInput
+                type="password"
+                required
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
 
-            <form onSubmit={handleCreateCollegeAdmin} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Admin Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={adminName}
-                  onChange={(e) => setAdminName(e.target.value)}
-                  placeholder="Prof. Sharma"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Official Email *</label>
-                <input
-                  type="email"
-                  required
-                  value={adminEmail}
-                  onChange={(e) => setAdminEmail(e.target.value)}
-                  placeholder={`admin@${selectedCollegeForAdmin.emailDomain || 'college.edu'}`}
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Temporary Password *</label>
-                <input
-                  type="password"
-                  required
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-800">
-                <button
-                  type="button"
-                  onClick={() => setShowAdminModal(false)}
-                  className="px-4 py-2 rounded-xl border border-gray-700 text-gray-300 text-xs font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5"
-                >
-                  {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  Create Admin
-                </button>
-              </div>
-            </form>
-          </div>
+            <div className={`flex items-center justify-end gap-3 pt-3 border-t ${isLight ? 'border-slate-200' : 'border-gray-800'}`}>
+              <SpatialButton
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAdminModal(false)}
+              >
+                Cancel
+              </SpatialButton>
+              <SpatialButton
+                type="submit"
+                variant="primary"
+                size="sm"
+                loading={submitting}
+              >
+                Create Admin
+              </SpatialButton>
+            </div>
+          </form>
         </div>
-      )}
+      </SpatialModal>
     </div>
   );
 };

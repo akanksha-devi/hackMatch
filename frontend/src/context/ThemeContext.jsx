@@ -70,6 +70,10 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
+  useEffect(() => {
+    window.__setTheme = setTheme;
+  }, []);
+
   // 6. Convenience toggle
   const toggleTheme = () => {
     const next = resolvedTheme === 'dark' ? 'light' : 'dark';

@@ -12,6 +12,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import verificationRoutes from './routes/verificationRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import cronRoutes from './routes/cronRoutes.js';
+import searchRoutes from './routes/searchRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 dotenv.config();
@@ -67,6 +68,7 @@ app.get(['/', '/api'], (req, res) => {
       experienceVerifications: '/api/experience-verifications',
       notifications: '/api/notifications',
       cronSync: '/api/cron/sync-hackathons',
+      search: '/api/search',
     },
   });
 });
@@ -91,6 +93,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/experience-verifications', verificationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/cron', cronRoutes);
+app.use('/api/search', searchRoutes);
 
 // Error Handling
 app.use(notFound);

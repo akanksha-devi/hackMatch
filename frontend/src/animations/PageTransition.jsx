@@ -34,7 +34,7 @@ export const PageTransition = ({ children, className = '' }) => {
     };
   }, [location.pathname]);
 
-  if (prefersReducedMotion) {
+  if (prefersReducedMotion || transitionDone) {
     return <div className={`w-full ${className}`}>{children}</div>;
   }
 
@@ -45,7 +45,6 @@ export const PageTransition = ({ children, className = '' }) => {
           ? 'opacity-100 translate-y-0 filter-none'
           : 'opacity-0 translate-y-2.5'
       } ${className}`}
-      style={transitionDone ? { transform: 'none' } : undefined}
     >
       {children}
     </div>

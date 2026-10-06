@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import apiService from '../../services/apiService';
-import { SkillTag } from '../../components/SkillTag';
-import { SpatialPanel, SpatialDropdown } from '../../components/spatial';
+import { SkillChip } from '../../components/SkillChip';
+import { SpatialPanel, SpatialDropdown, SpatialButton, SpatialInput } from '../../components/spatial';
+import { StatusBadge } from '../../components/StatusBadge';
+import { ExperienceBadge } from '../../components/ExperienceBadge';
+import { Avatar } from '../../components/Avatar';
+import { useTheme } from '../../context/ThemeContext';
 import {
   Users,
   Search,
@@ -17,6 +21,8 @@ import {
 } from 'lucide-react';
 
 export const AdminStudents = () => {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const { isSuperAdmin, collegeName } = useAuth();
   const [students, setStudents] = useState([]);
   const [colleges, setColleges] = useState([]);
@@ -76,35 +82,34 @@ export const AdminStudents = () => {
   return (
     <div className="space-y-8 pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-6">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b ${isLight ? 'border-slate-200' : 'border-gray-800'} pb-6`}>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2.5">
-            <Users className="w-8 h-8 text-cyan-400" />
+          <h1 className={`text-2xl sm:text-3xl font-extrabold ${isLight ? 'text-slate-900' : 'text-white'} flex items-center gap-2.5`}>
+            <Users className="w-8 h-8 text-cyan-500" />
             Student Verification & Management
           </h1>
-          <p className="text-xs sm:text-sm text-gray-400 mt-1">
+          <p className={`text-xs sm:text-sm ${isLight ? 'text-slate-600' : 'text-gray-400'} mt-1`}>
             {isSuperAdmin
               ? 'Platform-wide student directory with college filtering and activation controls.'
               : `Managing verified student accounts belonging to ${collegeName}.`}
           </p>
         </div>
 
-        <div className="text-xs text-gray-400 font-semibold px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-800 shrink-0">
-          Total Registered: <strong className="text-white">{students.length}</strong>
+        <div className={`text-xs ${isLight ? 'bg-white border-slate-200 text-slate-600' : 'bg-gray-900 border-gray-800 text-gray-400'} font-semibold px-3 py-1.5 rounded-xl border shrink-0`}>
+          Total Registered: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{students.length}</strong>
         </div>
       </div>
 
       {/* Filter Toolbar */}
-      <SpatialPanel className="border border-gray-800 flex flex-col md:flex-row items-center gap-3 relative z-20">
+      <SpatialPanel className={`border ${isLight ? 'bg-white/80 border-slate-200 shadow-sm' : 'border-gray-800'} flex flex-col md:flex-row items-center gap-3 relative z-20`}>
         {/* Search */}
-        <div className="relative flex-1 w-full">
-          <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
+        <div className="flex-1 w-full">
+          <SpatialInput
+            size="sm"
+            icon={Search}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search students by name, email, or skill..."
-            className="w-full spatial-input rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none placeholder:text-gray-500"
           />
         </div>
 
@@ -142,17 +147,17 @@ export const AdminStudents = () => {
       </SpatialPanel>
 
       {/* Students Table */}
-      <div className="glass-panel rounded-3xl border border-gray-800 overflow-hidden">
+      <SpatialPanel padding="none" className="overflow-hidden">
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 border-3 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-xs text-gray-400">Loading student directory...</p>
+            <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Loading student directory...</p>
           </div>
         ) : filteredStudents.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-gray-800 bg-gray-950/40 text-gray-400">
+                <tr className={`border-b ${isLight ? 'border-slate-200 bg-slate-50/70 text-slate-600' : 'border-gray-800 bg-gray-950/40 text-gray-400'}`}>
                   <th className="py-3.5 px-6 font-semibold">Student</th>
                   <th className="py-3.5 px-4 font-semibold">Campus</th>
                   <th className="py-3.5 px-4 font-semibold">Experience</th>
@@ -161,29 +166,30 @@ export const AdminStudents = () => {
                   <th className="py-3.5 px-6 font-semibold text-right">Moderation</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800/60">
+              <tbody className={`divide-y ${isLight ? 'divide-slate-200' : 'divide-gray-800/60'}`}>
                 {filteredStudents.map((s) => {
                   const sId = s._id || s.id;
                   const isActive = s.status === 'Active';
                   return (
-                    <tr key={sId} className="hover:bg-gray-900/40 transition-colors">
+                    <tr key={sId} className={`hover:${isLight ? 'bg-slate-50/70' : 'bg-gray-900/40'} transition-colors`}>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={s.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'}
-                            alt={s.name}
-                            className="w-9 h-9 rounded-xl object-cover ring-1 ring-cyan-500/30 shrink-0"
+                          <Avatar
+                            src={s.avatarUrl}
+                            name={s.name}
+                            size="sm"
+                            verified={s.experienceVerificationStatus === 'Verified'}
                           />
                           <div>
-                            <p className="font-bold text-white">{s.name}</p>
-                            <p className="text-[11px] text-gray-400">{s.email}</p>
+                            <p className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{s.name}</p>
+                            <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>{s.email}</p>
                           </div>
                         </div>
                       </td>
 
-                      <td className="py-4 px-4 text-gray-300">
+                      <td className={`py-4 px-4 ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
                         <span className="flex items-center gap-1.5 text-[11px]">
-                          <School className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <School className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
                           <span className="truncate max-w-[140px]">
                             {s.collegeId?.name || s.collegeName || 'Unknown Campus'}
                           </span>
@@ -191,15 +197,16 @@ export const AdminStudents = () => {
                       </td>
 
                       <td className="py-4 px-4">
-                        <span className="px-2 py-0.5 rounded-full bg-gray-900 border border-gray-800 text-[10px] text-gray-300 font-semibold">
-                          {s.experienceLevel || 'Intermediate'}
-                        </span>
+                        <ExperienceBadge
+                          level={s.experienceLevel || 'Intermediate'}
+                          size="sm"
+                        />
                       </td>
 
                       <td className="py-4 px-4">
                         <div className="flex flex-wrap gap-1 max-w-xs">
                           {s.skills?.slice(0, 3).map((sk) => (
-                            <SkillTag key={sk} name={sk} size="sm" />
+                            <SkillChip key={sk} skill={sk} variant="default" size="sm" />
                           ))}
                           {s.skills?.length > 3 && (
                             <span className="text-[10px] text-gray-500 self-center">
@@ -210,28 +217,17 @@ export const AdminStudents = () => {
                       </td>
 
                       <td className="py-4 px-4">
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] border ${
-                            isActive
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                              : 'bg-red-500/10 text-red-400 border-red-500/30'
-                          }`}
-                        >
-                          {s.status}
-                        </span>
+                        <StatusBadge status={s.status} size="sm" />
                       </td>
 
                       <td className="py-4 px-6 text-right">
-                        <button
+                        <SpatialButton
+                          variant={isActive ? 'danger' : 'outline'}
+                          size="sm"
                           onClick={() => handleToggleStatus(sId, s.status)}
-                          className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
-                            isActive
-                              ? 'border-red-500/30 text-red-400 hover:bg-red-500/10'
-                              : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
-                          }`}
                         >
                           {isActive ? 'Deactivate' : 'Activate'}
-                        </button>
+                        </SpatialButton>
                       </td>
                     </tr>
                   );
@@ -240,12 +236,12 @@ export const AdminStudents = () => {
             </table>
           </div>
         ) : (
-          <div className="p-12 text-center text-gray-500 space-y-2">
-            <Users className="w-10 h-10 text-gray-600 mx-auto" />
+          <div className={`p-12 text-center ${isLight ? 'text-slate-500' : 'text-gray-500'} space-y-2`}>
+            <Users className={`w-10 h-10 ${isLight ? 'text-slate-400' : 'text-gray-600'} mx-auto`} />
             <p>No student accounts match the selected criteria.</p>
           </div>
         )}
-      </div>
+      </SpatialPanel>
     </div>
   );
 };

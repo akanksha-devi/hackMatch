@@ -30,7 +30,7 @@ export const SpatialTooltip = ({
       {visible && content && (
         <div
           role="tooltip"
-          className={`absolute ${positionStyles} z-30 px-2.5 py-1 text-xs rounded-lg spatial-overlay spatial-glass border border-white/10 dark:border-white/10 light:border-slate-300 text-white dark:text-white light:text-slate-900 shadow-xl whitespace-nowrap pointer-events-none animate-in fade-in zoom-in-95 duration-150`}
+          className={`absolute ${positionStyles} z-30 px-2.5 py-1 text-xs font-medium rounded-lg liquid-glass-floating text-white light:text-slate-900 whitespace-nowrap pointer-events-none animate-in fade-in zoom-in-95 duration-150`}
         >
           {content}
         </div>

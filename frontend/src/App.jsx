@@ -1,13 +1,15 @@
 import React from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { ThemeTransitionProvider } from './context/ThemeTransitionContext';
 import { ThemeRipple } from './components/ThemeRipple';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ProtectedAdminRoute } from './components/ProtectedAdminRoute';
+import { SpatialButton, LiquidGlassDefs } from './components/spatial';
+
 
 // Student Pages
 import { Home } from './pages/Home';
@@ -39,8 +41,14 @@ import { AnimationBackground, PageTransition, AnimationProvider } from './animat
 
 // Student Layout Wrapper (Header + Main + Footer)
 const StudentLayout = () => {
+  const { resolvedTheme, theme } = useTheme();
+  const isLight = (resolvedTheme || theme) === 'light';
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    window.__navigate = navigate;
+  }, [navigate]);
   return (
-    <div className="min-h-screen bg-[#07090e]/75 dark:bg-[#07090e]/75 text-gray-100 dark:text-gray-100 flex flex-col selection:bg-indigo-500 selection:text-white font-sans relative z-10 transition-colors duration-300">
+    <div className={`min-h-screen ${isLight ? 'bg-slate-50/30 text-slate-900' : 'bg-[#07090e]/20 text-gray-100'} flex flex-col selection:bg-indigo-500 selection:text-white font-sans relative z-10 transition-colors duration-300 overflow-x-hidden`}>
       <Navbar />
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PageTransition>
@@ -60,7 +68,9 @@ export default function App() {
           <AnimationProvider>
             <AnimationBackground isRoot />
             <ThemeRipple />
+            <LiquidGlassDefs />
             <Routes>
+
           {/* ================= ADMIN ROUTES ================= */}
           <Route path="/admin/login" element={<AdminLogin />} />
 
@@ -191,12 +201,13 @@ export default function App() {
                 <p className="text-sm text-gray-400">
                   The page you're looking for doesn't exist or has been moved.
                 </p>
-                <a
-                  href="/dashboard"
-                  className="inline-block px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-semibold"
+                <SpatialButton
+                  to="/dashboard"
+                  variant="primary"
+                  size="md"
                 >
                   Return to Dashboard
-                </a>
+                </SpatialButton>
               </div>
             }
           />

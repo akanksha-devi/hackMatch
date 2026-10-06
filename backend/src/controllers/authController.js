@@ -31,6 +31,13 @@ export const registerUser = async (req, res) => {
       });
     }
 
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters long.',
+      });
+    }
+
     const cleanEmail = email.toLowerCase().trim();
 
     // Check if user already exists
@@ -120,6 +127,13 @@ export const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error('[Signup Error]:', error);
+    if (error.name === 'ValidationError') {
+      const firstError = Object.values(error.errors || {})[0]?.message || 'Validation error during registration.';
+      return res.status(400).json({
+        success: false,
+        message: firstError,
+      });
+    }
     res.status(500).json({
       success: false,
       message: error.message || 'Server error during signup',

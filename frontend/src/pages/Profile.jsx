@@ -2,9 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import apiService from '../services/apiService';
-import { SkillTag } from '../components/SkillTag';
+import { SkillChip } from '../components/SkillChip';
 import { TeamRequestCard } from '../components/TeamRequestCard';
 import { VerificationBadge } from '../components/VerificationBadge';
+import { ExperienceBadge } from '../components/ExperienceBadge';
+import { StatusBadge } from '../components/StatusBadge';
+import { Avatar } from '../components/Avatar';
+import { useTheme } from '../context/ThemeContext';
+import { SpatialCard, SpatialPanel, SpatialModal, SpatialDropdown, SpatialButton, SpatialInput, SpatialTextarea } from '../components/spatial';
 import { 
   User as UserIcon, 
   Code2, 
@@ -32,6 +37,8 @@ import {
 } from 'lucide-react';
 
 export const Profile = () => {
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === 'light';
   const { id } = useParams();
   const navigate = useNavigate();
   const { user: currentUser, refreshUser } = useAuth();
@@ -185,16 +192,17 @@ export const Profile = () => {
         <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center mx-auto shadow-lg shadow-red-500/20">
           <ShieldAlert className="w-8 h-8" />
         </div>
-        <h2 className="text-2xl font-bold text-white">Campus Isolation Active</h2>
-        <p className="text-sm text-gray-400 leading-relaxed">
+        <h2 className={`text-2xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>Campus Isolation Active</h2>
+        <p className={`text-sm leading-relaxed ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
           {forbiddenError}
         </p>
-        <Link
+        <SpatialButton
           to="/users"
-          className="inline-block px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all"
+          variant="primary"
+          size="md"
         >
           Return to My Campus Developers
-        </Link>
+        </SpatialButton>
       </div>
     );
   }
@@ -202,8 +210,8 @@ export const Profile = () => {
   if (!profileUser) {
     return (
       <div className="py-20 text-center space-y-4">
-        <h2 className="text-2xl font-bold text-white">Profile Not Found</h2>
-        <Link to="/users" className="text-indigo-400 font-semibold hover:underline">
+        <h2 className={`text-2xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>Profile Not Found</h2>
+        <Link to="/users" className="text-indigo-500 font-semibold hover:underline">
           Browse Developers
         </Link>
       </div>
@@ -234,286 +242,298 @@ export const Profile = () => {
   const isUnverified = !isVerified && !isPending && !isRejected;
 
   return (
-    <div className="space-y-8 pb-12">
-      {/* Top Breadcrumb & Profile Action Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
-        <div className="flex items-center gap-2 text-xs text-gray-400">
-          <Link to="/users" className="hover:text-white transition-colors">
-            Developers
-          </Link>
-          <span>/</span>
-          <span className="text-white font-semibold">Developer Profile</span>
-        </div>
+    <div className="space-y-10 sm:space-y-12 pb-16">
+      
+      {/* =====================================================================
+          LAYER 2 & 5: SPATIAL PERSONAL IDENTITY SURFACE
+          ===================================================================== */}
+      <section aria-label="Personal Identity Header" className="relative pt-2">
+        <div 
+          className={`absolute -top-16 left-0 w-96 h-96 blur-3xl rounded-full pointer-events-none transition-opacity duration-700 ${
+            isLight ? 'bg-indigo-200/30' : 'bg-indigo-600/15'
+          }`} 
+          aria-hidden="true" 
+        />
 
-        {/* Profile Action Buttons */}
-        <div className="flex items-center gap-3">
-          {isOwnProfile && (
-            <>
-              {/* Verification Request Action for Unverified or Rejected */}
-              {(isUnverified || isRejected) && (
-                <button
-                  onClick={() => setShowVerifyModal(true)}
-                  className="btn-glow px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold text-xs flex items-center gap-2 hover:brightness-110 transition-all"
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4 border-inherit relative z-10">
+          <div className={`flex items-center gap-2 text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
+            <Link to="/users" className={`transition-colors ${isLight ? 'hover:text-slate-900' : 'hover:text-white'}`}>
+              Developers
+            </Link>
+            <span>/</span>
+            <span className={`font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>Developer Profile</span>
+          </div>
+
+          {/* Action Triggers */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {isOwnProfile && (
+              <>
+                {(isUnverified || isRejected) && (
+                  <SpatialButton
+                    variant="primary"
+                    size="sm"
+                    onClick={() => setShowVerifyModal(true)}
+                    icon={BadgeCheck}
+                  >
+                    {isRejected ? 'Request Verification Again' : 'Request Verification'}
+                  </SpatialButton>
+                )}
+
+                <SpatialButton
+                  to="/profile/edit"
+                  variant="primary"
+                  size="sm"
+                  icon={Edit3}
                 >
-                  <BadgeCheck className="w-4 h-4" />
-                  {isRejected ? 'Request Verification Again' : 'Request Verification'}
-                </button>
-              )}
-
-              {/* Status Indicator for Pending */}
-              {isPending && (
-                <span className="px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-semibold flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" />
-                  Verification Pending
-                </span>
-              )}
-
-              {/* Badge for Verified */}
-              {isVerified && (
-                <span className="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  Verified
-                </span>
-              )}
-
-              {/* Edit Profile Button */}
-              <Link
-                to="/profile/edit"
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-md shadow-indigo-600/20"
-              >
-                <Edit3 className="w-4 h-4" /> Edit Profile
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* 1. Main Profile Card */}
-      <div className="glass-panel p-8 rounded-3xl border border-gray-800 relative overflow-hidden space-y-6">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500"></div>
-
-        <div className="flex flex-col sm:flex-row sm:items-start gap-6">
-          {/* Profile Picture */}
-          <div className="relative shrink-0">
-            <img
-              src={avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'}
-              alt={name}
-              className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover ring-4 ring-indigo-500/30 shadow-2xl"
-            />
+                  Edit Profile
+                </SpatialButton>
+              </>
+            )}
           </div>
+        </div>
 
-          {/* Core Info */}
-          <div className="space-y-2 flex-1">
-            <div className="space-y-1">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                {name}
-              </h1>
-
-              {/* Dynamic College Display */}
-              <div className="flex items-center gap-1.5 text-xs text-cyan-300 font-medium pt-0.5">
-                <School className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>College: <strong className="text-white">{resolvedCollegeName}</strong></span>
+        {/* Main Identity Surface */}
+        <div className="mt-6 relative z-10">
+          <SpatialCard accentLine elevation="raised" padding="large" className="space-y-6 border-indigo-500/20">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-6">
+              {/* Focal Avatar */}
+              <div className="relative shrink-0">
+                <Avatar
+                  src={avatarUrl}
+                  name={name}
+                  size="2xl"
+                  verified={isVerified}
+                />
               </div>
-            </div>
 
-            {/* Verification Status & Experience Level Badges */}
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/30">
-                Experience Level: <span className="font-bold text-white">{experienceLevel}</span>
-              </span>
+              {/* Identity & Badges */}
+              <div className="space-y-2 flex-1">
+                <div className="space-y-1">
+                  <h1 className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                    {name}
+                  </h1>
 
-              <VerificationBadge status={experienceVerificationStatus} size="lg" />
-            </div>
-
-            {email && (
-              <p className="text-xs text-gray-400 pt-1">{email}</p>
-            )}
-
-            <p className="text-[11px] text-gray-500 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" /> Member since {new Date(createdAt || Date.now()).getFullYear()}
-            </p>
-          </div>
-        </div>
-
-        {/* About / Bio */}
-        <div className="pt-4 border-t border-gray-800 space-y-1.5">
-          <h3 className="text-xs uppercase tracking-wider font-bold text-gray-400">About</h3>
-          <p className="text-sm text-gray-300 leading-relaxed max-w-3xl">
-            {bio || 'No bio provided.'}
-          </p>
-        </div>
-
-        {/* Skills */}
-        <div className="space-y-2.5 pt-4 border-t border-gray-800">
-          <h3 className="text-xs uppercase tracking-wider font-bold text-gray-400 flex items-center gap-1.5">
-            <Code className="w-4 h-4 text-cyan-400" />
-            Skills
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {skills.length > 0 ? (
-              skills.map((skill) => (
-                <SkillTag key={skill} name={skill} size="md" isHighlight />
-              ))
-            ) : (
-              <span className="text-xs text-gray-500">No skills listed</span>
-            )}
-          </div>
-        </div>
-
-        {/* Social Links (Render only if URLs exist) */}
-        {(githubUrl || linkedinUrl || portfolioUrl) && (
-          <div className="flex items-center gap-3 pt-4 border-t border-gray-800 text-xs flex-wrap">
-            {githubUrl && (
-              <a
-                href={githubUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors bg-gray-900/80 hover:bg-gray-800 px-3.5 py-2 rounded-xl border border-gray-800"
-              >
-                <Code2 className="w-4 h-4 text-indigo-400" />
-                <span>GitHub</span>
-                <ExternalLink className="w-3 h-3 text-gray-500" />
-              </a>
-            )}
-            {linkedinUrl && (
-              <a
-                href={linkedinUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors bg-gray-900/80 hover:bg-gray-800 px-3.5 py-2 rounded-xl border border-gray-800"
-              >
-                <Share2 className="w-4 h-4 text-cyan-400" />
-                <span>LinkedIn</span>
-                <ExternalLink className="w-3 h-3 text-gray-500" />
-              </a>
-            )}
-            {portfolioUrl && (
-              <a
-                href={portfolioUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors bg-gray-900/80 hover:bg-gray-800 px-3.5 py-2 rounded-xl border border-gray-800"
-              >
-                <Globe className="w-4 h-4 text-purple-400" />
-                <span>Portfolio</span>
-                <ExternalLink className="w-3 h-3 text-gray-500" />
-              </a>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* 2. Dedicated Experience Display Card */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-gray-800 space-y-6">
-        <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-indigo-400" />
-            Experience & Verification
-          </h2>
-          <VerificationBadge status={experienceVerificationStatus} size="lg" />
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800/60 pb-3">
-            <span className="text-xs uppercase tracking-wider font-semibold text-gray-400">Experience Level</span>
-            <span className="text-sm font-bold text-white bg-indigo-500/10 px-3 py-1 rounded-xl border border-indigo-500/20">
-              {experienceLevel}
-            </span>
-          </div>
-
-          <div className="space-y-2 border-b border-gray-800/60 pb-4">
-            <span className="text-xs uppercase tracking-wider font-semibold text-gray-400">Status</span>
-            
-            {/* Status: Verified */}
-            {isVerified && (
-              <div className="space-y-2">
-                <p className="text-sm font-semibold text-emerald-400 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" /> Verified by College Administration
-                </p>
-                {experienceVerificationNote && (
-                  <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/20 text-xs text-emerald-300">
-                    <strong>Campus Endorsement:</strong> {experienceVerificationNote}
+                  <div className="flex items-center gap-1.5 text-xs font-medium pt-0.5">
+                    <School className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+                    <span>Campus: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{resolvedCollegeName}</strong></span>
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Status: Pending */}
-            {isPending && (
-              <div className="space-y-2">
-                <p className="text-sm font-semibold text-amber-400 flex items-center gap-2">
-                  <Clock className="w-4 h-4" /> Pending Verification
-                </p>
-                <p className="text-xs text-gray-300 bg-amber-950/30 p-3 rounded-xl border border-amber-500/20">
-                  Your verification request is currently under review by your college administration.
-                </p>
-              </div>
-            )}
-
-            {/* Status: Rejected */}
-            {isRejected && (
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-rose-400 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" /> Verification Rejected
-                </p>
-                <div className="p-3 rounded-xl bg-rose-950/30 border border-rose-500/20 text-xs text-rose-300">
-                  <strong>Reason:</strong> {experienceVerificationNote || 'Please provide valid GitHub repositories with commit history.'}
                 </div>
-                {isOwnProfile && (
-                  <button
-                    onClick={() => setShowVerifyModal(true)}
-                    className="btn-glow px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold text-xs flex items-center gap-2 hover:brightness-110 transition-all"
-                  >
-                    <BadgeCheck className="w-4 h-4" />
-                    Request Verification Again
-                  </button>
-                )}
-              </div>
-            )}
 
-            {/* Status: Unverified */}
-            {isUnverified && (
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-yellow-500" /> Unverified
-                </p>
-                <p className="text-xs text-gray-300 bg-gray-900/60 p-3 rounded-xl border border-gray-800">
-                  Your experience level is self-declared. Submit proof of experience for college verification.
-                </p>
-                {isOwnProfile && (
-                  <button
-                    onClick={() => setShowVerifyModal(true)}
-                    className="btn-glow px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold text-xs flex items-center gap-2 hover:brightness-110 transition-all"
-                  >
-                    <BadgeCheck className="w-4 h-4" />
-                    Request Verification
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <ExperienceBadge level={experienceLevel} size="md" />
+                  <VerificationBadge status={experienceVerificationStatus} size="lg" />
+                </div>
 
-          {/* Skills under Experience Card */}
-          <div className="space-y-2 pt-1">
-            <span className="text-xs uppercase tracking-wider font-semibold text-gray-400">Skills</span>
-            <div className="flex flex-wrap gap-2">
-              {skills.map((s) => (
-                <SkillTag key={s} name={s} size="sm" />
-              ))}
+                {email && (
+                  <p className={`text-xs pt-0.5 ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>{email}</p>
+                )}
+
+                <p className={`text-[11px] flex items-center gap-1 ${isLight ? 'text-slate-400' : 'text-gray-500'}`}>
+                  <Calendar className="w-3.5 h-3.5 text-indigo-400" /> Member since {new Date(createdAt || Date.now()).getFullYear()}
+                </p>
+              </div>
             </div>
-          </div>
+
+            {/* About / Bio */}
+            <div className={`pt-4 border-t space-y-1.5 ${isLight ? 'border-slate-200' : 'border-white/[0.08]'}`}>
+              <h2 className={`text-xs uppercase tracking-wider font-bold ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>About Developer</h2>
+              <p className={`text-sm leading-relaxed max-w-3xl ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
+                {bio || 'No bio provided yet.'}
+              </p>
+            </div>
+
+            {/* Social Links */}
+            {(githubUrl || linkedinUrl || portfolioUrl) && (
+              <div className={`flex items-center gap-3 pt-4 border-t text-xs flex-wrap ${isLight ? 'border-slate-200' : 'border-white/[0.08]'}`}>
+                {githubUrl && (
+                  <SpatialButton
+                    as="a"
+                    href={githubUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    variant="secondary"
+                    size="sm"
+                    icon={Code2}
+                  >
+                    GitHub
+                  </SpatialButton>
+                )}
+                {linkedinUrl && (
+                  <SpatialButton
+                    as="a"
+                    href={linkedinUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    variant="secondary"
+                    size="sm"
+                    icon={Share2}
+                  >
+                    LinkedIn
+                  </SpatialButton>
+                )}
+                {portfolioUrl && (
+                  <SpatialButton
+                    as="a"
+                    href={portfolioUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    variant="secondary"
+                    size="sm"
+                    icon={Globe}
+                  >
+                    Portfolio
+                  </SpatialButton>
+                )}
+              </div>
+            )}
+          </SpatialCard>
         </div>
-      </div>
+      </section>
+
+      {/* =====================================================================
+          LAYER 3 & 4: SKILLS ARSENAL & VERIFICATION TRUST CENTER (SECONDARY)
+          ===================================================================== */}
+      <section aria-label="Skills and Verification Details">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          
+          {/* Skills Arsenal (7 cols) */}
+          <SpatialCard elevation="raised" hover={false} className="lg:col-span-7 p-6 space-y-4">
+            <div className="flex items-center justify-between border-b pb-3 border-inherit">
+              <h2 className={`text-base font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                <Code className="w-5 h-5 text-cyan-500" />
+                Indexed Skills Arsenal
+              </h2>
+              <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+                isLight ? 'bg-cyan-50 text-cyan-800' : 'bg-cyan-500/15 text-cyan-300'
+              }`}>
+                {skills.length} Stack Tags
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
+                These skills are evaluated in real-time by the HackMatch Smart Matching algorithm to score squad compatibility.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {skills.length > 0 ? (
+                  skills.map((skill) => (
+                    <SkillChip key={skill} skill={skill} variant="default" size="md" />
+                  ))
+                ) : (
+                  <span className={`text-xs ${isLight ? 'text-slate-400' : 'text-gray-500'}`}>No skills listed yet</span>
+                )}
+              </div>
+            </div>
+          </SpatialCard>
+
+          {/* Verification & Trust Center (5 cols) */}
+          <SpatialCard elevation="raised" hover={false} className="lg:col-span-5 p-6 space-y-4">
+            <div className="flex items-center justify-between border-b pb-3 border-inherit">
+              <h2 className={`text-base font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                <ShieldCheck className="w-5 h-5 text-indigo-400" />
+                Trust & Verification
+              </h2>
+              <VerificationBadge status={experienceVerificationStatus} size="md" />
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="flex items-center justify-between">
+                <span className={isLight ? 'text-slate-500' : 'text-gray-400'}>Claimed Experience:</span>
+                <span className={`font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>{experienceLevel} Level</span>
+              </div>
+
+              {isVerified && (
+                <div className={`p-3 rounded-xl border space-y-1.5 ${
+                  isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-emerald-950/30 border-emerald-500/20 text-emerald-300'
+                }`}>
+                  <p className="font-semibold flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Verified by Campus Administration
+                  </p>
+                  {experienceVerificationNote && (
+                    <p className="text-[11px] leading-relaxed opacity-90">
+                      <strong>Endorsement:</strong> {experienceVerificationNote}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {isPending && (
+                <div className={`p-3 rounded-xl border space-y-1 ${
+                  isLight ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-amber-950/30 border-amber-500/20 text-amber-300'
+                }`}>
+                  <p className="font-semibold flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-amber-500" /> Review In Progress
+                  </p>
+                  <p className="text-[11px] opacity-90">
+                    Your verification request is currently being inspected by campus administrators.
+                  </p>
+                </div>
+              )}
+
+              {isRejected && (
+                <div className={`p-3 rounded-xl border space-y-2 ${
+                  isLight ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-rose-950/30 border-rose-500/20 text-rose-300'
+                }`}>
+                  <p className="font-semibold flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4 text-rose-500" /> Verification Rejected
+                  </p>
+                  <p className="text-[11px] opacity-90">
+                    {experienceVerificationNote || 'Please provide updated project evidence.'}
+                  </p>
+                  {isOwnProfile && (
+                    <SpatialButton
+                      variant="primary"
+                      size="sm"
+                      onClick={() => setShowVerifyModal(true)}
+                      icon={BadgeCheck}
+                    >
+                      Re-submit Evidence
+                    </SpatialButton>
+                  )}
+                </div>
+              )}
+
+              {isUnverified && (
+                <div className={`p-3 rounded-xl border space-y-2 ${
+                  isLight ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-900/60 border-white/[0.08] text-gray-300'
+                }`}>
+                  <p className="font-semibold flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 text-amber-500" /> Self-Declared Profile
+                  </p>
+                  <p className="text-[11px] opacity-90">
+                    Experience level is unverified. Submit GitHub or portfolio evidence for campus badge verification.
+                  </p>
+                  {isOwnProfile && (
+                    <SpatialButton
+                      variant="primary"
+                      size="sm"
+                      onClick={() => setShowVerifyModal(true)}
+                      icon={BadgeCheck}
+                    >
+                      Request Verification
+                    </SpatialButton>
+                  )}
+                </div>
+              )}
+            </div>
+          </SpatialCard>
+
+        </div>
+      </section>
 
       {/* 3. Connected HackMatch Features: Team Requests */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-gray-800 space-y-6">
-        <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+      <SpatialPanel padding="loose" className="space-y-6">
+        <div className={`flex items-center justify-between border-b pb-4 ${
+          isLight ? 'border-slate-200' : 'border-gray-800'
+        }`}>
           <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-cyan-400" />
+            <h2 className={`text-base font-bold flex items-center gap-2 ${
+              isLight ? 'text-slate-900' : 'text-white'
+            }`}>
+              <Trophy className="w-5 h-5 text-cyan-500" />
               Team Requests
             </h2>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
               {isOwnProfile
                 ? 'Active team formation requests you created'
                 : `Active team requests created by ${name}`}
@@ -523,7 +543,7 @@ export const Profile = () => {
           {isOwnProfile && (
             <Link
               to="/my-requests"
-              className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
+              className="text-xs font-semibold text-indigo-500 hover:text-indigo-600 flex items-center gap-1 transition-colors"
             >
               Manage Requests <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -537,99 +557,119 @@ export const Profile = () => {
             ))}
           </div>
         ) : (
-          <div className="py-8 text-center space-y-3 bg-gray-900/40 rounded-2xl border border-gray-800/80 p-6">
-            <Inbox className="w-8 h-8 text-gray-600 mx-auto" />
-            <p className="text-xs text-gray-400">
+          <div className={`py-8 text-center space-y-3 rounded-2xl border p-6 ${
+            isLight ? 'bg-slate-50/80 border-slate-200' : 'bg-gray-900/40 border-gray-800/80'
+          }`}>
+            <Inbox className={`w-8 h-8 mx-auto ${isLight ? 'text-slate-400' : 'text-gray-600'}`} />
+            <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
               {isOwnProfile
                 ? 'You have not created any team requests yet.'
                 : 'No active team requests posted by this student.'}
             </p>
             {isOwnProfile && (
-              <Link
+              <SpatialButton
                 to="/post-request"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all shadow-md shadow-indigo-600/20"
+                variant="primary"
+                size="sm"
+                icon={PlusCircle}
               >
-                <PlusCircle className="w-3.5 h-3.5" /> Post Team Request
-              </Link>
+                Post Team Request
+              </SpatialButton>
             )}
           </div>
         )}
-      </div>
+      </SpatialPanel>
 
       {/* 4. Connected HackMatch Features: Applications (Own Profile Only) */}
       {isOwnProfile && (
-        <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-gray-800 space-y-6">
-          <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+        <SpatialPanel padding="loose" className="space-y-6">
+          <div className={`flex items-center justify-between border-b pb-4 ${
+            isLight ? 'border-slate-200' : 'border-gray-800'
+          }`}>
             <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <Send className="w-5 h-5 text-indigo-400" />
+              <h2 className={`text-base font-bold flex items-center gap-2 ${
+                isLight ? 'text-slate-900' : 'text-white'
+              }`}>
+                <Send className="w-5 h-5 text-indigo-500" />
                 Applications
               </h2>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
                 Overview of applications you submitted and candidates who applied to your teams
               </p>
             </div>
 
             <Link
               to="/my-requests"
-              className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
+              className="text-xs font-semibold text-indigo-500 hover:text-indigo-600 flex items-center gap-1 transition-colors"
             >
               View Applications <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 rounded-2xl bg-gray-900/60 border border-gray-800 space-y-2">
-              <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+            <div className={`p-4 rounded-2xl border space-y-2 ${
+              isLight ? 'bg-slate-50/90 border-slate-200' : 'bg-gray-900/60 border-gray-800'
+            }`}>
+              <span className={`text-xs uppercase tracking-wider font-semibold ${
+                isLight ? 'text-slate-500' : 'text-gray-400'
+              }`}>
                 Applications I Sent
               </span>
               <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-extrabold text-white">
+                <span className={`text-2xl font-extrabold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   {sentApplicationsCount}
                 </span>
                 <Link
                   to="/my-requests"
-                  className="text-xs text-indigo-400 hover:underline"
+                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
                   Track status →
                 </Link>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-gray-900/60 border border-gray-800 space-y-2">
-              <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+            <div className={`p-4 rounded-2xl border space-y-2 ${
+              isLight ? 'bg-slate-50/90 border-slate-200' : 'bg-gray-900/60 border-gray-800'
+            }`}>
+              <span className={`text-xs uppercase tracking-wider font-semibold ${
+                isLight ? 'text-slate-500' : 'text-gray-400'
+              }`}>
                 Applicant Responses Received
               </span>
               <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-extrabold text-white">
+                <span className={`text-2xl font-extrabold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   {receivedApplicationsCount}
                 </span>
                 <Link
                   to="/my-requests"
-                  className="text-xs text-indigo-400 hover:underline"
+                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
                   Review applicants →
                 </Link>
               </div>
             </div>
           </div>
-        </div>
+        </SpatialPanel>
       )}
 
       {/* 5. Verification History Section (Own Profile Only) */}
       {isOwnProfile && verificationHistory.length > 0 && (
-        <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-gray-800 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-gray-800">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-300 flex items-center gap-2">
-              <History className="w-4 h-4 text-indigo-400" />
+        <SpatialPanel padding="loose" className="space-y-4">
+          <div className={`flex items-center justify-between pb-3 border-b ${
+            isLight ? 'border-slate-200' : 'border-gray-800'
+          }`}>
+            <h3 className={`text-sm font-bold uppercase tracking-wider flex items-center gap-2 ${
+              isLight ? 'text-slate-700' : 'text-gray-300'
+            }`}>
+              <History className="w-4 h-4 text-indigo-500" />
               Verification History
             </h3>
-            <span className="text-xs text-gray-400">
+            <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
               {verificationHistory.length} record{verificationHistory.length > 1 ? 's' : ''}
             </span>
           </div>
 
-          <div className="divide-y divide-gray-800/80">
+          <div className={`divide-y ${isLight ? 'divide-slate-200' : 'divide-gray-800/80'}`}>
             {verificationHistory.map((item) => (
               <div
                 key={item._id}
@@ -637,7 +677,7 @@ export const Profile = () => {
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold text-white">
+                    <span className={`text-sm font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                       Requested: {item.requestedLevel} Experience
                     </span>
                     <VerificationBadge status={item.status} />
@@ -673,122 +713,115 @@ export const Profile = () => {
               </div>
             ))}
           </div>
-        </div>
+        </SpatialPanel>
       )}
 
       {/* 6. Verification Submission Modal */}
-      {showVerifyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="glass-panel w-full max-w-lg p-6 sm:p-8 rounded-3xl border border-gray-800 space-y-5 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-              <div>
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <BadgeCheck className="w-5 h-5 text-emerald-400" />
-                  Request Experience Verification
-                </h3>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Your campus administration will inspect your evidence and verify your experience level.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowVerifyModal(false)}
-                className="text-gray-400 hover:text-white font-bold text-2xl"
-              >
-                ×
-              </button>
-            </div>
-
-            {verifSuccess && (
-              <div className="p-3.5 rounded-xl bg-emerald-950/50 border border-emerald-500/30 text-emerald-300 text-xs">
-                {verifSuccess}
-              </div>
-            )}
-            {verifError && (
-              <div className="p-3.5 rounded-xl bg-red-950/50 border border-red-500/30 text-red-300 text-xs">
-                {verifError}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmitVerification} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Requested Level *</label>
-                <select
-                  value={requestedLevel}
-                  onChange={(e) => setRequestedLevel(e.target.value)}
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-                >
-                  <option value="Beginner">Beginner (Foundational projects)</option>
-                  <option value="Intermediate">Intermediate (Multiple apps / hackathon experience)</option>
-                  <option value="Advanced">Advanced (3+ hackathon wins, open-source / production systems)</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">GitHub Profile URL</label>
-                <input
-                  type="url"
-                  value={githubUrlInput}
-                  onChange={(e) => setGithubUrlInput(e.target.value)}
-                  placeholder="https://github.com/username"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Portfolio / Personal Website</label>
-                <input
-                  type="url"
-                  value={portfolioUrlInput}
-                  onChange={(e) => setPortfolioUrlInput(e.target.value)}
-                  placeholder="https://yourdomain.dev"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Key Project / Deployment Links (One per line)</label>
-                <textarea
-                  rows={2}
-                  value={projectLinksInput}
-                  onChange={(e) => setProjectLinksInput(e.target.value)}
-                  placeholder="https://myproject.vercel.app&#10;https://github.com/myteam/hackathon-winner"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-indigo-500 resize-none font-mono"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Description & Proof of Experience *</label>
-                <textarea
-                  rows={3}
-                  required
-                  value={descriptionInput}
-                  onChange={(e) => setDescriptionInput(e.target.value)}
-                  placeholder="Summarize your technical contributions, hackathon awards, and production tech stack experience..."
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-indigo-500 resize-none"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-800">
-                <button
-                  type="button"
-                  onClick={() => setShowVerifyModal(false)}
-                  className="px-4 py-2 rounded-xl border border-gray-700 text-gray-300 text-xs font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingVerif}
-                  className="btn-glow px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5"
-                >
-                  {submittingVerif && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  Submit Evidence
-                </button>
-              </div>
-            </form>
+      <SpatialModal
+        isOpen={showVerifyModal}
+        onClose={() => setShowVerifyModal(false)}
+        title="Request Experience Verification"
+        subtitle="Your campus administration will inspect your evidence and verify your experience level."
+        icon={BadgeCheck}
+        maxWidth="max-w-lg"
+      >
+        {verifSuccess && (
+          <div className="p-3.5 mb-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+            <span>{verifSuccess}</span>
           </div>
-        </div>
-      )}
+        )}
+        {verifError && (
+          <div className="p-3.5 mb-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-300 text-xs font-semibold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+            <span>{verifError}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmitVerification} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
+              Requested Level *
+            </label>
+            <SpatialDropdown
+              value={requestedLevel}
+              onChange={(e) => setRequestedLevel(e.target.value)}
+              options={[
+                { value: 'Beginner', label: 'Beginner (Foundational projects)' },
+                { value: 'Intermediate', label: 'Intermediate (Multiple apps / hackathon experience)' },
+                { value: 'Advanced', label: 'Advanced (3+ hackathon wins, open-source / production systems)' },
+              ]}
+              placeholder="Select Level..."
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <SpatialInput
+              id="verification-github-url"
+              label="GitHub Profile URL"
+              type="url"
+              value={githubUrlInput}
+              onChange={(e) => setGithubUrlInput(e.target.value)}
+              placeholder="https://github.com/username"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <SpatialInput
+              id="verification-portfolio-url"
+              label="Portfolio / Personal Website"
+              type="url"
+              value={portfolioUrlInput}
+              onChange={(e) => setPortfolioUrlInput(e.target.value)}
+              placeholder="https://yourdomain.dev"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <SpatialTextarea
+              id="verification-project-links"
+              label="Key Project / Deployment Links (One per line)"
+              rows={2}
+              value={projectLinksInput}
+              onChange={(e) => setProjectLinksInput(e.target.value)}
+              placeholder="https://myproject.vercel.app&#10;https://github.com/myteam/hackathon-winner"
+              className="font-mono text-xs"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <SpatialTextarea
+              id="verification-description"
+              label="Description & Proof of Experience"
+              required
+              rows={3}
+              value={descriptionInput}
+              onChange={(e) => setDescriptionInput(e.target.value)}
+              placeholder="Summarize your technical contributions, hackathon awards, and production tech stack experience..."
+            />
+          </div>
+
+          <div className={`flex items-center justify-end gap-3 pt-3 border-t ${isLight ? 'border-slate-200' : 'border-gray-800'}`}>
+            <SpatialButton
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={() => setShowVerifyModal(false)}
+            >
+              Cancel
+            </SpatialButton>
+            <SpatialButton
+              type="submit"
+              variant="primary"
+              size="md"
+              isLoading={submittingVerif}
+              icon={CheckCircle2}
+            >
+              Submit Evidence
+            </SpatialButton>
+          </div>
+        </form>
+      </SpatialModal>
     </div>
   );
 };

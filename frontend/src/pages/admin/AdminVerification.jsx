@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import apiService from '../../services/apiService';
 import { VerificationBadge } from '../../components/VerificationBadge';
+import { ExperienceBadge } from '../../components/ExperienceBadge';
+import { StatusBadge } from '../../components/StatusBadge';
+import { Avatar } from '../../components/Avatar';
+import { useTheme } from '../../context/ThemeContext';
+import { SpatialPanel, SpatialModal, SpatialButton, SpatialTabs, SpatialInput, SpatialTextarea, SpatialCard } from '../../components/spatial';
 import {
   BadgeCheck,
   CheckCircle2,
@@ -21,6 +26,8 @@ import {
 } from 'lucide-react';
 
 export const AdminVerification = () => {
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === 'light';
   const { isSuperAdmin, collegeName } = useAuth();
   const [verifications, setVerifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -116,46 +123,39 @@ export const AdminVerification = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          {['All', 'Pending', 'Verified', 'Rejected'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                statusFilter === status
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/20'
-                  : 'glass-panel text-gray-400 hover:text-white border border-gray-800'
-              }`}
-            >
-              {status}
-            </button>
-          ))}
+          <SpatialTabs
+            tabs={['All', 'Pending', 'Verified', 'Rejected'].map((status) => ({
+              id: status,
+              label: status,
+            }))}
+            activeTab={statusFilter}
+            onChange={setStatusFilter}
+          />
         </div>
       </div>
 
       {/* Search Filter */}
-      <div className="glass-panel p-4 rounded-2xl border border-gray-800 flex items-center gap-3">
-        <Search className="w-4 h-4 text-gray-500 shrink-0" />
-        <input
-          type="text"
+      <div>
+        <SpatialInput
+          icon={Search}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Filter by student name, email, or campus institution..."
-          className="w-full bg-transparent text-sm text-white focus:outline-none placeholder:text-gray-600"
         />
       </div>
 
       {/* Verifications List */}
-      <div className="glass-panel rounded-3xl border border-gray-800 overflow-hidden">
+      <SpatialPanel padding="none" className="overflow-hidden">
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-xs text-gray-400">Loading experience verification requests...</p>
+            <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Loading experience verification requests...</p>
           </div>
         ) : filteredVerifications.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-gray-800 bg-gray-950/40 text-gray-400">
+                <tr className={`border-b ${isLight ? 'border-slate-200 bg-slate-50 text-slate-600' : 'border-gray-800 bg-gray-950/40 text-gray-400'}`}>
                   <th className="py-3.5 px-6 font-semibold">Student</th>
                   <th className="py-3.5 px-4 font-semibold">Campus</th>
                   <th className="py-3.5 px-4 font-semibold">Requested Level</th>
@@ -165,46 +165,45 @@ export const AdminVerification = () => {
                   <th className="py-3.5 px-6 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800/60">
+              <tbody className={`divide-y ${isLight ? 'divide-slate-200' : 'divide-gray-800/60'}`}>
                 {filteredVerifications.map((verif) => {
                   const isPending = verif.status === 'Pending';
                   const isVerified = verif.status === 'Verified';
                   const isRejected = verif.status === 'Rejected';
 
                   return (
-                    <tr key={verif._id} className="hover:bg-gray-900/40 transition-colors">
+                    <tr key={verif._id} className={`transition-colors ${isLight ? 'hover:bg-slate-50/80' : 'hover:bg-gray-900/40'}`}>
                       {/* Student Info */}
-                      <td className="py-4 px-6 font-medium text-white flex items-center gap-3">
-                        <img
-                          src={
-                            verif.user?.avatarUrl ||
-                            'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'
-                          }
-                          alt={verif.user?.name || 'Student'}
-                          className="w-8 h-8 rounded-full object-cover border border-gray-700"
+                      <td className={`py-4 px-6 font-medium flex items-center gap-3 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                        <Avatar
+                          src={verif.user?.avatarUrl}
+                          name={verif.user?.name}
+                          size="sm"
+                          verified={verif.user?.experienceVerificationStatus === 'Verified'}
                         />
                         <div>
-                          <div className="font-bold text-white flex items-center gap-1.5 flex-wrap">
+                          <div className={`font-bold flex items-center gap-1.5 flex-wrap ${isLight ? 'text-slate-900' : 'text-white'}`}>
                             {verif.user?.name || 'Unknown Student'}
                             <VerificationBadge status={verif.user?.experienceVerificationStatus} size="sm" />
                           </div>
-                          <div className="text-[11px] text-gray-400">{verif.user?.email}</div>
+                          <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>{verif.user?.email}</div>
                         </div>
                       </td>
 
                       {/* Campus */}
-                      <td className="py-4 px-4 text-gray-300">
+                      <td className={`py-4 px-4 ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
                         <div className="flex items-center gap-1">
-                          <School className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                          <School className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                           <span className="font-semibold">{verif.collegeId?.code || 'Campus'}</span>
                         </div>
                       </td>
 
                       {/* Requested Level */}
                       <td className="py-4 px-4">
-                        <span className="px-2.5 py-0.5 rounded-lg bg-indigo-950/50 text-indigo-300 border border-indigo-500/30 font-bold">
-                          {verif.requestedLevel}
-                        </span>
+                        <ExperienceBadge
+                          level={verif.requestedLevel}
+                          size="sm"
+                        />
                       </td>
 
                       {/* Evidence Links */}
@@ -214,7 +213,7 @@ export const AdminVerification = () => {
                             href={verif.githubUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-gray-400 hover:text-white transition-colors"
+                            className={`inline-flex items-center gap-1 transition-colors ${isLight ? 'text-slate-500 hover:text-slate-900' : 'text-gray-400 hover:text-white'}`}
                             title="GitHub"
                           >
                             <Code2 className="w-3.5 h-3.5" />
@@ -225,14 +224,14 @@ export const AdminVerification = () => {
                             href={verif.portfolioUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-cyan-400 hover:text-cyan-300 transition-colors"
+                            className="inline-flex items-center gap-1 text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors"
                             title="Portfolio"
                           >
                             <Globe className="w-3.5 h-3.5" />
                           </a>
                         )}
                         {verif.projectLinks?.length > 0 && (
-                          <span className="text-[10px] text-gray-400 font-mono">
+                          <span className={`text-[10px] font-mono ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
                             +{verif.projectLinks.length} links
                           </span>
                         )}
@@ -240,35 +239,23 @@ export const AdminVerification = () => {
 
                       {/* Status */}
                       <td className="py-4 px-4">
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] border flex items-center gap-1 w-fit ${
-                            isVerified
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                              : isRejected
-                              ? 'bg-red-500/10 text-red-400 border-red-500/30'
-                              : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                          }`}
-                        >
-                          {isVerified && <CheckCircle2 className="w-3 h-3" />}
-                          {isRejected && <XCircle className="w-3 h-3" />}
-                          {isPending && <Clock className="w-3 h-3" />}
-                          {verif.status}
-                        </span>
+                        <StatusBadge status={verif.status} size="sm" />
                       </td>
 
                       {/* Submitted Date */}
-                      <td className="py-4 px-4 text-gray-400">
+                      <td className={`py-4 px-4 ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
                         {new Date(verif.createdAt).toLocaleDateString()}
                       </td>
 
                       {/* Action */}
                       <td className="py-4 px-6 text-right">
-                        <button
+                        <SpatialButton
+                          variant="primary"
+                          size="sm"
                           onClick={() => handleOpenReview(verif)}
-                          className="px-3.5 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-xs font-semibold transition-all"
                         >
                           {isPending ? 'Review Proof' : 'View Details'}
-                        </button>
+                        </SpatialButton>
                       </td>
                     </tr>
                   );
@@ -285,174 +272,194 @@ export const AdminVerification = () => {
             </p>
           </div>
         )}
-      </div>
+      </SpatialPanel>
 
       {/* REVIEW / AUDIT MODAL */}
-      {selectedVerification && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="glass-panel w-full max-w-xl p-6 sm:p-8 rounded-3xl border border-gray-800 space-y-6 max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-gray-800 pb-4">
-              <div className="flex items-center gap-3">
-                <img
-                  src={
-                    selectedVerification.user?.avatarUrl ||
-                    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'
-                  }
-                  alt="Student"
-                  className="w-10 h-10 rounded-full object-cover border border-purple-500/40"
-                />
-                <div>
-                  <h3 className="text-lg font-bold text-white">
-                    {selectedVerification.user?.name}
-                  </h3>
-                  <p className="text-xs text-gray-400">
-                    {selectedVerification.user?.email} • {selectedVerification.collegeId?.name}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedVerification(null)}
-                className="text-gray-400 hover:text-white font-bold text-2xl"
-              >
-                ×
-              </button>
-            </div>
-
+      {/* Review Modal */}
+      <SpatialModal
+        isOpen={!!selectedVerification}
+        onClose={() => setSelectedVerification(null)}
+        title={selectedVerification ? `Review: ${selectedVerification.user?.name || 'Student'}` : ''}
+        subtitle={selectedVerification ? `${selectedVerification.user?.email || ''} • ${selectedVerification.collegeId?.name || ''}` : ''}
+        icon={BadgeCheck}
+        maxWidth="max-w-xl"
+      >
+        {selectedVerification && (
+          <div className="space-y-5">
             {/* Notification alert banners */}
             {actionSuccess && (
-              <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <div className={`p-3.5 rounded-xl border text-xs flex items-center gap-2 ${
+                isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+              }`}>
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                 <span>{actionSuccess}</span>
               </div>
             )}
             {actionError && (
-              <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+              <div className={`p-3.5 rounded-xl border text-xs flex items-center gap-2 ${
+                isLight ? 'bg-red-50 border-red-200 text-red-800' : 'bg-red-950/40 border-red-500/30 text-red-300'
+              }`}>
+                <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
                 <span>{actionError}</span>
               </div>
             )}
 
+            {/* Student Overview Card */}
+            <div className={`flex items-center gap-3.5 p-3.5 rounded-2xl border ${
+              isLight ? 'bg-slate-50 border-slate-200' : 'bg-gray-900/60 border-gray-800'
+            }`}>
+              <Avatar
+                src={selectedVerification.user?.avatarUrl}
+                name={selectedVerification.user?.name}
+                size="md"
+              />
+              <div className="min-w-0 flex-1">
+                <p className={`text-sm font-bold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {selectedVerification.user?.name}
+                </p>
+                <p className={`text-xs truncate ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
+                  {selectedVerification.user?.email} • {selectedVerification.collegeId?.name}
+                </p>
+              </div>
+            </div>
+
             {/* Requested Level Badge */}
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gray-900/60 border border-gray-800">
-              <span className="text-xs text-gray-400 font-medium">Requested Verification Level:</span>
-              <span className="px-3 py-1 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold text-xs">
-                {selectedVerification.requestedLevel}
-              </span>
+            <div className={`flex items-center justify-between p-3.5 rounded-2xl border ${
+              isLight ? 'bg-slate-50 border-slate-200' : 'bg-gray-900/60 border-gray-800'
+            }`}>
+              <span className={`text-xs font-medium ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>Requested Verification Level:</span>
+              <ExperienceBadge level={selectedVerification.requestedLevel} size="md" />
             </div>
 
             {/* Evidence Description */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-300">Submitted Experience Proof</label>
-              <div className="p-4 rounded-2xl bg-gray-950/60 border border-gray-800/80 text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">
+              <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>Submitted Experience Proof</label>
+              <div className={`p-4 rounded-2xl border text-xs whitespace-pre-wrap leading-relaxed ${
+                isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-gray-950/60 border-gray-800/80 text-gray-300'
+              }`}>
                 {selectedVerification.description}
               </div>
             </div>
 
             {/* External Portfolios & Links */}
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-gray-300">Verified Project & Profile Links</label>
+              <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>Verified Project & Profile Links</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {selectedVerification.githubUrl && (
-                  <a
+                  <SpatialCard
+                    as="a"
                     href={selectedVerification.githubUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-800 text-xs text-gray-300 hover:text-white flex items-center justify-between transition-colors"
+                    hover
+                    interactive
+                    padding="compact"
+                    elevation="raised"
+                    className="flex items-center justify-between text-xs cursor-pointer group"
                   >
                     <span className="flex items-center gap-2 truncate">
-                      <Code2 className="w-4 h-4 text-purple-400 shrink-0" />
+                      <Code2 className="w-4 h-4 text-purple-500 shrink-0" />
                       GitHub Profile
                     </span>
-                    <ExternalLink className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                  </a>
+                    <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-indigo-400 shrink-0 transition-colors" />
+                  </SpatialCard>
                 )}
 
                 {selectedVerification.portfolioUrl && (
-                  <a
+                  <SpatialCard
+                    as="a"
                     href={selectedVerification.portfolioUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-800 text-xs text-gray-300 hover:text-white flex items-center justify-between transition-colors"
+                    hover
+                    interactive
+                    padding="compact"
+                    elevation="raised"
+                    className="flex items-center justify-between text-xs cursor-pointer group"
                   >
                     <span className="flex items-center gap-2 truncate">
-                      <Globe className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <Globe className="w-4 h-4 text-cyan-500 shrink-0" />
                       Portfolio / Website
                     </span>
-                    <ExternalLink className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                  </a>
+                    <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-indigo-400 shrink-0 transition-colors" />
+                  </SpatialCard>
                 )}
 
                 {selectedVerification.projectLinks?.map((link, idx) => (
-                  <a
+                  <SpatialCard
                     key={idx}
+                    as="a"
                     href={link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-800 text-xs text-gray-300 hover:text-white flex items-center justify-between transition-colors col-span-1 sm:col-span-2 truncate"
+                    hover
+                    interactive
+                    padding="compact"
+                    elevation="raised"
+                    className="flex items-center justify-between text-xs col-span-1 sm:col-span-2 truncate cursor-pointer group"
                   >
                     <span className="flex items-center gap-2 truncate">
-                      <ExternalLink className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                      <ExternalLink className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                       {link}
                     </span>
-                  </a>
+                    <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-indigo-400 shrink-0 transition-colors" />
+                  </SpatialCard>
                 ))}
               </div>
             </div>
 
             {/* Review Note Input */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
-                <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
+              <label className={`text-xs font-semibold flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
+                <MessageSquare className="w-3.5 h-3.5 text-purple-500" />
                 Administrative Note / Feedback (Optional on approval, recommended on rejection)
               </label>
-              <textarea
+              <SpatialTextarea
                 rows={3}
                 value={reviewNote}
                 onChange={(e) => setReviewNote(e.target.value)}
                 placeholder="e.g. Verified 3x hackathon wins and GitHub commit history. Excellent work!"
-                className="w-full bg-gray-900 border border-gray-800 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-purple-500 resize-none placeholder:text-gray-600"
               />
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-4 border-t border-gray-800 gap-3">
-              <button
+            <div className={`flex items-center justify-between pt-4 border-t gap-3 ${isLight ? 'border-slate-200' : 'border-gray-800'}`}>
+              <SpatialButton
                 type="button"
+                variant="secondary"
+                size="md"
                 onClick={() => setSelectedVerification(null)}
-                className="px-4 py-2 rounded-xl border border-gray-700 text-gray-300 text-xs font-semibold"
               >
                 Close
-              </button>
+              </SpatialButton>
 
               <div className="flex items-center gap-2">
-                <button
+                <SpatialButton
                   type="button"
+                  variant="danger"
+                  size="md"
                   disabled={submitting}
                   onClick={() => handleReviewAction('Rejected')}
-                  className="px-4 py-2 rounded-xl bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 text-xs font-bold transition-all flex items-center gap-1.5"
+                  icon={XCircle}
                 >
-                  <XCircle className="w-3.5 h-3.5" />
                   Reject Request
-                </button>
-                <button
+                </SpatialButton>
+                <SpatialButton
                   type="button"
+                  variant="primary"
+                  size="md"
                   disabled={submitting}
+                  isLoading={submitting}
                   onClick={() => handleReviewAction('Verified')}
-                  className="btn-glow px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-1.5"
+                  icon={BadgeCheck}
                 >
-                  {submitting ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <BadgeCheck className="w-4 h-4" />
-                  )}
                   Approve Verification
-                </button>
+                </SpatialButton>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </SpatialModal>
     </div>
   );
 };

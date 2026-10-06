@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../context/ThemeContext';
 import apiService from '../services/apiService';
-import { SkillTag } from '../components/SkillTag';
+import { SkillChip } from '../components/SkillChip';
 import { MatchScoreBadge } from '../components/MatchScoreBadge';
 import { VerificationBadge } from '../components/VerificationBadge';
+import { StatusBadge } from '../components/StatusBadge';
+import { Avatar } from '../components/Avatar';
+import { SpatialButton, SpatialTabs, SpatialCard, SpatialPanel } from '../components/spatial';
 import { 
   Inbox, 
   Send, 
@@ -21,6 +25,8 @@ import {
 
 export const MyRequests = () => {
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [activeTab, setActiveTab] = useState('my-requests'); // 'my-requests' | 'sent-responses'
 
   const [myRequests, setMyRequests] = useState([]);
@@ -69,62 +75,47 @@ export const MyRequests = () => {
     }
   };
 
-  const getStatusBadge = (st) => {
-    switch (st) {
-      case 'Accepted':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
-      case 'Rejected':
-        return 'bg-red-500/10 text-red-400 border-red-500/30';
-      default:
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
-    }
-  };
-
   return (
-    <div className="space-y-8 pb-12">
+    <div className="relative space-y-8 pb-16">
+      {/* Ambient Atmospheric Glow */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10" aria-hidden="true">
+        <div 
+          className="absolute -top-10 left-1/2 -translate-x-1/2 w-[560px] max-w-full h-[340px] bg-gradient-to-tr from-purple-500/12 via-indigo-500/10 to-transparent blur-3xl rounded-full" 
+        />
+      </div>
+
       {/* Header */}
-      <div className="space-y-2 border-b border-gray-800 pb-6">
-        <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
-          <Inbox className="w-8 h-8 text-indigo-400" />
-          Requests & Application Management
+      <div className={`relative space-y-2 border-b ${isLight ? 'border-slate-200/80' : 'border-gray-800/80'} pb-6`}>
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 mb-1">
+          <Inbox className="w-3.5 h-3.5" />
+          <span>ROSTER ORCHESTRATION</span>
+        </div>
+        <h1 className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'} flex items-center gap-3`}>
+          <Inbox className="w-8 h-8 text-indigo-500 shrink-0" />
+          Requests & Applications
         </h1>
-        <p className="text-sm text-gray-400">
-          Track responses to your team requests and manage applications you sent to others
+        <p className={`text-sm max-w-2xl ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
+          Orchestrate applicants to your posted team squads and track status updates on applications you submitted across the network.
         </p>
       </div>
 
       {/* Tabs Switcher */}
-      <div className="flex items-center gap-3 border-b border-gray-800 pb-4">
-        <button
-          onClick={() => setActiveTab('my-requests')}
-          className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${
-            activeTab === 'my-requests'
-              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25'
-              : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-white'
-          }`}
-        >
-          <Inbox className="w-4 h-4" />
-          Requests I Created ({myRequests.length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab('sent-responses')}
-          className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${
-            activeTab === 'sent-responses'
-              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25'
-              : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-white'
-          }`}
-        >
-          <Send className="w-4 h-4" />
-          Applications I Sent ({sentResponses.length})
-        </button>
+      <div className={`relative border-b ${isLight ? 'border-slate-200/80' : 'border-gray-800/80'} pb-4`}>
+        <SpatialTabs
+          tabs={[
+            { id: 'my-requests', label: 'Requests I Created', icon: Inbox, badge: myRequests.length },
+            { id: 'sent-responses', label: 'Applications I Sent', icon: Send, badge: sentResponses.length },
+          ]}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
       </div>
 
       {/* Tab 1: Requests I Created */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <div className="flex flex-col items-center justify-center py-24 gap-3">
           <div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-xs text-gray-400">Loading requests & applications...</p>
+          <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Loading requests & applications...</p>
         </div>
       ) : activeTab === 'my-requests' ? (
         <div className="space-y-6">
@@ -140,59 +131,58 @@ export const MyRequests = () => {
               const isExpanded = expandedRequestId === reqId;
 
               return (
-                <div key={reqId} className="glass-panel p-6 rounded-3xl border border-gray-800 space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
-                          {req.hackathon?.title || 'Hackathon'}
-                        </span>
-                        <span
-                          className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
-                            req.status === 'Open'
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                              : 'bg-red-500/10 text-red-400 border-red-500/30'
-                          }`}
-                        >
-                          {req.status}
-                        </span>
+                <SpatialCard key={reqId} hover={false} elevation="raised" className="p-6 space-y-5">
+                  <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b ${isLight ? 'border-slate-200/80' : 'border-gray-800/80'} pb-4`}>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <StatusBadge
+                          status="hackathon"
+                          accent="indigo"
+                          icon={Trophy}
+                          label={req.hackathon?.title || 'Hackathon Target'}
+                          size="sm"
+                        />
+                        <StatusBadge status={req.status} size="sm" />
                       </div>
-                      <h3 className="text-lg font-bold text-white">{req.title}</h3>
+                      <h3 className={`text-xl font-bold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>{req.title}</h3>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <button
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <SpatialButton
+                        variant="secondary"
+                        size="sm"
                         onClick={() => handleToggleRequestStatus(reqId, req.status)}
-                        className="px-3 py-1.5 rounded-xl border border-gray-700 text-gray-300 text-xs font-semibold hover:bg-gray-800 transition-colors"
                       >
                         Mark as {req.status === 'Open' ? 'Closed' : 'Open'}
-                      </button>
+                      </SpatialButton>
 
-                      <button
+                      <SpatialButton
+                        variant={isExpanded ? 'primary' : 'outline'}
+                        size="sm"
                         onClick={() => setExpandedRequestId(isExpanded ? null : reqId)}
-                        className="px-3.5 py-1.5 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold flex items-center gap-1.5"
+                        icon={MessageSquare}
                       >
-                        <MessageSquare className="w-3.5 h-3.5" />
                         {responsesForThisReq.length} Applicant(s)
-                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </button>
+                      </SpatialButton>
                     </div>
                   </div>
 
                   {/* Skills Needed */}
                   <div className="flex items-center gap-2 flex-wrap text-xs">
-                    <span className="text-gray-500 font-semibold">Skills Needed:</span>
+                    <span className={`${isLight ? 'text-slate-500' : 'text-gray-400'} font-semibold`}>Skills Needed:</span>
                     {req.skillsNeeded?.map((s) => (
-                      <SkillTag key={s} name={s} size="sm" />
+                      <SkillChip key={s} skill={s} variant="required" size="sm" />
                     ))}
                   </div>
 
                   {/* Applicants Accordion */}
                   {(isExpanded || responsesForThisReq.length > 0) && (
-                    <div className="pt-4 border-t border-gray-800/80 space-y-3">
-                      <h4 className="text-xs font-bold text-gray-300 uppercase tracking-wider">
-                        Applicant Responses ({responsesForThisReq.length})
-                      </h4>
+                    <div className={`pt-4 border-t ${isLight ? 'border-slate-200/80' : 'border-gray-800/80'} space-y-3`}>
+                      <div className="flex items-center justify-between">
+                        <h4 className={`text-xs font-bold ${isLight ? 'text-slate-700' : 'text-gray-300'} uppercase tracking-wider`}>
+                          Applicant Responses ({responsesForThisReq.length})
+                        </h4>
+                      </div>
 
                       {responsesForThisReq.length > 0 ? (
                         <div className="space-y-3">
@@ -202,18 +192,22 @@ export const MyRequests = () => {
                             return (
                               <div
                                 key={resId}
-                                className="p-4 rounded-2xl bg-gray-900/80 border border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                                className={`p-4 sm:p-5 rounded-2xl ${
+                                  isLight 
+                                    ? 'bg-slate-50/90 border-slate-200/80 shadow-xs' 
+                                    : 'bg-gray-900/60 border-white/5 backdrop-blur-md'
+                                } border flex flex-col sm:flex-row sm:items-center justify-between gap-4`}
                               >
-                                <div className="flex items-start gap-3">
-                                  <img
-                                    src={respondentObj.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'}
-                                    alt={respondentObj.name}
-                                    className="w-10 h-10 rounded-xl object-cover ring-1 ring-indigo-500/30 shrink-0"
+                                <div className="flex items-start gap-3.5">
+                                  <Avatar
+                                    src={respondentObj.avatarUrl}
+                                    name={respondentObj.name}
+                                    size="md"
                                   />
-                                  <div className="space-y-1">
+                                  <div className="space-y-1.5 min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
-                                      <p className="text-sm font-bold text-white">{respondentObj.name || 'Developer'}</p>
-                                      <span className="text-[10px] text-gray-400">
+                                      <p className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{respondentObj.name || 'Developer'}</p>
+                                      <span className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
                                         ({respondentObj.experienceLevel || 'Intermediate'} Dev)
                                       </span>
                                       <VerificationBadge status={respondentObj.experienceVerificationStatus} />
@@ -224,12 +218,12 @@ export const MyRequests = () => {
                                         />
                                       )}
                                     </div>
-                                    <p className="text-xs text-gray-300 leading-relaxed">{res.message}</p>
+                                    <p className={`text-xs ${isLight ? 'text-slate-700' : 'text-gray-300'} leading-relaxed`}>{res.message}</p>
 
                                     {respondentObj.skills && (
-                                      <div className="flex flex-wrap gap-1 pt-1">
+                                      <div className="flex flex-wrap gap-1 pt-0.5">
                                         {respondentObj.skills.slice(0, 5).map((sk) => (
-                                          <SkillTag key={sk} name={sk} size="sm" />
+                                          <SkillChip key={sk} skill={sk} variant="default" size="sm" />
                                         ))}
                                       </div>
                                     )}
@@ -237,24 +231,26 @@ export const MyRequests = () => {
                                 </div>
 
                                 <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${getStatusBadge(res.status)}`}>
-                                    {res.status}
-                                  </span>
+                                  <StatusBadge status={res.status} size="sm" />
 
                                   {res.status === 'Pending' && (
                                     <>
-                                      <button
+                                      <SpatialButton
+                                        variant="primary"
+                                        size="sm"
                                         onClick={() => handleStatusChange(resId, 'Accepted')}
-                                        className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1 transition-all"
+                                        icon={CheckCircle2}
                                       >
-                                        <CheckCircle2 className="w-3.5 h-3.5" /> Accept
-                                      </button>
-                                      <button
+                                        Accept
+                                      </SpatialButton>
+                                      <SpatialButton
+                                        variant="danger"
+                                        size="sm"
                                         onClick={() => handleStatusChange(resId, 'Rejected')}
-                                        className="px-3 py-1.5 rounded-xl bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 text-xs font-semibold flex items-center gap-1 transition-all"
+                                        icon={XCircle}
                                       >
-                                        <XCircle className="w-3.5 h-3.5" /> Reject
-                                      </button>
+                                        Reject
+                                      </SpatialButton>
                                     </>
                                   )}
                                 </div>
@@ -263,19 +259,19 @@ export const MyRequests = () => {
                           })}
                         </div>
                       ) : (
-                        <p className="text-xs text-gray-500 italic">No responses received yet for this team request.</p>
+                        <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-500'} italic`}>No responses received yet for this team request.</p>
                       )}
                     </div>
                   )}
-                </div>
+                </SpatialCard>
               );
             })
           ) : (
-            <div className="glass-panel p-12 rounded-3xl border border-gray-800 text-center space-y-3">
-              <Inbox className="w-12 h-12 text-gray-600 mx-auto" />
-              <h3 className="text-lg font-bold text-white">No Team Requests Created Yet</h3>
-              <p className="text-xs text-gray-400">Post a request when you need skills for an upcoming hackathon.</p>
-            </div>
+            <SpatialPanel elevation="flat" className="p-12 text-center space-y-3">
+              <Inbox className="w-12 h-12 text-indigo-400/60 mx-auto" />
+              <h3 className={`text-lg font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>No Team Requests Created Yet</h3>
+              <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>Post a request when you need specific skills for an upcoming hackathon roster.</p>
+            </SpatialPanel>
           )}
         </div>
       ) : (
@@ -286,34 +282,32 @@ export const MyRequests = () => {
               const resId = res._id || res.id;
               const reqObj = typeof res.teamRequest === 'object' ? res.teamRequest : {};
               return (
-                <div key={resId} className="glass-panel p-6 rounded-3xl border border-gray-800 space-y-3">
-                  <div className="flex items-center justify-between gap-4 border-b border-gray-800 pb-3">
-                    <div>
-                      <span className="text-xs font-semibold text-indigo-400">
-                        Request: {reqObj.title || 'Hackathon Team Request'}
+                <SpatialCard key={resId} hover elevation="raised" className="p-6 space-y-3.5">
+                  <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b ${isLight ? 'border-slate-200/80' : 'border-gray-800/80'} pb-3`}>
+                    <div className="space-y-1">
+                      <span className={`text-sm font-bold ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`}>
+                        Target Request: {reqObj.title || 'Hackathon Team Request'}
                       </span>
-                      <p className="text-[11px] text-gray-500 flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> Sent on {new Date(res.createdAt).toLocaleDateString()}
+                      <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-gray-400'} flex items-center gap-1.5`}>
+                        <Clock className="w-3.5 h-3.5 text-slate-400" /> Sent on {new Date(res.createdAt).toLocaleDateString()}
                       </p>
                     </div>
 
-                    <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getStatusBadge(res.status)}`}>
-                      Status: {res.status}
-                    </span>
+                    <StatusBadge status={res.status} size="sm" />
                   </div>
 
-                  <p className="text-xs text-gray-300 leading-relaxed bg-gray-900/60 p-3 rounded-xl border border-gray-800">
-                    <span className="font-semibold text-gray-400">Your message:</span> "{res.message}"
-                  </p>
-                </div>
+                  <div className={`text-xs ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-gray-900/60 border-white/5 text-gray-300'} leading-relaxed p-3.5 rounded-xl border`}>
+                    <span className={`font-semibold ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Your pitch message:</span> "{res.message}"
+                  </div>
+                </SpatialCard>
               );
             })
           ) : (
-            <div className="glass-panel p-12 rounded-3xl border border-gray-800 text-center space-y-3">
-              <Send className="w-12 h-12 text-gray-600 mx-auto" />
-              <h3 className="text-lg font-bold text-white">No Sent Applications</h3>
-              <p className="text-xs text-gray-400">Browse hackathons and team requests to apply!</p>
-            </div>
+            <SpatialPanel elevation="flat" className="p-12 text-center space-y-3">
+              <Send className="w-12 h-12 text-indigo-400/60 mx-auto" />
+              <h3 className={`text-lg font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>No Sent Applications</h3>
+              <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>Browse hackathons and team requests across the platform to apply!</p>
+            </SpatialPanel>
           )}
         </div>
       )}

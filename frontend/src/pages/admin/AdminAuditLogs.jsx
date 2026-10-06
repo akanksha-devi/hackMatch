@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import apiService from '../../services/apiService';
+import { useTheme } from '../../context/ThemeContext';
+import { SpatialPanel, SpatialDropdown, SpatialButton, SpatialInput } from '../../components/spatial';
+import { StatusBadge } from '../../components/StatusBadge';
+import { Avatar } from '../../components/Avatar';
 import {
   History,
   Search,
@@ -13,6 +17,8 @@ import {
 } from 'lucide-react';
 
 export const AdminAuditLogs = () => {
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === 'light';
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -63,55 +69,56 @@ export const AdminAuditLogs = () => {
           </p>
         </div>
 
-        <button
+        <SpatialButton
+          variant="outline"
+          size="sm"
           onClick={loadLogs}
-          className="px-3.5 py-1.5 rounded-xl bg-gray-900 border border-gray-800 text-gray-300 hover:text-white text-xs font-semibold transition-all"
+          loading={loading}
         >
           Refresh Logs
-        </button>
+        </SpatialButton>
       </div>
 
       {/* Filter Toolbar */}
-      <div className="glass-panel p-4 rounded-2xl border border-gray-800 flex flex-col md:flex-row items-center gap-3">
-        <div className="relative flex-1 w-full">
-          <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
+      <SpatialPanel padding="compact" className="flex flex-col md:flex-row items-center gap-3">
+        <div className="flex-1 w-full">
+          <SpatialInput
+            size="sm"
+            icon={Search}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by action, actor name, or target..."
-            className="w-full bg-gray-900 border border-gray-800 rounded-xl pl-10 pr-4 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <Filter className="w-4 h-4 text-gray-400 shrink-0" />
-          <select
+        <div className="flex items-center gap-2 w-full md:w-64">
+          <SpatialDropdown
             value={actionFilter}
             onChange={(e) => setActionFilter(e.target.value)}
-            className="w-full md:w-auto bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
-          >
-            {uniqueActions.map((a) => (
-              <option key={a} value={a}>
-                {a === 'All' ? 'All Actions' : a}
-              </option>
-            ))}
-          </select>
+            options={uniqueActions.map((a) => ({
+              value: a,
+              label: a === 'All' ? 'All Actions' : a,
+            }))}
+            placeholder="Filter by Action..."
+            icon={Filter}
+          />
         </div>
-      </div>
+      </SpatialPanel>
 
       {/* Table */}
-      <div className="glass-panel rounded-3xl border border-gray-800 overflow-hidden">
+      <SpatialPanel padding="none" className="overflow-hidden">
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-xs text-gray-400">Loading audit history...</p>
+            <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Loading audit history...</p>
           </div>
         ) : filtered.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-gray-800 bg-gray-950/40 text-gray-400">
+                <tr className={`border-b ${
+                  isLight ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-gray-950/40 text-gray-400 border-gray-800'
+                }`}>
                   <th className="py-3.5 px-6 font-semibold">Timestamp</th>
                   <th className="py-3.5 px-4 font-semibold">Action</th>
                   <th className="py-3.5 px-4 font-semibold">Actor</th>
@@ -120,37 +127,47 @@ export const AdminAuditLogs = () => {
                   <th className="py-3.5 px-6 font-semibold">Metadata / Details</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800/60 font-mono">
+              <tbody className={`divide-y font-mono ${isLight ? 'divide-slate-200' : 'divide-gray-800/60'}`}>
                 {filtered.map((log) => {
                   const logId = log._id || log.id;
                   return (
-                    <tr key={logId} className="hover:bg-gray-900/40 transition-colors font-sans">
-                      <td className="py-4 px-6 text-gray-400 text-[11px] whitespace-nowrap">
+                    <tr key={logId} className={`transition-colors font-sans ${
+                      isLight ? 'hover:bg-slate-50' : 'hover:bg-gray-900/40'
+                    }`}>
+                      <td className={`py-4 px-6 text-[11px] whitespace-nowrap ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
                         {new Date(log.timestamp).toLocaleString([], {
                           dateStyle: 'medium',
                           timeStyle: 'medium',
                         })}
                       </td>
 
-                      <td className="py-4 px-4 font-mono font-bold text-purple-300">
+                      <td className={`py-4 px-4 font-mono font-bold ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
                         {log.action}
                       </td>
 
-                      <td className="py-4 px-4 text-white font-medium">
-                        {log.actor?.name || log.actor?.email || 'System'}
+                      <td className={`py-4 px-4 font-medium ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                        <div className="flex items-center gap-2">
+                          <Avatar
+                            name={log.actor?.name || log.actor?.email || 'System'}
+                            size="xs"
+                          />
+                          <span>{log.actor?.name || log.actor?.email || 'System'}</span>
+                        </div>
                       </td>
 
                       <td className="py-4 px-4">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-900 border border-gray-800 text-gray-400">
-                          {log.role}
-                        </span>
+                        <StatusBadge
+                          status={log.role}
+                          size="sm"
+                          accent={log.role === 'superAdmin' ? 'purple' : 'indigo'}
+                        />
                       </td>
 
-                      <td className="py-4 px-4 text-gray-300">
+                      <td className={`py-4 px-4 ${isLight ? 'text-slate-600' : 'text-gray-300'}`}>
                         {log.targetType || 'N/A'}
                       </td>
 
-                      <td className="py-4 px-6 text-gray-400 text-[11px] max-w-xs truncate">
+                      <td className={`py-4 px-6 text-[11px] max-w-xs truncate ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
                         {typeof log.details === 'object'
                           ? JSON.stringify(log.details)
                           : String(log.details || '-')}
@@ -167,7 +184,7 @@ export const AdminAuditLogs = () => {
             <p>No audit trail events found.</p>
           </div>
         )}
-      </div>
+      </SpatialPanel>
     </div>
   );
 };

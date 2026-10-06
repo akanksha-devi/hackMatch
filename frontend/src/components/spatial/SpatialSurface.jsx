@@ -8,6 +8,7 @@ export const SpatialSurface = React.forwardRef(({
   as: Component = 'div',
   elevation = 'raised', // 'flat' | 'raised' | 'floating' | 'overlay'
   variant = 'glass',    // 'glass' | 'panel' | 'card' | 'control'
+  glass = null,         // null | 'flat' | 'raised' | 'floating' | 'refraction' | 'refraction-subtle'
   glow = false,         // false | true | 'indigo' | 'cyan' | 'violet'
   hoverDepth = false,   // Adds 3D translateY(-3px) and shadow lift on hover
   className = '',
@@ -31,6 +32,22 @@ export const SpatialSurface = React.forwardRef(({
     control: 'spatial-control',
   }[variant] || 'spatial-glass';
 
+  // Liquid Glass Material Tier Mapping (Step 4.0A)
+  const liquidGlassClass = glass
+    ? ({
+        flat: 'liquid-glass-flat',
+        raised: 'liquid-glass-raised',
+        floating: 'liquid-glass-floating',
+        refraction: 'liquid-glass-refraction',
+        'refraction-subtle': 'liquid-glass-refraction-subtle',
+      }[glass] || 'liquid-glass-raised')
+    : ({
+        flat: 'liquid-glass-flat',
+        raised: 'liquid-glass-raised',
+        floating: 'liquid-glass-floating',
+        overlay: 'liquid-glass-refraction',
+      }[elevation] || 'liquid-glass-raised');
+
   // Optional glow rims
   const glowStyles = {
     true: 'spatial-glow-indigo',
@@ -44,7 +61,8 @@ export const SpatialSurface = React.forwardRef(({
   return (
     <Component
       ref={ref}
-      className={`spatial-surface ${elevationStyles} ${variantStyles} ${hoverStyle} ${glowStyles} ${className}`}
+      className={`spatial-surface ${liquidGlassClass} ${elevationStyles} ${variantStyles} ${hoverStyle} ${glowStyles} ${className}`}
+
       style={style}
       {...props}
     >

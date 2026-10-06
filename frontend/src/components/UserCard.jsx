@@ -1,11 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 import { Code2, Share2, Globe, ExternalLink, Mail } from 'lucide-react';
-import { SkillTag } from './SkillTag';
+import { SkillChip } from './SkillChip';
 import { MatchScoreBadge } from './MatchScoreBadge';
 import { VerificationBadge } from './VerificationBadge';
+import { ExperienceBadge } from './ExperienceBadge';
+import { StatusBadge } from './StatusBadge';
+import { Avatar } from './Avatar';
+import { SpatialButton, SpatialCard, SpatialAnimatedIcon } from './spatial';
 
 export const UserCard = ({ user, matchScore = 0, overlappingSkills = [], onInvite = null }) => {
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === 'light';
   const {
     id,
     name,
@@ -18,46 +25,43 @@ export const UserCard = ({ user, matchScore = 0, overlappingSkills = [], onInvit
     avatarUrl
   } = user;
 
-  const getExpBadge = (level) => {
-    switch (level) {
-      case 'Advanced':
-        return 'badge-purple';
-      case 'Intermediate':
-        return 'badge-indigo';
-      default:
-        return 'badge-emerald';
-    }
-  };
-
   const userId = user._id || user.id;
   const userCollege = user.collegeId?.name || user.college?.name || user.collegeName;
 
   return (
-    <div className="glass-panel glass-panel-hover rounded-2xl p-6 flex flex-col justify-between border border-gray-800/80 relative group">
+    <SpatialCard
+      hover
+      elevation="raised"
+      className="p-6 flex flex-col justify-between group card-choreography"
+    >
       <div>
         {/* Header: Avatar, Name, Exp Level & Match Score */}
-        <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex items-start justify-between gap-3 mb-4 card-meta">
           <div className="flex items-center gap-3">
-            <img
-              src={avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'}
-              alt={name}
-              className="w-12 h-12 rounded-xl object-cover ring-2 ring-indigo-500/30 group-hover:ring-indigo-500/70 transition-all"
-            />
+            <div className="card-avatar-bezel">
+              <Avatar
+                src={avatarUrl}
+                name={name}
+                size="lg"
+                verified={user.experienceVerificationStatus === 'Verified'}
+              />
+            </div>
             <div>
               <Link to={`/profile/${userId}`}>
-                <h4 className="font-bold text-white group-hover:text-indigo-300 transition-colors text-base">
+                <h4 className={`card-title font-bold ${isLight ? 'text-slate-900 group-hover:text-indigo-600' : 'text-white group-hover:text-indigo-300'} transition-colors text-base`}>
                   {name}
                 </h4>
               </Link>
               <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${getExpBadge(experienceLevel)}`}>
-                  {experienceLevel}
-                </span>
+                <ExperienceBadge level={experienceLevel} size="sm" />
                 <VerificationBadge status={user.experienceVerificationStatus} />
                 {userCollege && (
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 truncate max-w-[120px]">
-                    🏫 {userCollege}
-                  </span>
+                  <StatusBadge
+                    status="campus"
+                    label={userCollege}
+                    size="sm"
+                    className="max-w-[120px]"
+                  />
                 )}
               </div>
             </div>
@@ -70,26 +74,27 @@ export const UserCard = ({ user, matchScore = 0, overlappingSkills = [], onInvit
 
         {/* Bio */}
         {bio && (
-          <p className="text-xs text-gray-400 line-clamp-2 mb-4 leading-relaxed">
+          <p className={`card-desc text-xs ${isLight ? 'text-slate-600' : 'text-gray-400'} line-clamp-2 mb-4 leading-relaxed`}>
             {bio}
           </p>
         )}
 
         {/* Skills */}
         <div className="mb-4">
-          <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-2">Skills</p>
+          <p className={`text-[11px] uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-gray-500'} font-semibold mb-2`}>Skills</p>
           <div className="flex flex-wrap gap-1.5">
             {skills.map((skill) => {
               const isMatch = overlappingSkills.some(
                 (s) => s.toLowerCase() === skill.toLowerCase()
               );
               return (
-                <SkillTag
-                  key={skill}
-                  name={skill}
-                  size="sm"
-                  isHighlight={isMatch}
-                />
+                <div key={skill} className="card-chip">
+                  <SkillChip
+                    skill={skill}
+                    size="sm"
+                    variant={isMatch ? 'matched' : 'default'}
+                  />
+                </div>
               );
             })}
           </div>
@@ -97,17 +102,17 @@ export const UserCard = ({ user, matchScore = 0, overlappingSkills = [], onInvit
       </div>
 
       {/* Social Links & Action */}
-      <div className="pt-4 border-t border-gray-800/80 flex items-center justify-between gap-2">
+      <div className={`pt-4 border-t ${isLight ? 'border-slate-200' : 'border-gray-800/80'} flex items-center justify-between gap-2`}>
         <div className="flex items-center gap-2">
           {githubUrl && (
             <a
               href={githubUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-gray-400 hover:text-white transition-colors"
+              className={`${isLight ? 'text-slate-400 hover:text-slate-800' : 'text-gray-400 hover:text-white'} transition-colors`}
               title="GitHub Profile"
             >
-              <Code2 className="w-4 h-4" />
+              <SpatialAnimatedIcon icon={Code2} animation="bracket" trigger="parent-hover" choreography="primary" className="w-4 h-4" />
             </a>
           )}
           {linkedinUrl && (
@@ -115,10 +120,10 @@ export const UserCard = ({ user, matchScore = 0, overlappingSkills = [], onInvit
               href={linkedinUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-gray-400 hover:text-white transition-colors"
+              className={`${isLight ? 'text-slate-400 hover:text-slate-800' : 'text-gray-400 hover:text-white'} transition-colors`}
               title="LinkedIn Profile"
             >
-              <Share2 className="w-4 h-4" />
+              <SpatialAnimatedIcon icon={Share2} animation="bloom" trigger="parent-hover" choreography="primary" className="w-4 h-4" />
             </a>
           )}
           {portfolioUrl && (
@@ -126,31 +131,32 @@ export const UserCard = ({ user, matchScore = 0, overlappingSkills = [], onInvit
               href={portfolioUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-gray-400 hover:text-white transition-colors"
+              className={`${isLight ? 'text-slate-400 hover:text-slate-800' : 'text-gray-400 hover:text-white'} transition-colors`}
               title="Portfolio Website"
             >
-              <Globe className="w-4 h-4" />
+              <SpatialAnimatedIcon icon={Globe} animation="orbit" trigger="parent-hover" choreography="primary" className="w-4 h-4" />
             </a>
           )}
         </div>
 
         {onInvite ? (
-          <button
+          <SpatialButton
+            variant="secondary"
+            size="sm"
             onClick={() => onInvite(user)}
-            className="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 border border-indigo-500/40 text-indigo-300 hover:text-white text-xs font-semibold transition-all flex items-center gap-1.5"
+            icon={Mail}
           >
-            <Mail className="w-3.5 h-3.5" />
             Invite Teammate
-          </button>
+          </SpatialButton>
         ) : (
           <Link
             to={`/profile/${userId}`}
-            className="text-xs font-semibold text-gray-400 hover:text-white flex items-center gap-1 transition-colors"
+            className={`text-xs font-semibold ${isLight ? 'text-indigo-600 hover:text-indigo-800' : 'text-gray-400 hover:text-white'} flex items-center gap-1 transition-colors`}
           >
-            View Profile <ExternalLink className="w-3.5 h-3.5" />
+            View Profile <SpatialAnimatedIcon icon={ExternalLink} animation="outward" trigger="parent-hover" choreography="action" className="w-3.5 h-3.5 card-action-icon" />
           </Link>
         )}
       </div>
-    </div>
+    </SpatialCard>
   );
 };

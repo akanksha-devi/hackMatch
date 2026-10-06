@@ -46,6 +46,39 @@ html {
   --color-border: rgba(255, 255, 255, 0.08);
   --color-text-primary: #f3f4f6;
   --color-text-secondary: #9ca3af;
+
+  /* Semantic Design System Tokens (Dark) */
+  --surface-bg: #07090e;
+  --surface-card: rgba(15, 23, 42, 0.60);
+  --surface-panel: rgba(15, 23, 42, 0.58);
+  --surface-control: rgba(15, 23, 42, 0.70);
+  --surface-elevated: rgba(22, 34, 58, 0.85);
+  --surface-overlay: rgba(15, 23, 42, 0.90);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-disabled: #475569;
+  --text-inverse: #0f172a;
+
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-focus: rgba(99, 102, 241, 0.60);
+
+  --focus-ring-color: rgba(129, 140, 248, 0.70);
+  --focus-ring-offset: #0f172a;
+
+  --elevation-flat: none;
+  --elevation-control: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+  --elevation-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  --elevation-floating: 0 16px 38px -10px rgba(0, 0, 0, 0.6);
+  --elevation-modal: 0 24px 50px -12px rgba(0, 0, 0, 0.75);
+
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-micro: 150ms;
+  --duration-standard: 200ms;
+  --duration-enter: 280ms;
 }
 
 [data-theme="light"], .light {
@@ -55,6 +88,44 @@ html {
   --color-border: rgba(203, 213, 225, 0.8);
   --color-text-primary: #0f172a;
   --color-text-secondary: #475569;
+
+  /* Semantic Design System Tokens (Light) */
+  --surface-bg: #f8fafc;
+  --surface-card: rgba(255, 255, 255, 0.85);
+  --surface-panel: rgba(255, 255, 255, 0.78);
+  --surface-control: rgba(255, 255, 255, 0.92);
+  --surface-elevated: rgba(255, 255, 255, 0.98);
+  --surface-overlay: rgba(255, 255, 255, 0.95);
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-disabled: #94a3b8;
+  --text-inverse: #ffffff;
+
+  --border-subtle: rgba(226, 232, 240, 0.60);
+  --border-default: rgba(203, 213, 225, 0.80);
+  --border-strong: rgba(148, 163, 184, 0.80);
+  --border-focus: rgba(99, 102, 241, 0.70);
+
+  --focus-ring-color: rgba(99, 102, 241, 0.70);
+  --focus-ring-offset: #ffffff;
+
+  --elevation-flat: none;
+  --elevation-control: 0 2px 8px -2px rgba(15, 23, 42, 0.04);
+  --elevation-card: 0 10px 25px -5px rgba(15, 23, 42, 0.05);
+  --elevation-floating: 0 16px 35px -8px rgba(15, 23, 42, 0.08);
+  --elevation-modal: 0 24px 45px -10px rgba(15, 23, 42, 0.12);
+}
+
+/* Reduced Motion Safety */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .font-mono-code {
@@ -110,6 +181,13 @@ nav, aside, main, .glass-panel {
     radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
     radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
     radial-gradient(at 50% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 50%);
+}
+
+.light .bg-mesh-glow {
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.10) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(6, 182, 212, 0.06) 0px, transparent 50%);
 }
 
 /* Glassmorphism Cards with Spatial UI Depth */
@@ -173,10 +251,63 @@ nav, aside, main, .glass-panel {
 
 .spatial-card {
   background: rgba(15, 23, 42, 0.60);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
+
+/* ==========================================================================
+   HACKMATCH LIQUID GLASS MATERIAL SYSTEM (STEP 4.0A)
+   Centralized 4-tier optical material engine: flat, raised, floating, refraction
+   ========================================================================== */
+
+/* Tier 1: Glass Flat */
+.liquid-glass-flat {
+  background: rgba(15, 23, 42, 0.25);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Tier 2: Glass Raised (Default SpatialCard) */
+.liquid-glass-raised {
+  background: rgba(15, 23, 42, 0.40);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.20), inset 0 0 20px 0 rgba(255, 255, 255, 0.02);
+}
+
+/* Tier 3: Glass Floating (Elevated Controls, Popovers & Floating Menus) */
+.liquid-glass-floating {
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.65), 0 8px 20px -4px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.26), inset 0 0 24px 0 rgba(255, 255, 255, 0.02);
+}
+
+/* Tier 4: Glass Refraction (Optical SVG Displacement + Cascading CSS Fallback) */
+.liquid-glass-refraction {
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(20px) saturate(165%);
+  -webkit-backdrop-filter: blur(20px) saturate(165%);
+  backdrop-filter: url(#liquid-glass-refract) blur(20px) saturate(165%);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: 0 28px 64px -12px rgba(0, 0, 0, 0.85), inset 0 1.5px 2px rgba(255, 255, 255, 0.35), inset 0 0 32px rgba(255, 255, 255, 0.04);
+}
+
+.liquid-glass-refraction-subtle {
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(18px) saturate(155%);
+  -webkit-backdrop-filter: blur(18px) saturate(155%);
+  backdrop-filter: url(#liquid-glass-refract-subtle) blur(18px) saturate(155%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 20px 44px -10px rgba(0, 0, 0, 0.70), inset 0 1px 1px rgba(255, 255, 255, 0.22);
+}
+
 
 /* Interactive Controls (Dropdowns, Date Pickers, Inputs) */
 .spatial-control {
@@ -272,7 +403,17 @@ nav, aside, main, .glass-panel {
   background: #334155;
 }
 
-/* Badge Glow */
+/* Badge Glow & Liquid Glass Substrate */
+[class*="badge-"] {
+  backdrop-filter: blur(8px) saturate(125%);
+  -webkit-backdrop-filter: blur(8px) saturate(125%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.light [class*="badge-"] {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.60);
+}
+
 .badge-indigo {
   background: rgba(99, 102, 241, 0.12);
   color: #818cf8;
@@ -303,6 +444,37 @@ nav, aside, main, .glass-panel {
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
+/* Light Mode Badges - High contrast, accessible color toning */
+.light .badge-indigo {
+  background: rgba(99, 102, 241, 0.08);
+  color: #4338ca;
+  border-color: rgba(99, 102, 241, 0.28);
+}
+
+.light .badge-cyan {
+  background: rgba(6, 182, 212, 0.08);
+  color: #0e7490;
+  border-color: rgba(6, 182, 212, 0.28);
+}
+
+.light .badge-emerald {
+  background: rgba(16, 185, 129, 0.08);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.28);
+}
+
+.light .badge-purple {
+  background: rgba(168, 85, 247, 0.08);
+  color: #7e22ce;
+  border-color: rgba(168, 85, 247, 0.28);
+}
+
+.light .badge-amber {
+  background: rgba(245, 158, 11, 0.08);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.28);
+}
+
 /* Hero Gradient Text */
 .text-gradient {
   background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 50%, #818cf8 100%);
@@ -328,11 +500,11 @@ nav, aside, main, .glass-panel {
 
 /* Navigation & Layout */
 .light nav.sticky {
-  background-color: rgba(255, 255, 255, 0.82) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  border-bottom-color: rgba(226, 232, 240, 0.85) !important;
-  box-shadow: 0 4px 20px -5px rgba(15, 23, 42, 0.04);
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom-color: transparent !important;
+  box-shadow: none !important;
 }
 
 .light aside {
@@ -365,9 +537,18 @@ nav, aside, main, .glass-panel {
 .light .bg-gray-900\/90,
 .light .bg-gray-900\/80,
 .light .bg-gray-900\/60,
+.light .bg-slate-950,
+.light .bg-slate-950\/90,
+.light .bg-slate-950\/80,
+.light .bg-slate-950\/60,
 .light .bg-slate-900,
 .light .bg-slate-900\/90,
-.light .bg-\[\#0b0f17\] {
+.light .bg-slate-900\/80,
+.light .bg-slate-900\/70,
+.light .bg-slate-900\/60,
+.light .bg-slate-800\/80,
+.light .bg-\[\#0b0f17\],
+.light .bg-\[\#05070a\] {
   background-color: rgba(255, 255, 255, 0.78);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -382,7 +563,9 @@ nav, aside, main, .glass-panel {
 .light .bg-gray-800\/60,
 .light .bg-gray-800\/50,
 .light .bg-gray-800\/40,
-.light .bg-gray-900\/40 {
+.light .bg-gray-900\/40,
+.light .bg-slate-800,
+.light .bg-slate-800\/90 {
   background-color: rgba(241, 245, 249, 0.85);
 }
 
@@ -390,7 +573,12 @@ nav, aside, main, .glass-panel {
 .light .border-gray-800,
 .light .border-gray-800\/80,
 .light .border-gray-800\/90,
-.light .border-gray-700 {
+.light .border-gray-800\/60,
+.light .border-gray-700,
+.light .border-slate-800,
+.light .border-slate-800\/80,
+.light .border-slate-700,
+.light .border-slate-700\/80 {
   border-color: rgba(226, 232, 240, 0.9);
 }
 
@@ -403,23 +591,28 @@ nav, aside, main, .glass-panel {
   color: #0f172a;
 }
 
-.light .text-gray-100 {
+.light .text-gray-100,
+.light .text-slate-100 {
   color: #0f172a;
 }
 
-.light .text-gray-200 {
+.light .text-gray-200,
+.light .text-slate-200 {
   color: #1e293b;
 }
 
-.light .text-gray-300 {
+.light .text-gray-300,
+.light .text-slate-300 {
   color: #334155;
 }
 
-.light .text-gray-400 {
+.light .text-gray-400,
+.light .text-slate-400 {
   color: #475569;
 }
 
-.light .text-gray-500 {
+.light .text-gray-500,
+.light .text-slate-500 {
   color: #64748b;
 }
 
@@ -521,4 +714,686 @@ nav, aside, main, .glass-panel {
   box-shadow: 0 16px 35px -8px rgba(99, 102, 241, 0.14), inset 0 1px 0 0 #ffffff;
 }
 
+/* Safety rules for light theme hover states */
+.light :hover.hover\:bg-gray-900,
+.light :hover.hover\:bg-gray-800,
+.light :hover.hover\:bg-slate-900,
+.light :hover.hover\:bg-slate-800 {
+  background-color: rgba(241, 245, 249, 0.9) !important;
+}
 
+.light :hover.hover\:bg-gray-900\/40,
+.light :hover.hover\:bg-gray-900\/60,
+.light :hover.hover\:bg-gray-800\/60,
+.light :hover.hover\:bg-slate-800\/60 {
+  background-color: rgba(241, 245, 249, 0.8) !important;
+}
+
+.light :hover.hover\:text-white:not(.btn-glow):not([class*="bg-indigo"]):not([class*="bg-violet"]):not([class*="bg-cyan"]):not([class*="bg-emerald"]):not([class*="bg-purple"]):not([class*="bg-gradient"]) {
+  color: #0f172a !important;
+}
+
+/* ==========================================================================
+   Light Mode Liquid Glass Overrides
+   ========================================================================== */
+.light .liquid-glass-flat {
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  border: 1px solid rgba(203, 213, 225, 0.50);
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.light .liquid-glass-raised {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  border: 1px solid rgba(203, 213, 225, 0.65);
+  box-shadow: 0 12px 30px -6px rgba(15, 23, 42, 0.07), 0 4px 12px -2px rgba(15, 23, 42, 0.04), inset 0 1px 0 #ffffff;
+}
+
+.light .liquid-glass-floating {
+  background: rgba(255, 255, 255, 0.52);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(203, 213, 225, 0.75);
+  box-shadow: 0 18px 40px -8px rgba(15, 23, 42, 0.09), 0 6px 14px -4px rgba(15, 23, 42, 0.04), inset 0 1px 1.5px #ffffff;
+}
+
+.light .liquid-glass-refraction {
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: url(#liquid-glass-refract) blur(20px) saturate(160%);
+  border: 1px solid rgba(203, 213, 225, 0.90);
+  box-shadow: 0 24px 56px -10px rgba(15, 23, 42, 0.16), 0 8px 24px -4px rgba(15, 23, 42, 0.08), inset 0 1.5px 2px #ffffff;
+}
+
+.light .liquid-glass-refraction-subtle {
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: url(#liquid-glass-refract-subtle) blur(18px) saturate(150%);
+  border: 1px solid rgba(203, 213, 225, 0.80);
+  box-shadow: 0 18px 40px -8px rgba(15, 23, 42, 0.12), inset 0 1px 1px #ffffff;
+}
+
+/* Reduced transparency accessibility support */
+@media (prefers-reduced-transparency: reduce) {
+  .liquid-glass-flat,
+  .liquid-glass-raised,
+  .liquid-glass-floating,
+  .liquid-glass-refraction,
+  .liquid-glass-refraction-subtle {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: #0f172a !important;
+  }
+  .light .liquid-glass-flat,
+  .light .liquid-glass-raised,
+  .light .liquid-glass-floating,
+  .light .liquid-glass-refraction,
+  .light .liquid-glass-refraction-subtle {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: #ffffff !important;
+  }
+}
+
+/* ==========================================================================
+   GLOBAL MOTION SYSTEM (STEP 4.5)
+   Emil Kowalski + Apple Design Physics & Tactile Micro-Interactions
+   ========================================================================== */
+
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  /* =============================================================
+     STEP 4.5E — HUMAN-PERCEPTION MOTION SCALE
+     Calibrated to be clearly noticeable at normal viewing distance.
+     ============================================================= */
+  --duration-micro: 280ms;         /* Tiny icons: micro-lift, glide, pop */
+  --duration-standard: 360ms;      /* Standard icon responses */
+  --duration-expressive: 480ms;    /* Complex icons: bell, bounce, twist */
+  --duration-enter: 340ms;         /* Popover / menu entrance */
+  --duration-exit: 200ms;          /* Surface exit, faster than enter */
+  --duration-modal: 400ms;         /* Universal search & dialog entrance */
+  --duration-choreography: 650ms;  /* Full card cascade total window */
+}
+
+
+/* Semantic Motion Utilities */
+.motion-interactive {
+  transition: transform var(--duration-standard) var(--ease-out),
+              box-shadow var(--duration-standard) var(--ease-out),
+              border-color var(--duration-standard) var(--ease-out),
+              background-color var(--duration-standard) var(--ease-out),
+              color var(--duration-standard) var(--ease-out);
+  will-change: transform, box-shadow;
+}
+
+.motion-press:active {
+  transform: scale(0.97) !important;
+  transition-duration: 120ms !important;
+  transition-timing-function: var(--ease-out) !important;
+}
+
+/* Tactile Popover Entrance & Exit (Level 2) */
+@keyframes popover-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(-12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes popover-exit {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.94) translateY(-8px);
+  }
+}
+
+.motion-open {
+  animation: popover-enter var(--duration-enter) var(--ease-spring) forwards;
+  transform-origin: top right;
+}
+
+.motion-close {
+  animation: popover-exit var(--duration-exit) var(--ease-out) forwards;
+  transform-origin: top right;
+}
+
+/* Modal Entrance */
+@keyframes modal-scale-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.motion-modal-enter {
+  animation: modal-scale-enter var(--duration-modal) var(--ease-spring) forwards;
+}
+
+
+/* ==========================================================================
+   LEVEL 3: EXPANDED CARD MICRO-CHOREOGRAPHY (STEP 4.5E)
+   Human-perception calibrated cascade:
+   T+0ms card lift → T+50ms icon/bezel → T+110ms metadata → T+170ms title
+   → T+230ms description → T+300ms chips → T+380ms footer action
+   Total window: ~650ms with spring settle
+   ========================================================================== */
+
+@media (hover: hover) and (pointer: fine) {
+  .card-choreography {
+    transition: transform 360ms var(--ease-out),
+                box-shadow 360ms var(--ease-out),
+                border-color 360ms var(--ease-out);
+    will-change: transform, box-shadow;
+  }
+
+  .card-choreography:hover {
+    transform: translateY(-5px);
+    border-color: rgba(99, 102, 241, 0.55) !important;
+    box-shadow: 0 22px 48px -10px rgba(0, 0, 0, 0.75), 0 0 28px -4px rgba(99, 102, 241, 0.30), inset 0 1px 1px 0 rgba(255, 255, 255, 0.35) !important;
+  }
+
+  .light .card-choreography:hover {
+    border-color: rgba(99, 102, 241, 0.55) !important;
+    box-shadow: 0 18px 40px -8px rgba(99, 102, 241, 0.22), 0 4px 12px -2px rgba(15, 23, 42, 0.06), inset 0 1px 1px 0 #ffffff !important;
+  }
+
+  /* T+50ms: Primary contextual icon / avatar bezel response */
+  .card-choreography .card-avatar-bezel {
+    transition: transform 280ms var(--ease-out),
+                box-shadow 280ms var(--ease-out);
+  }
+  .card-choreography:hover .card-avatar-bezel {
+    transition-delay: 50ms;
+    transform: scale(1.07);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
+  }
+
+  /* CSS parent-hover animations for card primary icons (parent-hover trigger) */
+  .card-choreography:hover .spatial-animated-icon[data-choreography="primary"] .spatial-icon-svg {
+    animation-delay: 50ms !important;
+  }
+
+  /* T+110ms: Metadata row response */
+  .card-choreography .card-meta {
+    transition: opacity 280ms var(--ease-out),
+                transform 280ms var(--ease-out);
+  }
+
+  .card-choreography:hover .card-meta {
+    transition-delay: 110ms;
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+
+  /* T+170ms: Title emphasis */
+  .card-choreography .card-title {
+    transition: color 280ms var(--ease-out),
+                text-shadow 280ms var(--ease-out);
+  }
+
+  .card-choreography:hover .card-title {
+    transition-delay: 170ms;
+    color: #818cf8 !important;
+  }
+
+  .light .card-choreography:hover .card-title {
+    color: #4338ca !important;
+  }
+
+  /* T+230ms: Description contrast response */
+  .card-choreography .card-desc {
+    transition: opacity 280ms var(--ease-out),
+                transform 280ms var(--ease-out);
+  }
+
+  .card-choreography:hover .card-desc {
+    transition-delay: 230ms;
+    opacity: 0.95;
+    transform: translateY(-1.5px);
+  }
+
+  /* T+300ms: Skill chips ripple / stagger — perceptible 3px lift */
+  .card-choreography .card-chip {
+    transition: transform 280ms var(--ease-out),
+                border-color 280ms var(--ease-out),
+                background-color 280ms var(--ease-out);
+    will-change: transform;
+  }
+
+  .card-choreography:hover .card-chip {
+    border-color: rgba(99, 102, 241, 0.50);
+  }
+
+  .card-choreography:hover .card-chip:nth-child(1) {
+    transform: translateY(-3px);
+    transition-delay: 300ms;
+  }
+  .card-choreography:hover .card-chip:nth-child(2) {
+    transform: translateY(-3px);
+    transition-delay: 340ms;
+  }
+  .card-choreography:hover .card-chip:nth-child(3) {
+    transform: translateY(-3px);
+    transition-delay: 380ms;
+  }
+  .card-choreography:hover .card-chip:nth-child(4) {
+    transform: translateY(-3px);
+    transition-delay: 420ms;
+  }
+  .card-choreography:hover .card-chip:nth-child(n+5) {
+    transform: translateY(-3px);
+    transition-delay: 460ms;
+  }
+
+  /* T+380ms: Footer action / arrow response — clearly perceptible 7px glide */
+  .card-choreography .card-action-icon {
+    display: inline-block;
+    transition: transform 300ms var(--ease-out),
+                color 300ms var(--ease-out);
+  }
+
+  .card-choreography:hover .card-action-icon {
+    transition-delay: 380ms;
+    transform: translateX(7px);
+    color: #818cf8;
+  }
+
+  .light .card-choreography:hover .card-action-icon {
+    color: #4338ca;
+  }
+
+  .card-choreography:hover .spatial-animated-icon[data-choreography="action"] .spatial-icon-svg {
+    animation-delay: 380ms !important;
+  }
+}
+
+
+
+/* ==========================================================================
+   LEVEL 1: HACKMATCH ANIMATED ICON SYSTEM (STEP 4.5E)
+   CSS keyframes for parent-hover trigger (card choreography).
+   Direct hover uses Motion whileHover (see SpatialAnimatedIcon.jsx).
+   Amplitudes calibrated for clear human perception at normal viewing distance.
+   ========================================================================== */
+
+/* Base container */
+.spatial-animated-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+}
+
+.spatial-animated-icon .spatial-icon-svg {
+  transform-origin: center;
+  transition: transform 340ms var(--ease-out);
+  will-change: transform;
+}
+
+/* Specific Transform Origins for Natural Physics */
+.spatial-animated-icon[data-animation="signal"] .spatial-icon-svg {
+  transform-origin: 50% 15%; /* Top pivot — natural pendulum chime */
+}
+.spatial-animated-icon[data-animation="lift"] .spatial-icon-svg,
+.spatial-animated-icon[data-animation="bounce"] .spatial-icon-svg,
+.spatial-animated-icon[data-animation="rise"] .spatial-icon-svg {
+  transform-origin: bottom center;
+}
+.spatial-animated-icon[data-animation="launch"] .spatial-icon-svg,
+.spatial-animated-icon[data-animation="outward"] .spatial-icon-svg {
+  transform-origin: bottom left;
+}
+.spatial-animated-icon[data-animation="tilt"] .spatial-icon-svg,
+.spatial-animated-icon[data-animation="calendar-tick"] .spatial-icon-svg {
+  transform-origin: top center;
+}
+
+/* --------------------------------------------------------------------------
+   SEMANTIC KEYFRAMES (Step 4.5E — Amplified for Human Perception)
+   Target: Clearly visible at normal browser speed without slow-motion
+   -------------------------------------------------------------------------- */
+
+/* 1. Bell: Pendulum Signal — ±12° swing, 3 natural oscillations (380ms) */
+@keyframes spatial-icon-signal {
+  0%   { transform: rotate(0deg); }
+  15%  { transform: rotate(-13deg); }
+  30%  { transform: rotate(11deg); }
+  45%  { transform: rotate(-7deg); }
+  60%  { transform: rotate(5deg); }
+  75%  { transform: rotate(-2deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* 2. Search: Magnify Tilt — 9° tilt, 1.12 scale, 4px shift (320ms) */
+@keyframes spatial-icon-magnify {
+  0%   { transform: scale(1) rotate(0deg) translate(0, 0); }
+  40%  { transform: scale(1.14) rotate(-10deg) translate(4px, -3px); }
+  70%  { transform: scale(1.10) rotate(-8deg) translate(3px, -2.5px); }
+  100% { transform: scale(1.10) rotate(-8deg) translate(3px, -2.5px); }
+}
+
+/* 3. ArrowRight: Directional Glide — 7px glide (300ms) */
+@keyframes spatial-icon-pointing {
+  0%   { transform: translateX(0); opacity: 0.9; }
+  50%  { transform: translateX(8px); opacity: 1; }
+  75%  { transform: translateX(6px); opacity: 1; }
+  100% { transform: translateX(7px); opacity: 1; }
+}
+
+/* 4. ArrowLeft: Directional Glide Left (300ms) */
+@keyframes spatial-icon-pointing-left {
+  0%   { transform: translateX(0); opacity: 0.9; }
+  50%  { transform: translateX(-8px); opacity: 1; }
+  75%  { transform: translateX(-6px); opacity: 1; }
+  100% { transform: translateX(-7px); opacity: 1; }
+}
+
+/* 5. Plus/Sun/Moon: Rotate & Expand — 90° rotation, 1.12 scale (360ms) */
+@keyframes spatial-icon-rotate-expand {
+  0%   { transform: rotate(0deg) scale(1); }
+  55%  { transform: rotate(100deg) scale(1.16); }
+  80%  { transform: rotate(88deg) scale(1.10); }
+  100% { transform: rotate(90deg) scale(1.10); }
+}
+
+/* 6. Users: Group Separation — 1.14 scaleX, 3px lift (320ms) */
+@keyframes spatial-icon-group {
+  0%   { transform: scale(1) translateY(0); }
+  30%  { transform: scale(1.16, 1.06) translateY(-3px); }
+  65%  { transform: scale(1.08, 1.02) translateY(-1px); }
+  100% { transform: scale(1.12, 1.04) translateY(-2px); }
+}
+
+/* 7. Trophy: Celebratory Lift — 6px lift, 5° tilt, 1.10 scale (360ms) */
+@keyframes spatial-icon-lift {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); }
+  35%  { transform: translateY(-7px) rotate(-6deg) scale(1.12); }
+  65%  { transform: translateY(-4px) rotate(4deg) scale(1.08); }
+  100% { transform: translateY(-5px) rotate(0deg) scale(1.08); }
+}
+
+/* 8. Calendar: Page Tick — 5px notch settle, slight squish (300ms) */
+@keyframes spatial-icon-calendar-tick {
+  0%   { transform: translateY(0) scaleY(1); }
+  30%  { transform: translateY(-5px) scaleY(0.90); }
+  65%  { transform: translateY(-2px) scaleY(1.06); }
+  100% { transform: translateY(-3px) scaleY(1); }
+}
+
+/* 9. MapPin: Location Drop & Bounce — 6px bounce, anchor preserved (360ms) */
+@keyframes spatial-icon-bounce {
+  0%   { transform: translateY(0) scale(1, 1); }
+  25%  { transform: translateY(-7px) scale(0.93, 1.10); }
+  55%  { transform: translateY(2px) scale(1.08, 0.92); }
+  75%  { transform: translateY(-2px) scale(0.97, 1.04); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+
+/* 10. Clock: Escapement Hand Tick — visible -10° anticipation → +30° tick (320ms) */
+@keyframes spatial-icon-tick {
+  0%   { transform: rotate(0deg); }
+  20%  { transform: rotate(-10deg); }
+  60%  { transform: rotate(38deg); }
+  80%  { transform: rotate(26deg); }
+  100% { transform: rotate(28deg); }
+}
+
+/* 11. Sparkles: Twinkle — scale 1.26, rotate 18°, star pop (340ms) */
+@keyframes spatial-icon-sparkle {
+  0%   { transform: scale(1) rotate(0deg); }
+  40%  { transform: scale(1.28) rotate(18deg); }
+  70%  { transform: scale(1.12) rotate(-5deg); }
+  100% { transform: scale(1.16) rotate(8deg); }
+}
+
+/* 12. Send: Launch Trajectory — 6px diagonal, scale 1.14 (300ms) */
+@keyframes spatial-icon-launch {
+  0%   { transform: translate(0, 0) scale(1); }
+  45%  { transform: translate(6px, -6px) scale(1.18); }
+  75%  { transform: translate(4px, -4px) scale(1.10); }
+  100% { transform: translate(5px, -5px) scale(1.10); }
+}
+
+/* 13. ExternalLink: Outward Diagonal — 5px outward (300ms) */
+@keyframes spatial-icon-outward {
+  0%   { transform: translate(0, 0); }
+  50%  { transform: translate(5px, -5px); }
+  78%  { transform: translate(3.5px, -3.5px); }
+  100% { transform: translate(4px, -4px); }
+}
+
+/* 14. Check: Completion Pop — strong overshoot 1.28 → settle 1.12 (360ms) */
+@keyframes spatial-icon-pop {
+  0%   { transform: scale(0.85); }
+  45%  { transform: scale(1.28); }
+  70%  { transform: scale(0.96); }
+  100% { transform: scale(1.12); }
+}
+
+/* 15. X: Cross Twist — 90° rotation, clear spin (280ms) */
+@keyframes spatial-icon-cross {
+  0%   { transform: rotate(0deg) scale(1); }
+  65%  { transform: rotate(100deg) scale(1.12); }
+  100% { transform: rotate(90deg) scale(1.08); }
+}
+
+/* 16. ChevronLeft: Glide Left (260ms) */
+@keyframes spatial-icon-glide-left {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-5px); }
+}
+
+/* 17. ChevronRight: Glide Right (260ms) */
+@keyframes spatial-icon-glide-right {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(5px); }
+}
+
+/* 18. Filter/Edit: Sieve Tilt — ±16° tilt (320ms) */
+@keyframes spatial-icon-tilt {
+  0%   { transform: rotate(0deg); }
+  30%  { transform: rotate(-16deg) scale(1.10); }
+  65%  { transform: rotate(12deg) scale(1.10); }
+  100% { transform: rotate(0deg) scale(1.06); }
+}
+
+/* 19. MessageSquare: Speech Pop — scale 1.22, 4px lift (300ms) */
+@keyframes spatial-icon-bubble {
+  0%   { transform: scale(1) translateY(0); }
+  45%  { transform: scale(1.24) translateY(-4px); }
+  75%  { transform: scale(1.12) translateY(-2px); }
+  100% { transform: scale(1.16) translateY(-3px); }
+}
+
+/* 20. Mail: Envelope Rise — 5px lift (300ms) */
+@keyframes spatial-icon-rise {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-5px); }
+  78%  { transform: translateY(-3px); }
+  100% { transform: translateY(-4px); }
+}
+
+/* 21. Globe: Orbital Rotation — 30° rotation (360ms) */
+@keyframes spatial-icon-orbit {
+  0%   { transform: rotate(0deg); }
+  55%  { transform: rotate(34deg); }
+  80%  { transform: rotate(24deg); }
+  100% { transform: rotate(28deg); }
+}
+
+/* 22. Code/Code2: Bracket Expansion — scale 1.24 wide (300ms) */
+@keyframes spatial-icon-bracket {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.26, 1); }
+  78%  { transform: scale(1.14, 1); }
+  100% { transform: scale(1.18, 1); }
+}
+
+/* 23. Share2: Bloom Nodes — scale 1.20, rotate 10° (320ms) */
+@keyframes spatial-icon-bloom {
+  0%   { transform: scale(1) rotate(0deg); }
+  45%  { transform: scale(1.22) rotate(12deg); }
+  75%  { transform: scale(1.10) rotate(4deg); }
+  100% { transform: scale(1.14) rotate(6deg); }
+}
+
+/* 24. RefreshCw: Spin Once — 180° spin (400ms) */
+@keyframes spatial-icon-spin-once {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(180deg); }
+}
+
+/* 25. Micro-Lift fallback — 3px lift (280ms) */
+@keyframes spatial-icon-micro-lift {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-3px); }
+}
+
+/* --------------------------------------------------------------------------
+   ACTIVATION RULES (Self-Hover + Parent-Hover)
+   Fine-pointer and hover-capable devices only.
+   -------------------------------------------------------------------------- */
+
+@media (hover: hover) and (pointer: fine) {
+  /* Self Hover for direct icons */
+  .spatial-animated-icon[data-trigger="hover"]:hover .spatial-icon-svg {
+    animation-timing-function: var(--ease-out);
+    animation-fill-mode: forwards;
+  }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="signal"]:hover .spatial-icon-svg { animation-name: spatial-icon-signal; animation-duration: 420ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="magnify"]:hover .spatial-icon-svg { animation-name: spatial-icon-magnify; animation-duration: 320ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="pointing"]:hover .spatial-icon-svg { animation-name: spatial-icon-pointing; animation-duration: 300ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="pointing-left"]:hover .spatial-icon-svg { animation-name: spatial-icon-pointing-left; animation-duration: 300ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="rotate-expand"]:hover .spatial-icon-svg { animation-name: spatial-icon-rotate-expand; animation-duration: 360ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="group"]:hover .spatial-icon-svg { animation-name: spatial-icon-group; animation-duration: 320ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="lift"]:hover .spatial-icon-svg { animation-name: spatial-icon-lift; animation-duration: 360ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="calendar-tick"]:hover .spatial-icon-svg { animation-name: spatial-icon-calendar-tick; animation-duration: 300ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="bounce"]:hover .spatial-icon-svg { animation-name: spatial-icon-bounce; animation-duration: 360ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="tick"]:hover .spatial-icon-svg { animation-name: spatial-icon-tick; animation-duration: 320ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="sparkle"]:hover .spatial-icon-svg { animation-name: spatial-icon-sparkle; animation-duration: 340ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="launch"]:hover .spatial-icon-svg { animation-name: spatial-icon-launch; animation-duration: 300ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="outward"]:hover .spatial-icon-svg { animation-name: spatial-icon-outward; animation-duration: 300ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="pop"]:hover .spatial-icon-svg { animation-name: spatial-icon-pop; animation-duration: 360ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="cross"]:hover .spatial-icon-svg { animation-name: spatial-icon-cross; animation-duration: 280ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="glide-left"]:hover .spatial-icon-svg { animation-name: spatial-icon-glide-left; animation-duration: 260ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="glide-right"]:hover .spatial-icon-svg { animation-name: spatial-icon-glide-right; animation-duration: 260ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="tilt"]:hover .spatial-icon-svg { animation-name: spatial-icon-tilt; animation-duration: 320ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="bubble"]:hover .spatial-icon-svg { animation-name: spatial-icon-bubble; animation-duration: 300ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="rise"]:hover .spatial-icon-svg { animation-name: spatial-icon-rise; animation-duration: 300ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="orbit"]:hover .spatial-icon-svg { animation-name: spatial-icon-orbit; animation-duration: 360ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="bracket"]:hover .spatial-icon-svg { animation-name: spatial-icon-bracket; animation-duration: 300ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="bloom"]:hover .spatial-icon-svg { animation-name: spatial-icon-bloom; animation-duration: 320ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="spin-once"]:hover .spatial-icon-svg { animation-name: spatial-icon-spin-once; animation-duration: 400ms; }
+  .spatial-animated-icon[data-trigger="hover"][data-animation="micro-lift"]:hover .spatial-icon-svg { animation-name: spatial-icon-micro-lift; animation-duration: 280ms; }
+  /* Parent / Group Hover (in buttons, cards, list items) */
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"] .spatial-icon-svg {
+    animation-timing-function: var(--ease-out);
+    animation-fill-mode: forwards;
+  }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="signal"] .spatial-icon-svg { animation-name: spatial-icon-signal; animation-duration: 420ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="magnify"] .spatial-icon-svg { animation-name: spatial-icon-magnify; animation-duration: 320ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="pointing"] .spatial-icon-svg { animation-name: spatial-icon-pointing; animation-duration: 300ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="pointing-left"] .spatial-icon-svg { animation-name: spatial-icon-pointing-left; animation-duration: 300ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="rotate-expand"] .spatial-icon-svg { animation-name: spatial-icon-rotate-expand; animation-duration: 360ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="group"] .spatial-icon-svg { animation-name: spatial-icon-group; animation-duration: 320ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="lift"] .spatial-icon-svg { animation-name: spatial-icon-lift; animation-duration: 360ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="calendar-tick"] .spatial-icon-svg { animation-name: spatial-icon-calendar-tick; animation-duration: 300ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="bounce"] .spatial-icon-svg { animation-name: spatial-icon-bounce; animation-duration: 360ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="tick"] .spatial-icon-svg { animation-name: spatial-icon-tick; animation-duration: 320ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="sparkle"] .spatial-icon-svg { animation-name: spatial-icon-sparkle; animation-duration: 340ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="launch"] .spatial-icon-svg { animation-name: spatial-icon-launch; animation-duration: 300ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="outward"] .spatial-icon-svg { animation-name: spatial-icon-outward; animation-duration: 300ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="pop"] .spatial-icon-svg { animation-name: spatial-icon-pop; animation-duration: 360ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="cross"] .spatial-icon-svg { animation-name: spatial-icon-cross; animation-duration: 280ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="glide-left"] .spatial-icon-svg { animation-name: spatial-icon-glide-left; animation-duration: 260ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="glide-right"] .spatial-icon-svg { animation-name: spatial-icon-glide-right; animation-duration: 260ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="tilt"] .spatial-icon-svg { animation-name: spatial-icon-tilt; animation-duration: 320ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="bubble"] .spatial-icon-svg { animation-name: spatial-icon-bubble; animation-duration: 300ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="rise"] .spatial-icon-svg { animation-name: spatial-icon-rise; animation-duration: 300ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="orbit"] .spatial-icon-svg { animation-name: spatial-icon-orbit; animation-duration: 360ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="bracket"] .spatial-icon-svg { animation-name: spatial-icon-bracket; animation-duration: 300ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="bloom"] .spatial-icon-svg { animation-name: spatial-icon-bloom; animation-duration: 320ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="spin-once"] .spatial-icon-svg { animation-name: spatial-icon-spin-once; animation-duration: 400ms; }
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"][data-animation="micro-lift"] .spatial-icon-svg { animation-name: spatial-icon-micro-lift; animation-duration: 280ms; }
+}
+
+/* State-Controlled Transitions (CSS fallback for reduced-motion or non-Motion environments) */
+.spatial-animated-icon[data-trigger="state"][data-animation="rotate"] .spatial-icon-svg {
+  transition: transform 320ms var(--ease-spring);
+}
+.spatial-animated-icon[data-trigger="state"][data-animation="rotate"][data-state="open"] .spatial-icon-svg {
+  transform: rotate(180deg);
+}
+
+.spatial-animated-icon[data-trigger="state"][data-animation="pop"][data-state="open"] .spatial-icon-svg {
+  transform: scale(1.12);
+  transition: transform 320ms var(--ease-spring);
+}
+
+
+
+/* Global Reduced Motion Accessibility Enforcement */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .card-choreography,
+  .card-choreography:hover,
+  .card-choreography .card-chip,
+  .card-choreography:hover .card-chip,
+  .card-choreography .card-meta,
+  .card-choreography:hover .card-meta,
+  .card-choreography .card-title,
+  .card-choreography:hover .card-title,
+  .card-choreography .card-desc,
+  .card-choreography:hover .card-desc,
+  .card-choreography .card-action-icon,
+  .card-choreography:hover .card-action-icon,
+  .card-choreography .card-avatar-bezel,
+  .card-choreography:hover .card-avatar-bezel,
+  .spatial-animated-icon,
+  .spatial-animated-icon .spatial-icon-svg,
+  .spatial-animated-icon[data-trigger="hover"]:hover .spatial-icon-svg,
+  :is(.group, .card-choreography, button, a):hover .spatial-animated-icon[data-trigger="parent-hover"] .spatial-icon-svg,
+  .motion-interactive,
+  .motion-press:active,
+  .motion-open,
+  .motion-close,
+  .motion-modal-enter {
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .spatial-animated-icon[data-trigger="state"][data-animation="rotate"][data-state="open"] .spatial-icon-svg {
+    transform: rotate(180deg) !important;
+  }
+}

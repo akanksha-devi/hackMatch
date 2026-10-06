@@ -1,7 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Lock, ShieldCheck, Clock, XCircle, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Lock, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../context/ThemeContext';
+import { VerificationBadge } from './VerificationBadge';
+import { SpatialButton } from './spatial';
 
 /**
  * RequireVerified UI Guard
@@ -14,6 +16,8 @@ export const RequireVerified = ({
   description = 'Verification builds trust between hackathon participants and ensures teammates have proven technical experience before joining or leading teams.',
 }) => {
   const { user, isSuperAdmin, isCollegeAdmin } = useAuth();
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === 'light';
 
   // Admins bypass verification requirements
   if (isSuperAdmin || isCollegeAdmin) {
@@ -27,67 +31,61 @@ export const RequireVerified = ({
     return <>{children}</>;
   }
 
-  const getStatusBadge = () => {
-    switch (status) {
-      case 'Pending':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
-            <Clock className="w-3.5 h-3.5" />
-            ⏳ Verification Pending
-          </span>
-        );
-      case 'Rejected':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/30">
-            <XCircle className="w-3.5 h-3.5" />
-            ✕ Verification Rejected
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
-            <AlertTriangle className="w-3.5 h-3.5 text-yellow-400" />
-            ⚠ Unverified
-          </span>
-        );
-    }
-  };
-
   return (
-    <div className="rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-950/90 border border-indigo-500/30 p-6 sm:p-8 text-center max-w-2xl mx-auto shadow-2xl shadow-indigo-950/20 backdrop-blur-xl">
+    <div className={`rounded-3xl border p-6 sm:p-8 text-center max-w-2xl mx-auto backdrop-blur-xl transition-all duration-200 ${
+      isLight
+        ? 'bg-white/95 border-indigo-200 text-slate-900 shadow-xl shadow-slate-200/50'
+        : 'bg-gradient-to-b from-slate-900/90 to-slate-950/90 border-indigo-500/30 text-white shadow-2xl shadow-indigo-950/20'
+    }`}>
       {/* Icon Lock Circle */}
-      <div className="w-16 h-16 rounded-2xl bg-indigo-950/60 border border-indigo-500/30 flex items-center justify-center mx-auto mb-5 text-indigo-400 shadow-inner">
+      <div className={`w-16 h-16 rounded-2xl border flex items-center justify-center mx-auto mb-5 shadow-inner ${
+        isLight
+          ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+          : 'bg-indigo-950/60 border-indigo-500/30 text-indigo-400'
+      }`}>
         <Lock className="w-8 h-8 stroke-[1.8]" />
       </div>
 
       <div className="mb-4">
-        {getStatusBadge()}
+        <VerificationBadge status={status} size="md" />
       </div>
 
-      <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-        🔒 {actionName} Locked
+      <h3 className={`text-xl sm:text-2xl font-bold tracking-tight ${
+        isLight ? 'text-slate-900' : 'text-white'
+      }`}>
+        {actionName} Locked
       </h3>
 
-      <p className="text-sm text-slate-300 mt-2.5 max-w-lg mx-auto leading-relaxed">
+      <p className={`text-sm mt-2.5 max-w-lg mx-auto leading-relaxed ${
+        isLight ? 'text-slate-600' : 'text-slate-300'
+      }`}>
         {description}
       </p>
 
       {status === 'Pending' ? (
-        <div className="mt-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 text-left flex items-start gap-3">
-          <Clock className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+        <div className={`mt-6 p-4 rounded-xl border text-xs text-left flex items-start gap-3 ${
+          isLight
+            ? 'bg-amber-50 border-amber-200 text-amber-900'
+            : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
+        }`}>
+          <Clock className={`w-4 h-4 shrink-0 mt-0.5 ${isLight ? 'text-amber-600' : 'text-amber-400'}`} />
           <div>
             <p className="font-semibold">Review in Progress</p>
-            <p className="text-amber-300/80 mt-0.5">
+            <p className={`mt-0.5 ${isLight ? 'text-amber-800' : 'text-amber-300/80'}`}>
               Your college administrator has been notified and is currently reviewing your submitted projects and evidence.
             </p>
           </div>
         </div>
       ) : status === 'Rejected' ? (
-        <div className="mt-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300 text-left flex items-start gap-3">
-          <XCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+        <div className={`mt-6 p-4 rounded-xl border text-xs text-left flex items-start gap-3 ${
+          isLight
+            ? 'bg-rose-50 border-rose-200 text-rose-900'
+            : 'bg-rose-500/10 border-rose-500/20 text-rose-300'
+        }`}>
+          <XCircle className={`w-4 h-4 shrink-0 mt-0.5 ${isLight ? 'text-rose-600' : 'text-rose-400'}`} />
           <div>
             <p className="font-semibold">Action Required</p>
-            <p className="text-rose-300/80 mt-0.5">
+            <p className={`mt-0.5 ${isLight ? 'text-rose-800' : 'text-rose-300/80'}`}>
               {user?.experienceVerificationNote
                 ? `Note: ${user.experienceVerificationNote}`
                 : 'Your previous verification request was rejected. You can submit updated repository links and project proofs.'}
@@ -98,14 +96,14 @@ export const RequireVerified = ({
 
       {/* Primary Action Button */}
       <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-        <Link
+        <SpatialButton
           to="/profile"
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          variant="primary"
+          size="lg"
+          icon={ShieldCheck}
         >
-          <ShieldCheck className="w-4 h-4" />
-          <span>{status === 'Rejected' ? 'Request Verification Again' : status === 'Pending' ? 'View My Verification' : 'Verify My Experience'}</span>
-          <ArrowRight className="w-4 h-4" />
-        </Link>
+          {status === 'Rejected' ? 'Request Verification Again' : status === 'Pending' ? 'View My Verification' : 'Verify My Experience'}
+        </SpatialButton>
       </div>
     </div>
   );

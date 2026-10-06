@@ -16,29 +16,31 @@ import {
 import apiService from '../services/apiService';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
+import { SpatialButton, SpatialIconButton, SpatialAnimatedIcon } from './spatial';
+import { StatusBadge } from './StatusBadge';
 
 const getNotificationIcon = (type) => {
   switch (type) {
     case 'VERIFICATION_APPROVED':
-      return <ShieldCheck className="w-5 h-5 text-emerald-400" />;
+      return <SpatialAnimatedIcon icon={ShieldCheck} animation="pop" trigger="parent-hover" className="w-5 h-5 text-emerald-400" />;
     case 'VERIFICATION_REJECTED':
-      return <XCircle className="w-5 h-5 text-rose-400" />;
+      return <SpatialAnimatedIcon icon={XCircle} animation="cross" trigger="parent-hover" className="w-5 h-5 text-rose-400" />;
     case 'VERIFICATION_REQUESTED':
-      return <Clock className="w-5 h-5 text-amber-400" />;
+      return <SpatialAnimatedIcon icon={Clock} animation="tick" trigger="parent-hover" className="w-5 h-5 text-amber-400" />;
     case 'VERIFICATION_RESET':
-      return <AlertTriangle className="w-5 h-5 text-yellow-400" />;
+      return <SpatialAnimatedIcon icon={AlertTriangle} animation="bounce" trigger="parent-hover" className="w-5 h-5 text-yellow-400" />;
     case 'APPLICATION_RECEIVED':
-      return <Users className="w-5 h-5 text-indigo-400" />;
+      return <SpatialAnimatedIcon icon={Users} animation="group" trigger="parent-hover" className="w-5 h-5 text-indigo-400" />;
     case 'APPLICATION_ACCEPTED':
-      return <UserCheck className="w-5 h-5 text-emerald-400" />;
+      return <SpatialAnimatedIcon icon={UserCheck} animation="pop" trigger="parent-hover" className="w-5 h-5 text-emerald-400" />;
     case 'APPLICATION_REJECTED':
-      return <XCircle className="w-5 h-5 text-rose-400" />;
+      return <SpatialAnimatedIcon icon={XCircle} animation="cross" trigger="parent-hover" className="w-5 h-5 text-rose-400" />;
     case 'ADMIN_CREATED':
     case 'ADMIN_REMOVED':
     case 'ADMIN_DEACTIVATED':
-      return <ShieldAlert className="w-5 h-5 text-violet-400" />;
+      return <SpatialAnimatedIcon icon={ShieldAlert} animation="tilt" trigger="parent-hover" className="w-5 h-5 text-violet-400" />;
     default:
-      return <Bell className="w-5 h-5 text-cyan-400" />;
+      return <SpatialAnimatedIcon icon={Bell} animation="signal" trigger="parent-hover" className="w-5 h-5 text-cyan-400" />;
   }
 };
 
@@ -121,25 +123,33 @@ export const NotificationBell = ({ isLight = false }) => {
     };
   }, [user]);
 
-  // Close dropdown on click outside or when popovers are dismissed globally
+  // Close dropdown on click outside, Escape, or when popovers are dismissed globally
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
     const handleClosePopovers = () => setIsOpen(false);
 
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
     window.addEventListener('close-all-popovers', handleClosePopovers);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('close-all-popovers', handleClosePopovers);
     };
   }, []);
 
   const handleToggle = () => {
     if (!isOpen) {
+      window.dispatchEvent(new CustomEvent('close-all-popovers'));
       fetchRecentNotifications();
     }
     setIsOpen((prev) => !prev);
@@ -180,80 +190,69 @@ export const NotificationBell = ({ isLight = false }) => {
   return (
     <div className="relative shrink-0" ref={dropdownRef}>
       {/* Bell Button */}
-      <button
-        type="button"
+      <SpatialIconButton
+        icon={Bell}
+        label="Notifications"
+        tooltip="Notifications"
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
+        variant={isOpen ? 'secondary' : 'ghost'}
+        size="md"
         onClick={handleToggle}
-        className={`relative p-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 shrink-0 cursor-pointer ${
-          isOpen
-            ? isLightMode
-              ? 'bg-slate-200 text-indigo-600'
-              : 'bg-slate-800 text-indigo-400'
-            : isLightMode
-            ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-            : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
-        }`}
-        title="Notifications"
-        aria-label="Notifications"
+        className={isOpen ? 'text-indigo-600 dark:text-indigo-400' : ''}
       >
-        <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className={`absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-indigo-600 rounded-full shadow-lg shadow-indigo-500/50 animate-pulse border-2 ${isLightMode ? 'border-white' : 'border-slate-950'}`}>
+          <span className={`absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-indigo-600 rounded-full shadow-md shadow-indigo-500/40 border-2 transition-transform duration-180 hover:scale-105 select-none ${isLightMode ? 'border-white' : 'border-slate-950'}`}>
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
-      </button>
+      </SpatialIconButton>
 
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className={`absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl backdrop-blur-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 border ${
+          role="dialog"
+          aria-label="Notifications popover"
+          className={`absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl z-50 overflow-hidden motion-open liquid-glass-floating ${
             isLightMode
-              ? 'bg-white/95 border-slate-200 shadow-slate-300/60 text-slate-900'
-              : 'bg-slate-900/95 border-slate-800 shadow-black/80 text-slate-100'
+              ? 'text-slate-900'
+              : 'text-slate-100'
           }`}
         >
+          {/* Top Specular Accent Highlight Line matching SpatialCard */}
+          <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-white/30 via-indigo-400/40 to-cyan-400/30 dark:from-white/20 dark:via-indigo-300/30 dark:to-cyan-300/20 opacity-80 pointer-events-none" />
+
           {/* Header */}
           <div
-            className={`flex items-center justify-between px-4 py-3.5 border-b ${
-              isLightMode
-                ? 'border-slate-100 bg-slate-50/80 text-slate-900'
-                : 'border-slate-800 bg-slate-950/60 text-slate-100'
-            }`}
+            className="flex items-center justify-between px-4 py-3.5 border-b border-slate-200/50 dark:border-white/10 bg-white/20 dark:bg-white/[0.02]"
           >
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm">Notifications</span>
               {unreadCount > 0 && (
-                <span
-                  className={`px-2 py-0.5 text-xs font-semibold rounded-full border ${
-                    isLightMode
-                      ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                      : 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30'
-                  }`}
-                >
-                  {unreadCount} new
-                </span>
+                <StatusBadge
+                  status="new"
+                  label={`${unreadCount} new`}
+                  size="sm"
+                  showIcon={false}
+                />
               )}
             </div>
             {unreadCount > 0 && (
-              <button
+              <SpatialButton
+                variant="ghost"
+                size="sm"
                 onClick={handleMarkAllRead}
-                className={`text-xs transition-colors flex items-center gap-1 font-medium cursor-pointer ${
-                  isLightMode
-                    ? 'text-indigo-600 hover:text-indigo-800'
-                    : 'text-indigo-400 hover:text-indigo-300'
-                }`}
+                icon={Check}
+                className="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 p-1 h-auto min-h-0 font-medium"
               >
-                <Check className="w-3.5 h-3.5" />
                 Mark all read
-              </button>
+              </SpatialButton>
             )}
           </div>
 
           {/* List of Notifications */}
           <div
-            className={`max-h-[380px] overflow-y-auto divide-y ${
-              isLightMode ? 'divide-slate-100' : 'divide-slate-800/60'
-            }`}
+            className="max-h-[380px] overflow-y-auto divide-y divide-slate-200/40 dark:divide-white/[0.06]"
           >
             {loading ? (
               <div
@@ -268,7 +267,7 @@ export const NotificationBell = ({ isLight = false }) => {
               <div className="py-10 text-center">
                 <Bell
                   className={`w-8 h-8 mx-auto mb-2 stroke-[1.5] ${
-                    isLightMode ? 'text-slate-400' : 'text-slate-600'
+                    isLightMode ? 'text-slate-400' : 'text-slate-500'
                   }`}
                 />
                 <p
@@ -287,29 +286,34 @@ export const NotificationBell = ({ isLight = false }) => {
                 </p>
               </div>
             ) : (
-              notifications.map((notif) => (
+              notifications.map((notif, idx) => (
                 <div
                   key={notif._id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => handleNotificationClick(notif)}
-                  className={`flex items-start gap-3 p-3.5 cursor-pointer transition-colors text-left ${
-                    isLightMode
-                      ? `${!notif.isRead ? 'bg-indigo-50/60' : ''} hover:bg-slate-50`
-                      : `${!notif.isRead ? 'bg-indigo-950/20' : ''} hover:bg-slate-800/60`
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleNotificationClick(notif);
+                    }
+                  }}
+                  style={{ animationDelay: `${idx * 60}ms` }}
+                  className={`group flex items-start gap-3 p-3.5 cursor-pointer transition-all duration-240 text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500 animate-in fade-in duration-260 fill-mode-both ${
+                    !notif.isRead
+                      ? 'bg-indigo-500/[0.08] dark:bg-indigo-500/15 hover:bg-slate-200/50 dark:hover:bg-white/10'
+                      : 'bg-transparent hover:bg-slate-200/40 dark:hover:bg-white/5'
                   }`}
                 >
                   <div
-                    className={`p-2 rounded-xl shrink-0 mt-0.5 border ${
-                      isLightMode
-                        ? 'bg-slate-100 border-slate-200'
-                        : 'bg-slate-800/80 border-slate-700'
-                    }`}
+                    className="p-2 rounded-xl shrink-0 mt-0.5 border bg-white/40 dark:bg-white/5 border-slate-200/60 dark:border-white/10 group-hover:scale-105 group-hover:border-indigo-400/40 transition-all duration-180"
                   >
                     {getNotificationIcon(notif.type)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1 mb-0.5">
                       <p
-                        className={`text-xs font-semibold truncate ${
+                        className={`text-xs font-semibold truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-180 ${
                           !notif.isRead
                             ? isLightMode
                               ? 'text-slate-900 font-bold'
@@ -338,7 +342,7 @@ export const NotificationBell = ({ isLight = false }) => {
                     </p>
                   </div>
                   {!notif.isRead && (
-                    <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0 mt-2" />
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 dark:bg-indigo-400 shrink-0 mt-2 shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
                   )}
                 </div>
               ))
@@ -347,24 +351,20 @@ export const NotificationBell = ({ isLight = false }) => {
 
           {/* Footer */}
           <div
-            className={`p-2.5 border-t text-center ${
-              isLightMode
-                ? 'border-slate-100 bg-slate-50/90'
-                : 'border-slate-800 bg-slate-950/80'
-            }`}
+            className="p-2.5 border-t border-slate-200/50 dark:border-white/10 bg-transparent text-center"
           >
-            <Link
+            <SpatialButton
               to="/notifications"
+              variant="ghost"
+              size="sm"
+              fullWidth
               onClick={() => setIsOpen(false)}
-              className={`inline-flex items-center justify-center gap-1.5 text-xs font-medium transition-colors w-full py-1.5 rounded-lg ${
-                isLightMode
-                  ? 'text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50'
-                  : 'text-indigo-400 hover:text-indigo-300 hover:bg-indigo-950/30'
-              }`}
+              icon={ArrowRight}
+              iconPosition="right"
+              className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
             >
-              <span>View full notification center</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+              View full notification center
+            </SpatialButton>
           </div>
         </div>
       )}

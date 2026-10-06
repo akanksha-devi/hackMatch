@@ -1,8 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import apiService from '../services/apiService';
-import { SkillTag } from '../components/SkillTag';
+import { SkillChip } from '../components/SkillChip';
+import { VerificationBadge } from '../components/VerificationBadge';
+import { useTheme } from '../context/ThemeContext';
+import { SpatialPanel, SpatialDropdown, SpatialButton, SpatialInput, SpatialTextarea } from '../components/spatial';
+import { Avatar } from '../components/Avatar';
 import { 
   User, 
   Code, 
@@ -27,6 +31,8 @@ const COMMON_SKILLS = [
 ];
 
 export const EditProfile = () => {
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === 'light';
   const { user, updateUser, refreshUser } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -35,14 +41,24 @@ export const EditProfile = () => {
   const [bio, setBio] = useState(user?.bio || '');
   const [experienceLevel, setExperienceLevel] = useState(user?.experienceLevel || 'Intermediate');
   const [skills, setSkills] = useState(user?.skills || []);
-  const [customSkill, setCustomSkill] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState(
-    user?.avatarUrl ||
-      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'
-  );
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');
   const [githubUrl, setGithubUrl] = useState(user?.githubUrl || '');
   const [linkedinUrl, setLinkedinUrl] = useState(user?.linkedinUrl || '');
   const [portfolioUrl, setPortfolioUrl] = useState(user?.portfolioUrl || '');
+  const [customSkill, setCustomSkill] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      if (user.name) setName(user.name);
+      if (user.bio) setBio(user.bio);
+      if (user.experienceLevel) setExperienceLevel(user.experienceLevel);
+      if (user.skills) setSkills(user.skills);
+      if (user.avatarUrl) setAvatarUrl(user.avatarUrl);
+      if (user.githubUrl) setGithubUrl(user.githubUrl);
+      if (user.linkedinUrl) setLinkedinUrl(user.linkedinUrl);
+      if (user.portfolioUrl) setPortfolioUrl(user.portfolioUrl);
+    }
+  }, [user]);
 
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState('');
@@ -174,48 +190,54 @@ export const EditProfile = () => {
   return (
     <div className="max-w-2xl mx-auto space-y-8 pb-12">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+      <div className={`flex items-center justify-between border-b pb-4 ${isLight ? 'border-slate-200' : 'border-gray-800'}`}>
         <div>
-          <h1 className="text-2xl font-extrabold text-white">Edit Profile</h1>
-          <p className="text-xs text-gray-400">Update your photo, technical skills, and developer credentials</p>
+          <h1 className={`text-2xl font-extrabold ${isLight ? 'text-slate-900' : 'text-white'}`}>Edit Profile</h1>
+          <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Update your photo, technical skills, and developer credentials</p>
         </div>
 
-        <button
+        <SpatialButton
+          variant="ghost"
+          size="sm"
           onClick={() => navigate('/profile')}
-          className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
+          icon={ArrowLeft}
         >
-          <ArrowLeft className="w-4 h-4" /> Cancel
-        </button>
+          Cancel
+        </SpatialButton>
       </div>
 
-      <div className="glass-panel p-8 rounded-3xl border border-gray-800 space-y-8">
+      <SpatialPanel padding="loose" className="space-y-8">
         {/* AVATAR PHOTO UPLOAD SECTION */}
-        <div className="space-y-4 pb-6 border-b border-gray-800">
-          <label className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-            <Camera className="w-4 h-4 text-purple-400" />
+        <div className={`space-y-4 pb-6 border-b ${isLight ? 'border-slate-200' : 'border-gray-800'}`}>
+          <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
+            <Camera className="w-4 h-4 text-purple-500" />
             Profile Picture
           </label>
 
           {avatarSuccess && (
-            <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs">
+            <div className={`p-3 rounded-xl border text-xs ${
+              isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+            }`}>
               {avatarSuccess}
             </div>
           )}
           {avatarError && (
-            <div className="p-3 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs">
+            <div className={`p-3 rounded-xl border text-xs ${
+              isLight ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-red-950/40 border-red-500/30 text-red-300'
+            }`}>
               {avatarError}
             </div>
           )}
 
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <div className="relative group shrink-0">
-              <img
+              <Avatar
                 src={avatarUrl}
-                alt={name}
-                className="w-24 h-24 rounded-2xl object-cover ring-4 ring-purple-500/30 shadow-xl"
+                name={name || user?.name || 'User'}
+                size="2xl"
               />
               {uploadingAvatar && (
-                <div className="absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center">
                   <Loader2 className="w-6 h-6 text-white animate-spin" />
                 </div>
               )}
@@ -231,25 +253,28 @@ export const EditProfile = () => {
               />
 
               <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
-                <button
+                <SpatialButton
                   type="button"
+                  variant="primary"
+                  size="sm"
                   disabled={uploadingAvatar}
+                  isLoading={uploadingAvatar}
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md shadow-purple-600/20"
+                  icon={Upload}
                 >
-                  <Upload className="w-3.5 h-3.5" />
                   {uploadingAvatar ? 'Uploading...' : 'Upload New Photo'}
-                </button>
+                </SpatialButton>
 
-                <button
+                <SpatialButton
                   type="button"
+                  variant="secondary"
+                  size="sm"
                   disabled={uploadingAvatar}
                   onClick={handleRemoveAvatar}
-                  className="px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-red-400 text-xs font-semibold flex items-center gap-1.5 transition-all"
+                  icon={Trash2}
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
                   Remove
-                </button>
+                </SpatialButton>
               </div>
 
               <p className="text-[11px] text-gray-500">
@@ -277,37 +302,39 @@ export const EditProfile = () => {
           {/* Name & Experience Level */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-300">Full Name *</label>
-              <input
-                type="text"
+              <label htmlFor="edit-profile-name" className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>Full Name *</label>
+              <SpatialInput
+                id="edit-profile-name"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
               />
             </div>
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-gray-300">Experience Level *</label>
+                <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>Experience Level *</label>
                 {isVerified && (
-                  <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-                    <BadgeCheck className="w-3 h-3" /> Verified
-                  </span>
+                  <VerificationBadge status="Verified" size="sm" />
                 )}
               </div>
-              <select
+              <SpatialDropdown
                 value={experienceLevel}
                 onChange={(e) => setExperienceLevel(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-              >
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
-              </select>
+                options={[
+                  { value: 'Beginner', label: 'Beginner' },
+                  { value: 'Intermediate', label: 'Intermediate' },
+                  { value: 'Advanced', label: 'Advanced' },
+                ]}
+                placeholder="Select Experience Level..."
+              />
 
               {isVerified && experienceLevel !== user?.experienceLevel && (
-                <p className="text-[11px] text-amber-400 bg-amber-950/40 p-2 rounded-lg border border-amber-500/30 mt-1">
+                <p className={`text-[11px] p-2 rounded-lg border mt-1 ${
+                  isLight
+                    ? 'text-amber-800 bg-amber-50 border-amber-200'
+                    : 'text-amber-400 bg-amber-950/40 border-amber-500/30'
+                }`}>
                   ⚠️ Note: Changing your experience level will reset your verification status to Unverified and require re-approval by your campus admin.
                 </p>
               )}
@@ -316,20 +343,20 @@ export const EditProfile = () => {
 
           {/* Bio */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-300">Bio</label>
-            <textarea
+            <label htmlFor="edit-profile-bio" className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>Bio</label>
+            <SpatialTextarea
+              id="edit-profile-bio"
               rows={3}
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Tell other students about your passions, hackathon achievements, and project goals..."
-              className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-indigo-500 resize-none"
             />
           </div>
 
           {/* Skills Selection */}
           <div className="space-y-3 pt-2">
-            <label className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
-              <Code className="w-4 h-4 text-cyan-400" />
+            <label className={`text-xs font-semibold flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
+              <Code className="w-4 h-4 text-cyan-500 dark:text-cyan-400" />
               Skills & Tech Stack (Selected: {skills.length})
             </label>
 
@@ -337,112 +364,118 @@ export const EditProfile = () => {
               {COMMON_SKILLS.map((skill) => {
                 const isSelected = skills.includes(skill);
                 return (
-                  <button
+                  <SkillChip
                     key={skill}
-                    type="button"
-                    onClick={() => toggleSkill(skill)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all flex items-center gap-1.5 ${
-                      isSelected
-                        ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
-                        : 'bg-gray-900/60 text-gray-400 border-gray-800 hover:border-gray-700 hover:text-white'
-                    }`}
-                  >
-                    {isSelected && <Check className="w-3 h-3" />}
-                    {skill}
-                  </button>
+                    skill={skill}
+                    variant="interactive"
+                    selected={isSelected}
+                    onToggle={() => toggleSkill(skill)}
+                  />
                 );
               })}
             </div>
 
             {/* Custom Skill Input */}
             <div className="flex gap-2 max-w-sm pt-1">
-              <input
-                type="text"
+              <SpatialInput
+                id="edit-custom-skill"
+                aria-label="Add custom tech skill"
+                size="sm"
                 value={customSkill}
                 onChange={(e) => setCustomSkill(e.target.value)}
                 placeholder="Add custom tech skill..."
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
               />
-              <button
+              <SpatialButton
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={handleAddCustomSkill}
-                className="px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-white shrink-0"
+                icon={Plus}
               >
                 Add
-              </button>
+              </SpatialButton>
             </div>
+
+            {/* Custom Skills Display */}
+            {skills.filter((s) => !COMMON_SKILLS.includes(s)).length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {skills
+                  .filter((s) => !COMMON_SKILLS.includes(s))
+                  .map((s) => (
+                    <SkillChip
+                      key={s}
+                      skill={s}
+                      variant="removable"
+                      size="md"
+                      onRemove={() => toggleSkill(s)}
+                    />
+                  ))}
+              </div>
+            )}
           </div>
 
           {/* Social Links */}
-          <div className="space-y-4 pt-4 border-t border-gray-800">
-            <h3 className="text-xs uppercase tracking-wider font-bold text-gray-400">Social & Portfolio Links</h3>
+          <div className={`space-y-4 pt-4 border-t ${isLight ? 'border-slate-200' : 'border-gray-800'}`}>
+            <h3 className={`text-xs uppercase tracking-wider font-bold ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>Social & Portfolio Links</h3>
 
             <div className="space-y-3">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
-                  <Code2 className="w-4 h-4" />
-                </div>
-                <input
-                  type="url"
-                  value={githubUrl}
-                  onChange={(e) => setGithubUrl(e.target.value)}
-                  placeholder="https://github.com/username"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl pl-10 pr-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
+              <SpatialInput
+                id="edit-github-url"
+                aria-label="GitHub Profile URL"
+                size="sm"
+                type="url"
+                icon={Code2}
+                value={githubUrl}
+                onChange={(e) => setGithubUrl(e.target.value)}
+                placeholder="https://github.com/username"
+              />
 
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
-                  <Share2 className="w-4 h-4" />
-                </div>
-                <input
-                  type="url"
-                  value={linkedinUrl}
-                  onChange={(e) => setLinkedinUrl(e.target.value)}
-                  placeholder="https://linkedin.com/in/username"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl pl-10 pr-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
+              <SpatialInput
+                id="edit-linkedin-url"
+                aria-label="LinkedIn Profile URL"
+                size="sm"
+                type="url"
+                icon={Share2}
+                value={linkedinUrl}
+                onChange={(e) => setLinkedinUrl(e.target.value)}
+                placeholder="https://linkedin.com/in/username"
+              />
 
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
-                  <Globe className="w-4 h-4" />
-                </div>
-                <input
-                  type="url"
-                  value={portfolioUrl}
-                  onChange={(e) => setPortfolioUrl(e.target.value)}
-                  placeholder="https://myportfolio.dev"
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl pl-10 pr-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
+              <SpatialInput
+                id="edit-portfolio-url"
+                aria-label="Portfolio / Personal Website URL"
+                size="sm"
+                type="url"
+                icon={Globe}
+                value={portfolioUrl}
+                onChange={(e) => setPortfolioUrl(e.target.value)}
+                placeholder="https://myportfolio.dev"
+              />
             </div>
           </div>
 
           {/* Submit Actions */}
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-800">
-            <button
+          <div className={`flex items-center justify-end gap-3 pt-6 border-t ${isLight ? 'border-slate-200' : 'border-gray-800'}`}>
+            <SpatialButton
               type="button"
+              variant="secondary"
+              size="md"
               onClick={() => navigate('/profile')}
-              className="px-5 py-2 rounded-xl border border-gray-700 text-gray-300 text-xs font-semibold"
             >
               Cancel
-            </button>
-            <button
+            </SpatialButton>
+            <SpatialButton
               type="submit"
-              disabled={submitting}
-              className="btn-glow px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600 text-white font-bold text-xs flex items-center gap-1.5"
+              variant="primary"
+              size="md"
+              isLoading={submitting}
+              icon={Save}
             >
-              {submitting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
               Save Changes
-            </button>
+            </SpatialButton>
           </div>
         </form>
-      </div>
+      </SpatialPanel>
     </div>
   );
 };

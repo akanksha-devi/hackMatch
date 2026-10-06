@@ -45,24 +45,34 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const res = await axiosInstance.post('/auth/login', { email, password });
-    if (res.data?.success) {
-      localStorage.setItem('hackmatch_token', res.data.token);
-      setUser(res.data.user);
-      return res.data.user;
-    } else {
-      throw new Error(res.data?.message || 'Login failed');
+    try {
+      const res = await axiosInstance.post('/auth/login', { email, password });
+      if (res.data?.success) {
+        localStorage.setItem('hackmatch_token', res.data.token);
+        setUser(res.data.user);
+        return res.data.user;
+      } else {
+        throw new Error(res.data?.message || 'Login failed');
+      }
+    } catch (err) {
+      const message = err.response?.data?.message || err.message || 'Login failed';
+      throw new Error(message);
     }
   };
 
   const signup = async (userData) => {
-    const res = await axiosInstance.post('/auth/signup', userData);
-    if (res.data?.success) {
-      localStorage.setItem('hackmatch_token', res.data.token);
-      setUser(res.data.user);
-      return res.data.user;
-    } else {
-      throw new Error(res.data?.message || 'Signup failed');
+    try {
+      const res = await axiosInstance.post('/auth/signup', userData);
+      if (res.data?.success) {
+        localStorage.setItem('hackmatch_token', res.data.token);
+        setUser(res.data.user);
+        return res.data.user;
+      } else {
+        throw new Error(res.data?.message || 'Signup failed');
+      }
+    } catch (err) {
+      const message = err.response?.data?.message || err.message || 'Signup failed';
+      throw new Error(message);
     }
   };
 

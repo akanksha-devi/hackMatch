@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../context/ThemeContext';
 import apiService from '../services/apiService';
-import { SkillTag } from '../components/SkillTag';
+import { SkillChip } from '../components/SkillChip';
 import { UserCard } from '../components/UserCard';
 import { RequireVerified } from '../components/RequireVerified';
-import { SpatialDropdown } from '../components/spatial';
+import { StatusBadge } from '../components/StatusBadge';
+import { SpatialPanel, SpatialDropdown, SpatialButton, SpatialInput, SpatialTextarea } from '../components/spatial';
 import { 
   PlusCircle, 
   Trophy, 
@@ -26,6 +28,8 @@ const COMMON_SKILLS = [
 
 export const PostTeamRequest = () => {
   const { user, collegeName } = useAuth();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const defaultHackathonId = searchParams.get('hackathonId') || '';
@@ -137,15 +141,26 @@ export const PostTeamRequest = () => {
   const isVerified = user?.experienceVerificationStatus === 'Verified';
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="relative space-y-8 pb-16">
+      {/* Ambient Atmospheric Glow */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10" aria-hidden="true">
+        <div 
+          className="absolute -top-12 left-1/2 -translate-x-1/2 w-[520px] max-w-full h-[320px] bg-gradient-to-tr from-indigo-500/12 via-purple-500/10 to-transparent blur-3xl rounded-full" 
+        />
+      </div>
+
       {/* Header */}
-      <div className="space-y-2 border-b border-gray-800 pb-6">
-        <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
-          <PlusCircle className="w-8 h-8 text-indigo-400" />
+      <div className={`relative space-y-2 border-b ${isLight ? 'border-slate-200/80' : 'border-gray-800/80'} pb-6`}>
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 mb-1">
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>TEAM ASSEMBLY WORKSPACE</span>
+        </div>
+        <h1 className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'} flex items-center gap-3`}>
+          <PlusCircle className="w-8 h-8 text-indigo-500 shrink-0" />
           Post a Team Request
         </h1>
-        <p className="text-sm text-gray-400">
-          Specify what skills you need and our matching engine will suggest compatible builders automatically.
+        <p className={`text-sm max-w-2xl ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
+          Specify required technical capabilities for your hackathon squad. Our real-time matching engine connects you with verified campus builders.
         </p>
       </div>
 
@@ -155,212 +170,240 @@ export const PostTeamRequest = () => {
           description="Creating team requests requires college-verified experience. This builds trust between hackathon participants and ensures teams are led with authentic technical credentials."
         />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* Left Column: Form (7 cols) */}
-        <div className="lg:col-span-7">
-          <form onSubmit={handleSubmit} className="glass-panel p-6 sm:p-8 rounded-3xl border border-gray-800 space-y-6">
-            {error && (
-              <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Target Hackathon */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700 flex items-center gap-1.5">
-                <Trophy className="w-4 h-4 text-indigo-400" />
-                Select Target Hackathon *
-              </label>
-              <SpatialDropdown
-                required
-                value={selectedHackathonId}
-                onChange={(e) => setSelectedHackathonId(e.target.value)}
-                options={hackathons.map((h) => ({
-                  value: h._id || h.id,
-                  label: `${h.title} (${h.mode})`,
-                }))}
-                placeholder="Select target hackathon..."
-              />
-            </div>
-
-            {/* Request Title */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-300 dark:text-gray-300 light:text-slate-700">
-                Request Headline / Title *
-              </label>
-              <input
-                type="text"
-                required
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Need PyTorch ML dev & UI designer for Smart India Hackathon"
-                className="w-full spatial-input rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none placeholder:text-gray-500"
-              />
-            </div>
-
-            {/* Description */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-300">
-                Project & Role Description *
-              </label>
-              <textarea
-                rows={4}
-                required
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe your idea, what you've built so far, responsibilities, and team expectations..."
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-indigo-500 placeholder:text-gray-600 resize-none"
-              />
-            </div>
-
-            {/* Required Skills Multi-select */}
-            <div className="space-y-3 pt-2 border-t border-gray-800">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
-                  <Code className="w-4 h-4 text-cyan-400" />
-                  Skills Needed for Your Team *
-                </label>
-                <span className="text-xs text-gray-400">{skillsNeeded.length} selected</span>
-              </div>
-
-              {/* Suggestions */}
-              <div className="flex flex-wrap gap-1.5">
-                {COMMON_SKILLS.map((sk) => {
-                  const isSelected = skillsNeeded.includes(sk);
-                  return (
-                    <button
-                      key={sk}
-                      type="button"
-                      onClick={() => toggleSkill(sk)}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
-                        isSelected
-                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30'
-                          : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-gray-200'
-                      }`}
-                    >
-                      {isSelected && <Check className="w-3 h-3 text-white" />}
-                      {sk}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Add custom skill */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={customSkill}
-                  onChange={(e) => setCustomSkill(e.target.value)}
-                  placeholder="Add custom skill..."
-                  className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddCustomSkill}
-                  className="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-xs font-semibold text-white flex items-center gap-1"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Add
-                </button>
-              </div>
-
-              {/* Display tags */}
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {skillsNeeded.map((s) => (
-                  <SkillTag
-                    key={s}
-                    name={s}
-                    size="sm"
-                    onRemove={(rem) => setSkillsNeeded(skillsNeeded.filter((k) => k !== rem))}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Team Size Needed */}
-            <div className="space-y-1.5 pt-2 border-t border-gray-800">
-              <label className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-purple-400" />
-                Number of Teammates Needed
-              </label>
-              <div className="flex items-center gap-3">
-                {[1, 2, 3, 4].map((num) => (
-                  <button
-                    key={num}
-                    type="button"
-                    onClick={() => setTeamSizeNeeded(num)}
-                    className={`w-12 h-10 rounded-xl font-bold text-sm transition-all ${
-                      teamSizeNeeded === num
-                        ? 'bg-indigo-600 text-white ring-2 ring-indigo-400 shadow-lg shadow-indigo-500/20'
-                        : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    {num}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-glow w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 via-violet-600 to-cyan-600 text-white font-bold text-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all disabled:opacity-50"
-            >
-              {loading ? (
-                <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-              ) : (
-                <>
-                  <PlusCircle className="w-5 h-5" /> Publish Team Request
-                </>
+          {/* Left Column: Form (7 cols) */}
+          <div className="lg:col-span-7">
+            <SpatialPanel as="form" onSubmit={handleSubmit} elevation="raised" className="p-6 sm:p-8 space-y-6">
+              {error && (
+                <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
               )}
-            </button>
-          </form>
-        </div>
 
-        {/* Right Column: Live Suggested Matches Preview (5 cols) */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="glass-panel p-6 rounded-3xl border border-gray-800 space-y-4 sticky top-24">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" />
-                <h3 className="text-base font-bold text-white">Suggested Matches</h3>
-              </div>
-              <span className="text-xs font-semibold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full">
-                {suggestedMatches.length} Found
-              </span>
-            </div>
+              {/* Section 1: Event Context */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-indigo-500">
+                  <span className="w-5 h-5 rounded-full bg-indigo-500/15 flex items-center justify-center text-[10px]">1</span>
+                  Target Hackathon
+                </div>
 
-            <p className="text-xs text-gray-400">
-              Live preview of registered developers ranked by skill overlap with your selected requirements:
-            </p>
-
-            {suggestedMatches.length > 0 ? (
-              <div className="space-y-4 max-h-[550px] overflow-y-auto pr-1">
-                {suggestedMatches.map((m) => (
-                  <UserCard
-                    key={m.user?._id || m.user?.id}
-                    user={m.user}
-                    matchScore={m.matchScore}
-                    overlappingSkills={m.matchedSkills || m.overlappingSkills || []}
+                <div className="space-y-1.5">
+                  <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'} flex items-center gap-1.5`}>
+                    <Trophy className="w-4 h-4 text-indigo-500" />
+                    Select Hackathon Target *
+                  </label>
+                  <SpatialDropdown
+                    required
+                    value={selectedHackathonId}
+                    onChange={(e) => setSelectedHackathonId(e.target.value)}
+                    options={hackathons.map((h) => ({
+                      value: h._id || h.id,
+                      label: `${h.title} (${h.mode || 'Virtual'})`,
+                    }))}
+                    placeholder="Select target hackathon..."
                   />
-                ))}
+                </div>
               </div>
-            ) : (
-              <div className="p-8 text-center text-xs text-gray-500 space-y-2 border border-dashed border-gray-800 rounded-2xl">
-                <Zap className="w-8 h-8 text-gray-600 mx-auto" />
-                <p>
-                  {isMatching
-                    ? 'Finding compatible campus teammates...'
-                    : 'Select required skills on the left to see live teammate match suggestions.'}
+
+              {/* Section 2: Team Pitch & Mission */}
+              <div className={`space-y-4 pt-4 border-t ${isLight ? 'border-slate-200/80' : 'border-gray-800/80'}`}>
+                <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-indigo-500">
+                  <span className="w-5 h-5 rounded-full bg-indigo-500/15 flex items-center justify-center text-[10px]">2</span>
+                  Team Mission & Scope
+                </div>
+
+                {/* Request Title */}
+                <div className="space-y-1.5">
+                  <label htmlFor="team-req-title" className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
+                    Headline / Role Summary *
+                  </label>
+                  <SpatialInput
+                    id="team-req-title"
+                    required
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. Need PyTorch ML engineer & UI designer for Smart India Hackathon"
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="space-y-1.5">
+                  <label htmlFor="team-req-desc" className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
+                    Project Pitch & Expectations *
+                  </label>
+                  <SpatialTextarea
+                    id="team-req-desc"
+                    rows={4}
+                    required
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe your idea, what you have built so far, responsibilities, and team expectations..."
+                  />
+                </div>
+              </div>
+
+              {/* Section 3: Tech Arsenal & Skill Requirements */}
+              <div className={`space-y-4 pt-4 border-t ${isLight ? 'border-slate-200/80' : 'border-gray-800/80'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-indigo-500">
+                    <span className="w-5 h-5 rounded-full bg-indigo-500/15 flex items-center justify-center text-[10px]">3</span>
+                    Required Skills
+                  </div>
+                  <span className={`text-xs px-2.5 py-0.5 rounded-full ${isLight ? 'bg-slate-100 text-slate-600' : 'bg-gray-800 text-gray-300'}`}>
+                    {skillsNeeded.length} selected
+                  </span>
+                </div>
+
+                <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
+                  Select required stack components to trigger real-time candidate matchmaking:
                 </p>
+
+                {/* Suggestions */}
+                <div className="flex flex-wrap gap-1.5">
+                  {COMMON_SKILLS.map((sk) => {
+                    const isSelected = skillsNeeded.includes(sk);
+                    return (
+                      <SkillChip
+                        key={sk}
+                        skill={sk}
+                        variant="interactive"
+                        selected={isSelected}
+                        onToggle={() => toggleSkill(sk)}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Add custom skill */}
+                <div className="flex items-center gap-2 pt-1">
+                  <SpatialInput
+                    id="team-req-custom-skill"
+                    aria-label="Add custom skill"
+                    size="sm"
+                    value={customSkill}
+                    onChange={(e) => setCustomSkill(e.target.value)}
+                    placeholder="Add custom skill (e.g. Rust, WebGL)..."
+                  />
+                  <SpatialButton
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleAddCustomSkill}
+                    icon={Plus}
+                  >
+                    Add
+                  </SpatialButton>
+                </div>
+
+                {/* Display tags */}
+                {skillsNeeded.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-2">
+                    {skillsNeeded.map((s) => (
+                      <SkillChip
+                        key={s}
+                        skill={s}
+                        size="md"
+                        variant="removable"
+                        onRemove={() => setSkillsNeeded(skillsNeeded.filter((k) => k !== s))}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* Section 4: Team Capacity */}
+              <div className={`space-y-4 pt-4 border-t ${isLight ? 'border-slate-200/80' : 'border-gray-800/80'}`}>
+                <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-indigo-500">
+                  <span className="w-5 h-5 rounded-full bg-indigo-500/15 flex items-center justify-center text-[10px]">4</span>
+                  Roster Allocation
+                </div>
+
+                <div className="space-y-2">
+                  <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-gray-300'} flex items-center gap-1.5`}>
+                    <Users className="w-4 h-4 text-purple-500" />
+                    Number of Teammates Needed
+                  </label>
+                  <div className="flex items-center gap-3">
+                    {[1, 2, 3, 4].map((num) => (
+                      <SpatialButton
+                        key={num}
+                        type="button"
+                        variant={teamSizeNeeded === num ? 'primary' : 'outline'}
+                        size="md"
+                        onClick={() => setTeamSizeNeeded(num)}
+                        className="w-12 h-10 font-bold"
+                      >
+                        {num}
+                      </SpatialButton>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit */}
+              <div className="pt-2">
+                <SpatialButton
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  isLoading={loading}
+                  icon={PlusCircle}
+                >
+                  Publish Team Request
+                </SpatialButton>
+              </div>
+            </SpatialPanel>
+          </div>
+
+          {/* Right Column: Live Suggested Matches Preview (5 cols) */}
+          <div className="lg:col-span-5 space-y-4">
+            <SpatialPanel padding="normal" elevation="raised" className="space-y-4 sticky top-24">
+              <div className={`flex items-center justify-between border-b ${isLight ? 'border-slate-200/80' : 'border-gray-800/80'} pb-3`}>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-indigo-500" />
+                  <h3 className={`text-base font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>Smart Candidate Radar</h3>
+                </div>
+                <StatusBadge
+                  status="active"
+                  accent="indigo"
+                  label={isMatching ? 'Matching...' : `${suggestedMatches.length} Found`}
+                  size="sm"
+                  showIcon={false}
+                />
+              </div>
+
+              <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
+                Live preview of verified developers ranked by skill overlap with your selected requirements:
+              </p>
+
+              {suggestedMatches.length > 0 ? (
+                <div className="space-y-3.5 max-h-[580px] overflow-y-auto pr-1">
+                  {suggestedMatches.map((m) => (
+                    <UserCard
+                      key={m.user?._id || m.user?.id}
+                      user={m.user}
+                      matchScore={m.matchScore}
+                      overlappingSkills={m.matchedSkills || m.overlappingSkills || []}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className={`p-8 text-center text-xs ${isLight ? 'text-slate-500 border-slate-300/80' : 'text-gray-500 border-gray-800/80'} space-y-2 border border-dashed rounded-2xl`}>
+                  <Zap className={`w-8 h-8 ${isLight ? 'text-slate-400' : 'text-gray-600'} mx-auto`} />
+                  <p>
+                    {isMatching
+                      ? 'Finding compatible campus teammates...'
+                      : 'Select required skills on the left to see live teammate match suggestions.'}
+                  </p>
+                </div>
+              )}
+            </SpatialPanel>
           </div>
         </div>
-      </div>
-    )}
-  </div>
-);
+      )}
+    </div>
+  );
 };

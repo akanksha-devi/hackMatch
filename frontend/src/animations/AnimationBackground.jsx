@@ -270,7 +270,7 @@ export const AnimationBackground = ({
 
   return (
     <div
-      className={`fixed inset-0 pointer-events-none -z-10 overflow-hidden transition-opacity duration-1000 ${className}`}
+      className={`fixed inset-0 pointer-events-none -z-10 overflow-hidden bg-mesh-glow transition-opacity duration-1000 ${className}`}
       style={{ opacity: effectiveOpacity }}
       aria-hidden="true"
     >

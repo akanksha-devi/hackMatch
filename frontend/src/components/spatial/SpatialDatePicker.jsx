@@ -2,6 +2,10 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { SpatialButton } from './SpatialButton';
+import { SpatialIconButton } from './SpatialIconButton';
+import { SpatialAnimatedIcon } from './SpatialAnimatedIcon';
+import { FOCUS, MOTION } from '../../design-system/tokens';
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const MONTHS = [
@@ -286,20 +290,25 @@ export const SpatialDatePicker = ({
       {/* Input Trigger Button */}
       <div
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
-        className={`w-full flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 outline-none ${
+        className={`w-full flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 outline-none bg-white/70 dark:bg-slate-900/60 backdrop-blur-md backdrop-saturate-140 shadow-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] ${
           isLight
-            ? 'bg-white hover:bg-slate-50 border border-slate-200 text-slate-900 shadow-sm'
-            : 'bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/80 text-white shadow-md'
+            ? 'hover:bg-white/90 border border-slate-300 hover:border-slate-400 text-slate-900'
+            : 'hover:bg-slate-800/70 border border-white/10 hover:border-white/20 text-white'
         } ${
           isOpen
             ? isLight
               ? 'ring-2 ring-indigo-500/30 border-indigo-500'
               : 'ring-2 ring-indigo-500/40 border-indigo-500/60 shadow-lg shadow-indigo-500/10'
             : ''
-        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-500/40'}`}
+        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
-        <div className="flex items-center gap-2.5 truncate">
-          <CalendarIcon className={`w-4 h-4 shrink-0 ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`} />
+        <div className="flex items-center gap-2.5 min-w-0 overflow-visible">
+          <SpatialAnimatedIcon
+            icon={CalendarIcon}
+            animation="calendar-tick"
+            trigger="parent-hover"
+            className={`w-4 h-4 shrink-0 ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`}
+          />
           <span className={`truncate ${value ? (isLight ? 'text-slate-900 font-semibold' : 'text-white font-medium') : (isLight ? 'text-slate-400' : 'text-gray-500')}`}>
             {displayValue || placeholder}
           </span>
@@ -307,16 +316,15 @@ export const SpatialDatePicker = ({
 
         <div className="flex items-center gap-1">
           {value && !disabled && (
-            <button
-              type="button"
+            <SpatialIconButton
+              icon={X}
+              label="Clear date"
+              variant="ghost"
+              size="sm"
               onClick={handleClear}
-              className={`p-1 rounded-md transition-colors cursor-pointer ${
-                isLight ? 'text-slate-400 hover:text-slate-800 hover:bg-slate-100' : 'text-gray-400 hover:text-white hover:bg-white/10'
-              }`}
-              title="Clear date"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+              tooltip="Clear date"
+              className="w-6 h-6 min-w-[24px] min-h-[24px] p-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+            />
           )}
         </div>
       </div>
@@ -325,10 +333,10 @@ export const SpatialDatePicker = ({
       {isOpen && typeof document !== 'undefined' && createPortal(
         <div
           ref={popupRef}
-          className={`fixed p-4 rounded-2xl shadow-2xl z-[70] transition-all duration-150 select-none ${
+          className={`fixed p-4 rounded-2xl z-[70] transition-all duration-150 select-none liquid-glass-floating ${
             isLight
-              ? 'bg-white border border-slate-200 shadow-slate-300/60 text-slate-900'
-              : 'bg-slate-900 border border-slate-700/80 shadow-black/80 text-slate-100'
+              ? 'text-slate-900'
+              : 'text-slate-100'
           }`}
           style={{
             top: coords.top,
@@ -343,30 +351,22 @@ export const SpatialDatePicker = ({
             </span>
 
             <div className="flex items-center gap-1">
-              <button
-                type="button"
+              <SpatialIconButton
+                icon={ChevronLeft}
+                label="Previous month"
+                variant="ghost"
+                size="sm"
                 onClick={handlePrevMonth}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                  isLight
-                    ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                }`}
-                title="Previous month"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
+                tooltip="Previous month"
+              />
+              <SpatialIconButton
+                icon={ChevronRight}
+                label="Next month"
+                variant="ghost"
+                size="sm"
                 onClick={handleNextMonth}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                  isLight
-                    ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                }`}
-                title="Next month"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+                tooltip="Next month"
+              />
             </div>
           </div>
 
@@ -405,8 +405,11 @@ export const SpatialDatePicker = ({
                   key={idx}
                   type="button"
                   disabled={cell.disabled}
+                  aria-label={`${MONTHS[viewMonth]} ${cell.day}, ${viewYear}`}
+                  aria-selected={cell.isSelected}
+                  aria-current={cell.isToday ? 'date' : undefined}
                   onClick={() => !cell.disabled && handleSelectDay(cell.day)}
-                  className={`h-8 w-8 mx-auto rounded-lg text-xs font-semibold flex items-center justify-center transition-all duration-150 relative select-none ${
+                  className={`h-8 w-8 mx-auto rounded-lg text-xs font-semibold flex items-center justify-center transition-all duration-150 relative select-none ${FOCUS.ring} ${MOTION.activePress} ${
                     cell.isSelected
                       ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-500/30'
                       : cell.disabled
@@ -429,30 +432,26 @@ export const SpatialDatePicker = ({
 
           {/* Footer Quick Actions */}
           <div className={`flex items-center justify-between pt-3 mt-3 border-t text-xs ${isLight ? 'border-slate-100' : 'border-slate-800'}`}>
-            <button
+            <SpatialButton
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={handleSelectToday}
-              className={`font-semibold px-2 py-1 rounded transition-colors cursor-pointer ${
-                isLight
-                  ? 'text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50'
-                  : 'text-indigo-400 hover:text-indigo-300 hover:bg-slate-800'
-              }`}
+              className="text-xs px-2 py-1 h-auto min-h-0 text-indigo-600 dark:text-indigo-400 font-semibold"
             >
               Today
-            </button>
+            </SpatialButton>
 
             {value && (
-              <button
+              <SpatialButton
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={handleClear}
-                className={`px-2 py-1 rounded transition-colors cursor-pointer ${
-                  isLight
-                    ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                }`}
+                className="text-xs px-2 py-1 h-auto min-h-0 text-slate-500 dark:text-gray-400"
               >
                 Clear
-              </button>
+              </SpatialButton>
             )}
           </div>
         </div>,
