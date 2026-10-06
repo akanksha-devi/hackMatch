@@ -260,8 +260,8 @@ export const AnimationBackground = ({
     return getSceneForRoute(location?.pathname || '/');
   }, [animCtx?.scene, scene, location?.pathname]);
 
-  // Dynamic opacity based on theme: keep both Dark and Light modes clearly visible and luminous
-  const effectiveOpacity = opacity !== undefined ? opacity : (resolvedTheme === 'light' ? 0.9 : 0.9);
+  // Dynamic opacity based on theme & animation context
+  const effectiveOpacity = opacity !== undefined ? opacity : (animCtx?.opacity !== undefined ? animCtx.opacity : (resolvedTheme === 'light' ? 0.9 : 0.9));
 
   // Fallback to CSS animation if WebGL is unavailable or encountered an error
   if (!webGLSupported || hasError) {

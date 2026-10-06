@@ -1,381 +1,685 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { PlusCircle, Users } from 'lucide-react';
-import { useTheme } from '../../context/ThemeContext';
+import { PlusCircle, Users, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useAnimation } from '../../animations/AnimationContext';
 import { HeroTeamAssembly3D } from './HeroTeamAssembly3D';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// ─── Inline hero CTA buttons
-// Primary: yellow bg, ink text, 2px ink border, hard offset shadow (no gradient)
+// ─── Canonical Primary CTA Button (Tactile Yellow with Hard Offset Shadow)
 const HeroPrimaryBtn = ({ to, children, icon: Icon }) => (
   <Link
     to={to}
-    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-extrabold rounded-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+    className="group relative inline-flex items-center justify-center gap-2.5 px-6 py-3.5 text-sm font-extrabold rounded-md select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#06080f]"
     style={{
       backgroundColor: '#fbbf24',
       color: '#0f172a',
       border: '2px solid #0f172a',
       boxShadow: '4px 4px 0px #0f172a',
-      transition: 'box-shadow 80ms ease, transform 80ms ease',
+      transition: 'box-shadow 120ms cubic-bezier(0.23, 1, 0.32, 1), transform 120ms cubic-bezier(0.23, 1, 0.32, 1)',
     }}
     onMouseEnter={(e) => {
-      e.currentTarget.style.boxShadow = '2px 2px 0px #0f172a';
-      e.currentTarget.style.transform = 'translate(2px, 2px)';
+      e.currentTarget.style.boxShadow = '6px 6px 0px #0f172a';
+      e.currentTarget.style.transform = 'translate(-2px, -2px)';
     }}
     onMouseLeave={(e) => {
       e.currentTarget.style.boxShadow = '4px 4px 0px #0f172a';
       e.currentTarget.style.transform = '';
     }}
     onMouseDown={(e) => {
-      e.currentTarget.style.boxShadow = '0px 0px 0px #0f172a';
-      e.currentTarget.style.transform = 'translate(4px, 4px)';
+      e.currentTarget.style.boxShadow = '1px 1px 0px #0f172a';
+      e.currentTarget.style.transform = 'translate(3px, 3px)';
     }}
     onMouseUp={(e) => {
-      e.currentTarget.style.boxShadow = '4px 4px 0px #0f172a';
-      e.currentTarget.style.transform = '';
+      e.currentTarget.style.boxShadow = '6px 6px 0px #0f172a';
+      e.currentTarget.style.transform = 'translate(-2px, -2px)';
     }}
   >
-    {Icon && <Icon className="w-4 h-4 flex-shrink-0" />}
-    {children}
+    {Icon && <Icon className="w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-110" />}
+    <span className="relative z-10">{children}</span>
   </Link>
 );
 
-// Secondary: white outline for cobalt background
-const HeroSecondaryBtn = ({ to, children, icon: Icon, isLight }) => (
+// ─── Canonical Secondary CTA Button (Translucent Glass Pill)
+const HeroSecondaryBtn = ({ to, children, icon: Icon }) => (
   <Link
     to={to}
-    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-extrabold rounded-sm select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 transition-colors duration-150"
+    className="group relative inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-bold rounded-full select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#06080f] transition-all duration-200"
     style={{
-      backgroundColor: 'transparent',
-      color: isLight ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.85)',
-      border: '2px solid rgba(255,255,255,0.4)',
+      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+      color: '#ffffff',
+      border: '1px solid rgba(255, 255, 255, 0.22)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      boxShadow: '0 4px 16px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)',
     }}
     onMouseEnter={(e) => {
-      e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)';
-      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.65)';
+      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.16)';
+      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.45)';
+      e.currentTarget.style.transform = 'translate(-2px, -2px)';
+      e.currentTarget.style.boxShadow = '0 8px 24px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.35)';
     }}
     onMouseLeave={(e) => {
-      e.currentTarget.style.backgroundColor = 'transparent';
-      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
+      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.22)';
+      e.currentTarget.style.transform = '';
+      e.currentTarget.style.boxShadow = '0 4px 16px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)';
+    }}
+    onMouseDown={(e) => {
+      e.currentTarget.style.transform = 'translate(1px, 1px)';
+    }}
+    onMouseUp={(e) => {
+      e.currentTarget.style.transform = 'translate(-2px, -2px)';
     }}
   >
-    {Icon && <Icon className="w-4 h-4 flex-shrink-0" />}
-    {children}
+    {Icon && <Icon className="w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-110 text-white/80" />}
+    <span>{children}</span>
   </Link>
 );
 
 export const HomeHero = ({ activeHackathonsCount = 4 }) => {
-  const { resolvedTheme, theme } = useTheme();
-  const isLight = (resolvedTheme || theme) === 'light';
+  const { user } = useAuth();
+  const animCtx = useAnimation();
 
+  // User initial from authentic authentication data
+  const userInitial = useMemo(() => {
+    if (user?.name && typeof user.name === 'string') {
+      return user.name.trim().charAt(0).toUpperCase();
+    }
+    return null;
+  }, [user]);
+
+  // Responsive & Accessibility States
   const [isMobile, setIsMobile] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [hasWebGLError, setHasWebGLError] = useState(false);
+  const [navHeight, setNavHeight] = useState(64);
 
+  // Element Refs
   const wrapperRef = useRef(null);
   const pinnedRef = useRef(null);
   const gridRef = useRef(null);
-  const lineRefs = useRef([]);
+  const cobaltLightRef = useRef(null);
+  const mintLightRef = useRef(null);
+  const yellowLightRef = useRef(null);
+
+  // Headline Word Refs for Kinetic Reveal
+  const line1Ref = useRef(null);
+  const line2Ref = useRef(null);
+  const line3EmptyRef = useRef(null);
+  const line3CompleteRef = useRef(null);
   const subcopyRef = useRef(null);
   const ctaRef = useRef(null);
+  const glassPanelRef = useRef(null);
 
   const hasEnteredRef = useRef(false);
 
+  // ── 1. Measure Actual Navbar Height & Device Capabilities
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const checkViewport = () => {
-      setIsMobile(window.innerWidth < 1024);
-      setReducedMotion(mq.matches);
+    const updateMetrics = () => {
+      const nav = document.querySelector('nav');
+      if (nav) {
+        setNavHeight(nav.offsetHeight);
+      }
+      setIsMobile(window.innerWidth < 860);
+      setReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     };
-    checkViewport();
-    window.addEventListener('resize', checkViewport);
-    if (mq.addEventListener) mq.addEventListener('change', checkViewport);
-    else mq.addListener(checkViewport);
-    return () => {
-      window.removeEventListener('resize', checkViewport);
-      if (mq.removeEventListener) mq.removeEventListener('change', checkViewport);
-      else mq.removeListener(checkViewport);
-    };
+
+    updateMetrics();
+    window.addEventListener('resize', updateMetrics);
+    return () => window.removeEventListener('resize', updateMetrics);
   }, []);
 
+  // ── 2. Mute Global Background Confetti/Particles while Hero is Active
+  useEffect(() => {
+    if (animCtx?.setOpacity) {
+      animCtx.setOpacity(0);
+    }
+    return () => {
+      if (animCtx?.setOpacity) {
+        animCtx.setOpacity(0.9);
+      }
+    };
+  }, [animCtx]);
+
+  // ── 3. GSAP Kinetic Entrance & ScrollTrigger Choreography
   useEffect(() => {
     if (!wrapperRef.current) return;
+
     const ctx = gsap.context(() => {
-      // 1. Entrance: headline lines rise from overflow mask
+      // A. Initial Load Entrance Reveal (word-by-word rising masks)
       if (!reducedMotion && !hasEnteredRef.current) {
         hasEnteredRef.current = true;
         const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-        const validLines = lineRefs.current.filter(Boolean);
-        if (validLines.length > 0) {
-          tl.from(validLines, { yPercent: 115, opacity: 0, duration: 0.75, stagger: 0.13 });
+
+        const lines = [line1Ref.current, line2Ref.current, line3EmptyRef.current].filter(Boolean);
+        if (lines.length > 0) {
+          tl.from(lines, {
+            yPercent: 120,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.12,
+          });
         }
+
         if (subcopyRef.current) {
-          tl.from(subcopyRef.current, { opacity: 0, y: 20, duration: 0.5 }, '-=0.38');
+          tl.from(subcopyRef.current, {
+            opacity: 0,
+            y: 22,
+            duration: 0.55,
+          }, '-=0.4');
         }
+
         if (ctaRef.current) {
-          tl.from(ctaRef.current, { opacity: 0, y: 14, duration: 0.45 }, '-=0.28');
+          tl.from(ctaRef.current, {
+            opacity: 0,
+            y: 18,
+            duration: 0.45,
+          }, '-=0.3');
         }
       }
 
-      // 2. ScrollTrigger pin + squad assembly (desktop only)
+      // B. ScrollTrigger Scrub Timeline (Desktop & Tablet >= 860px)
       if (!isMobile && !reducedMotion && wrapperRef.current && pinnedRef.current) {
-        ScrollTrigger.create({
-          trigger: wrapperRef.current,
-          pin: pinnedRef.current,
-          pinSpacing: true,
-          start: 'top 64px', // Navbar is h-16 = 64px
-          end: '+=900px',
-          scrub: 0.3,
-          anticipatePin: 1,
-          onUpdate: (self) => setScrollProgress(self.progress),
+        const heroTimeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: wrapperRef.current,
+            pin: pinnedRef.current,
+            pinSpacing: true,
+            start: `top ${navHeight}px`,
+            end: '+=1100px', // ~220-250vh equivalent scroll range
+            scrub: 1,       // Precise physical momentum scrub
+            anticipatePin: 1,
+            onUpdate: (self) => {
+              setScrollProgress(self.progress);
+            },
+            onLeave: () => {
+              // Smoothly fade global background canvas back in as user passes hero
+              if (animCtx?.setOpacity) animCtx.setOpacity(0.9);
+            },
+            onEnterBack: () => {
+              // Mute background again when returning to hero
+              if (animCtx?.setOpacity) animCtx.setOpacity(0);
+            },
+          },
         });
 
-        // Faint grid parallax travel during scroll
-        if (gridRef.current) {
-          gsap.to(gridRef.current, {
-            backgroundPosition: '0px 36px',
+        // 1. Atmospheric Light Movement (transform only, zero layout shift)
+        if (cobaltLightRef.current) {
+          heroTimeline.to(cobaltLightRef.current, {
+            x: -120,
+            y: 90,
             ease: 'none',
-            scrollTrigger: {
-              trigger: wrapperRef.current,
-              start: 'top 64px',
-              end: '+=900px',
-              scrub: true,
-            },
-          });
+          }, 0);
+        }
+
+        if (mintLightRef.current) {
+          heroTimeline.to(mintLightRef.current, {
+            x: -90,
+            y: -110,
+            ease: 'none',
+          }, 0);
+        }
+
+        if (yellowLightRef.current) {
+          heroTimeline.to(yellowLightRef.current, {
+            x: 70,
+            y: -60,
+            ease: 'none',
+          }, 0);
+        }
+
+        // 2. Faint Structural Grid Parallax (72px alignment)
+        if (gridRef.current) {
+          heroTimeline.to(gridRef.current, {
+            backgroundPosition: '0px 48px',
+            ease: 'none',
+          }, 0);
+        }
+
+        // 3. Headline End-State Transformation (at 80-90% scroll progress)
+        // "Three seats still empty." rises up & fades -> "Squad complete." enters cleanly
+        if (line3EmptyRef.current && line3CompleteRef.current) {
+          gsap.set(line3CompleteRef.current, { yPercent: 120, opacity: 0 });
+
+          heroTimeline.to(line3EmptyRef.current, {
+            yPercent: -130,
+            opacity: 0,
+            ease: 'power2.in',
+            duration: 0.07,
+          }, 0.80);
+
+          heroTimeline.to(line3CompleteRef.current, {
+            yPercent: 0,
+            opacity: 1,
+            ease: 'power2.out',
+            duration: 0.08,
+          }, 0.85);
         }
       }
     }, wrapperRef);
 
     return () => ctx.revert();
-  }, [isMobile, reducedMotion]);
+  }, [isMobile, reducedMotion, navHeight, animCtx]);
 
-  // Scroll-driven seat assembly progression
-  const isBackendJoined = scrollProgress >= 0.25;
-  const isMLJoined = scrollProgress >= 0.55;
-  const isDesignerJoined = scrollProgress >= 0.85;
-  const filledSeatsCount =
-    1 + (isBackendJoined ? 1 : 0) + (isMLJoined ? 1 : 0) + (isDesignerJoined ? 1 : 0);
+  // Derived Squad Assembly Status
+  const isBackendJoined = scrollProgress >= 0.20;
+  const isMLJoined = scrollProgress >= 0.45;
+  const isDesignerJoined = scrollProgress >= 0.70;
+  const isFullyAssembled = scrollProgress >= 0.90;
 
-  // Poster background — dark cobalt in dark mode, rich blue in light mode
-  const posterBg = isLight ? '#1e40af' : '#071528';
+  const filledSeatsCount = isMobile
+    ? 1
+    : 1 + (isBackendJoined ? 1 : 0) + (isMLJoined ? 1 : 0) + (isDesignerJoined ? 1 : 0);
 
-  // Faint structural grid lines
-  const gridLineColor = isLight ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.055)';
+  // Deep Ink Environmental Base Color
+  const deepInkBg = '#06080f';
 
   return (
-    /*
-     * Full-bleed breakout from StudentLayout's max-w-7xl main container.
-     * marginTop: '-2rem' pulls hero flush against the 64px sticky navbar,
-     * eliminating any gaps and preventing background particles from showing through.
-     */
     <div
       ref={wrapperRef}
-      className={`relative ${isMobile ? 'mb-12' : 'mb-8'}`}
+      className={`relative ${isMobile ? 'mb-10' : 'mb-8'}`}
       style={{
         width: '100vw',
         marginLeft: 'calc(-50vw + 50%)',
         maxWidth: '100vw',
-        marginTop: '-2rem',
+        marginTop: '-2rem', // Cancels main container's py-8 top padding to sit flush under navbar
       }}
     >
-      {/* Pinned viewport container */}
+      {/* Accessible Screen Reader State Announcement */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {`${filledSeatsCount} of 4 seats filled`}
+      </div>
+
+      {/* Pinned Stage Container */}
       <div ref={pinnedRef} className="w-full relative">
 
-        {/*
-         * HERO CANVAS — full-bleed, NO rounded corners, NO border card.
-         * Sits flush below the navbar with solid background + isolation.
-         */}
+        {/* ─── Hero Canvas Stage (Full-bleed, Deep Ink Base, Stacking Context Root) ─── */}
         <div
           className="relative w-full overflow-hidden"
           style={{
-            backgroundColor: posterBg,
+            backgroundColor: deepInkBg,
             isolation: 'isolate',
-            minHeight: isMobile ? 'auto' : 'calc(100vh - 64px)',
+            minHeight: isMobile ? 'auto' : `calc(100svh - ${navHeight}px)`,
           }}
         >
-          {/* Structural 72px grid — faint print-like architectural lines */}
-          <div
-            ref={gridRef}
-            className="absolute inset-0 pointer-events-none select-none"
-            aria-hidden="true"
-            style={{
-              backgroundImage: `
-                linear-gradient(to right, ${gridLineColor} 1px, transparent 1px),
-                linear-gradient(to bottom, ${gridLineColor} 1px, transparent 1px)
-              `,
-              backgroundSize: '72px 72px',
-            }}
-          />
 
-          {/* Vignette depth overlay */}
-          <div
-            className="absolute inset-0 pointer-events-none select-none"
-            aria-hidden="true"
-            style={{
-              background:
-                'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.35) 100%)',
-            }}
-          />
+          {/* ══════════════════════════════════════════════════════════════════
+              LAYER 0: ATMOSPHERIC ENVIRONMENT & MOVING AMBIENT LIGHT SOURCES
+              Three primary lights: Cobalt, Mint, Solar Yellow
+              ══════════════════════════════════════════════════════════════════ */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden select-none" style={{ zIndex: 0 }}>
 
-          {/* Main Poster Grid — Left: Text. Right: 3D Assembly */}
+            {/* Ambient Light 1: Deep Cobalt (Drifts with scroll) */}
+            <div
+              ref={cobaltLightRef}
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                width: '780px',
+                height: '780px',
+                top: '-10%',
+                left: '12%',
+                background: 'radial-gradient(circle, rgba(37, 99, 235, 0.34) 0%, rgba(30, 64, 175, 0.16) 48%, transparent 72%)',
+                filter: 'blur(100px)',
+                willChange: 'transform',
+              }}
+            />
+
+            {/* Ambient Light 2: Fresh Mint (Drifts upward with scroll) */}
+            <div
+              ref={mintLightRef}
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                width: '680px',
+                height: '680px',
+                top: '20%',
+                right: '4%',
+                background: 'radial-gradient(circle, rgba(16, 185, 129, 0.28) 0%, rgba(5, 150, 105, 0.12) 52%, transparent 72%)',
+                filter: 'blur(95px)',
+                willChange: 'transform',
+              }}
+            />
+
+            {/* Ambient Light 3: Solar Yellow Accent (Grounds the YOU block) */}
+            <div
+              ref={yellowLightRef}
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                width: '400px',
+                height: '400px',
+                top: '32%',
+                left: '44%',
+                background: 'radial-gradient(circle, rgba(245, 158, 11, 0.24) 0%, rgba(251, 191, 36, 0.08) 55%, transparent 75%)',
+                filter: 'blur(75px)',
+                willChange: 'transform',
+              }}
+            />
+
+            {/* Faint Structural 72px Architectural Grid */}
+            <div
+              ref={gridRef}
+              className="absolute inset-0 pointer-events-none select-none opacity-60"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+                  linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px)
+                `,
+                backgroundSize: '72px 72px',
+              }}
+            />
+
+            {/* Vignette Edge Depth Falloff */}
+            <div
+              className="absolute inset-0 pointer-events-none select-none"
+              style={{
+                background: 'radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(6, 8, 15, 0.6) 100%)',
+              }}
+            />
+          </div>
+
+          {/* ══════════════════════════════════════════════════════════════════
+              MAIN HERO SPATIAL STAGE (Split Desktop Composition)
+              Left: Headline + Copy + Tactile Buttons (z-index 3)
+              Right: 3D Team Canvas (z-index 1) + Liquid Glass Panel (z-index 2)
+              ══════════════════════════════════════════════════════════════════ */}
           <div
-            className="relative z-10 w-full h-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-0"
+            className="relative z-10 w-full h-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-0 items-center"
             style={{
               padding: isMobile
                 ? '32px 20px 48px'
-                : 'clamp(56px, 8vh, 96px) clamp(32px, 5vw, 80px)',
-              minHeight: isMobile ? 'auto' : 'calc(100vh - 64px)',
-              alignItems: 'center',
+                : 'clamp(48px, 7vh, 88px) clamp(32px, 5vw, 84px)',
+              minHeight: isMobile ? 'auto' : `calc(100svh - ${navHeight}px)`,
             }}
           >
 
-            {/* ── LEFT: EDITORIAL TEXT COLUMN ── */}
+            {/* ─── LEFT COLUMN: EDITORIAL HEADLINE & ACTIONS (Z-INDEX 3) ─── */}
             <div
-              className="lg:col-span-6 xl:col-span-7 flex flex-col justify-center space-y-6 text-left"
-              style={{ paddingRight: isMobile ? 0 : 'clamp(24px, 4vw, 64px)' }}
+              className="lg:col-span-6 xl:col-span-7 flex flex-col justify-center space-y-6 text-left relative z-[3]"
+              style={{ paddingRight: isMobile ? 0 : 'clamp(24px, 4vw, 56px)' }}
             >
-
-              {/* Eyebrow — mono, ultra-quiet */}
+              {/* Eyebrow Label */}
               <div
                 className="inline-flex items-center gap-2 text-[11px] font-mono font-bold uppercase tracking-widest select-none"
-                style={{ color: 'rgba(255,255,255,0.65)' }}
+                style={{ color: 'rgba(255, 255, 255, 0.55)' }}
               >
                 <span
-                  className="inline-block w-2 h-2 rounded-full"
+                  className="inline-block w-2 h-2 rounded-full shadow-[0_0_8px_rgba(251,191,36,0.8)]"
                   style={{ backgroundColor: '#fbbf24' }}
                 />
                 HackMatch — Campus Teammate Finder
               </div>
 
-              {/* Primary Kinetic Headline — masked rise animation */}
+              {/* Primary Headline with Kinetic Masks */}
               <h1
-                className="font-black tracking-tight leading-[1.04] select-none"
+                className="font-black tracking-tight leading-[1.04] select-none text-white"
                 style={{
-                  color: '#ffffff',
                   fontSize: 'clamp(2.4rem, 5.2vw, 4.6rem)',
                 }}
               >
-                {/* Line 1: white */}
+                {/* Line 1 */}
                 <div className="overflow-hidden pb-1">
-                  <div
-                    ref={(el) => (lineRefs.current[0] = el)}
-                    className="block"
-                    style={{ color: '#ffffff' }}
-                  >
+                  <div ref={line1Ref} className="block text-white">
                     Four people.
                   </div>
                 </div>
 
-                {/* Line 2: white */}
+                {/* Line 2 */}
                 <div className="overflow-hidden pb-1">
-                  <div
-                    ref={(el) => (lineRefs.current[1] = el)}
-                    className="block"
-                    style={{ color: '#ffffff' }}
-                  >
+                  <div ref={line2Ref} className="block text-white">
                     One idea.
                   </div>
                 </div>
 
-                {/* Line 3: amber — the single strategic accent */}
-                <div className="overflow-hidden pb-1">
+                {/* Line 3: Transformable Phrase ("Three seats still empty." -> "Squad complete.") */}
+                <div className="overflow-hidden pb-1 relative min-h-[1.15em]">
+                  {/* Initial Phrase */}
                   <div
-                    ref={(el) => (lineRefs.current[2] = el)}
+                    ref={line3EmptyRef}
                     className="block"
                     style={{ color: '#fbbf24' }}
                   >
                     Three seats still empty.
                   </div>
+
+                  {/* End-State Transformed Phrase */}
+                  <div
+                    ref={line3CompleteRef}
+                    className="absolute inset-0 block font-black"
+                    style={{
+                      color: '#34d399',
+                    }}
+                  >
+                    Squad complete.
+                  </div>
                 </div>
               </h1>
 
-              {/* Supporting copy — plain language, max 18 words */}
+              {/* Supporting Copy (Clear, Plain Language, Max 18 Words) */}
               <p
                 ref={subcopyRef}
-                className="leading-relaxed max-w-md"
+                className="leading-relaxed max-w-md font-normal"
                 style={{
                   fontSize: 'clamp(0.95rem, 1.5vw, 1.15rem)',
-                  color: 'rgba(255,255,255,0.85)',
+                  color: 'rgba(255, 255, 255, 0.8)',
                 }}
               >
                 Find the teammates whose skills your hackathon idea is missing.
               </p>
 
-              {/* CTA Row */}
+              {/* Primary & Secondary Actions */}
               <div
                 ref={ctaRef}
-                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2"
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2"
               >
                 <HeroPrimaryBtn to="/post-request" icon={PlusCircle}>
                   I need teammates
                 </HeroPrimaryBtn>
-                <HeroSecondaryBtn to="/hackathons" icon={Users} isLight={isLight}>
+                <HeroSecondaryBtn to="/hackathons" icon={Users}>
                   I want to join a team
                 </HeroSecondaryBtn>
               </div>
 
-              {/* Seat occupancy meter */}
+              {/* Kinetic Scroll Cue / Team Progress Indicator */}
               <div
-                className="flex items-center gap-3 font-mono select-none"
-                style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)' }}
+                className="flex items-center gap-3 font-mono select-none pt-1"
+                style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.45)' }}
               >
                 <div className="flex gap-1.5">
                   {[0, 1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="h-1.5 w-7 rounded-full transition-all duration-400"
+                      className="h-1.5 w-7 rounded-full transition-all duration-300"
                       style={{
                         backgroundColor:
-                          i < filledSeatsCount ? '#fbbf24' : 'rgba(255,255,255,0.18)',
+                          i < filledSeatsCount
+                            ? (isFullyAssembled ? '#34d399' : '#fbbf24')
+                            : 'rgba(255, 255, 255, 0.16)',
+                        boxShadow:
+                          i < filledSeatsCount
+                            ? (isFullyAssembled ? '0 0 8px rgba(52, 211, 153, 0.4)' : '0 0 8px rgba(251, 191, 36, 0.4)')
+                            : 'none',
                       }}
                     />
                   ))}
                 </div>
-                <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>
+                <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600 }}>
                   {filledSeatsCount}/4 seats
                 </span>
                 {!isMobile && (
-                  <span style={{ color: 'rgba(255,255,255,0.35)' }}>
-                    {filledSeatsCount < 4 ? '— scroll to assemble' : '— squad complete'}
+                  <span style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
+                    {isFullyAssembled ? '— squad fully assembled' : '— scroll down to assemble'}
                   </span>
                 )}
               </div>
             </div>
 
-            {/* ── RIGHT: 3D TEAM ASSEMBLY ── */}
-            <div className="lg:col-span-6 xl:col-span-5 flex items-center justify-center">
-              {!isMobile && !reducedMotion ? (
-                /* Three.js canvas assembly */
-                <div className="relative w-full">
-                  <HeroTeamAssembly3D progress={scrollProgress} isLight={isLight} />
+            {/* ─── RIGHT COLUMN: SPATIAL STAGE (CANVAS UNDERNEATH, GLASS OVERLAY) ─── */}
+            <div className="lg:col-span-6 xl:col-span-5 relative w-full flex items-center justify-center">
+
+              {!isMobile && !reducedMotion && !hasWebGLError ? (
+                /* Desktop/Tablet 3D Spatial Stacking Context */
+                <div
+                  className="relative w-full h-[480px] sm:h-[520px] lg:h-[540px] xl:h-[560px] flex items-center justify-center"
+                  style={{ isolation: 'isolate' }}
+                >
+                  {/* ─────────────────────────────────────────────────────────────
+                      LAYER 1: Three.js Physical 3D Canvas (z-index 1)
+                      Sits UNDERNEATH the glass squad panel.
+                      Tops of blocks (YOU, BACKEND) are exposed in sharp open space!
+                      Lower portions pass behind the glass panel and visibly blur!
+                      ───────────────────────────────────────────────────────────── */}
+                  <div
+                    className="absolute inset-0 pointer-events-none select-none"
+                    style={{ zIndex: 1 }}
+                  >
+                    <HeroTeamAssembly3D
+                      progress={scrollProgress}
+                      userInitial={userInitial}
+                      onContextLost={() => setHasWebGLError(true)}
+                    />
+                  </div>
+
+                  {/* ─────────────────────────────────────────────────────────────
+                      LAYER 2: Real Frosted Liquid Glass Squad Panel (z-index 2)
+                      Direct SIBLING of the canvas. No intervening backdrop root!
+                      Positioned over the LOWER ~40% of the team cluster.
+                      Visible human difference:
+                        Outside glass: 3D block is completely sharp.
+                        Inside glass: 3D block is visibly softer/blurred!
+                      ───────────────────────────────────────────────────────────── */}
+                  <div
+                    className="absolute bottom-2 right-0 sm:right-2 w-full sm:w-[330px] md:w-[340px]"
+                    style={{ zIndex: 2 }}
+                  >
+                    <div
+                      ref={glassPanelRef}
+                      data-glass-panel
+                      className="liquid-glass-floating rounded-2xl p-4 sm:p-5 text-white select-none transition-[backdrop-filter] duration-200"
+                      style={{
+                        backgroundColor: 'rgba(15, 23, 42, 0.44)',
+                        backdropFilter: 'blur(20px) saturate(160%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+                        border: '1px solid rgba(255, 255, 255, 0.16)',
+                        boxShadow: '0 20px 48px -10px rgba(0, 0, 0, 0.65), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25)',
+                      }}
+                    >
+                      {/* Glass Panel Header */}
+                      <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
+                        <span className="text-[11px] font-mono uppercase tracking-widest text-white/50">
+                          Example Team
+                        </span>
+                        <span className="text-xs font-mono font-bold text-amber-400">
+                          {filledSeatsCount} of 4 seats filled
+                        </span>
+                      </div>
+
+                      {/* 4 Compact Role Rows (Clear 14px Typography, No Fake Telemetry) */}
+                      <div className="space-y-2 text-sm font-sans">
+                        {/* Seat 1: YOU */}
+                        <div className="flex items-center justify-between py-1">
+                          <span className="font-bold text-white flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.6)]" />
+                            {userInitial ? `YOU (${userInitial})` : 'YOU'}
+                          </span>
+                          <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                            FILLED
+                          </span>
+                        </div>
+
+                        {/* Seat 2: BACKEND */}
+                        <div className="flex items-center justify-between py-1">
+                          <span className="font-medium text-white/85 flex items-center gap-2">
+                            <span
+                              className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                                isBackendJoined ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]' : 'bg-white/20'
+                              }`}
+                            />
+                            BACKEND
+                          </span>
+                          <span
+                            className={`text-xs font-mono font-semibold px-2 py-0.5 rounded transition-all duration-300 ${
+                              isBackendJoined
+                                ? 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/30'
+                                : 'bg-white/5 text-white/40 border border-white/10'
+                            }`}
+                          >
+                            {isBackendJoined ? 'FILLED' : 'OPEN'}
+                          </span>
+                        </div>
+
+                        {/* Seat 3: ML ENGINEER */}
+                        <div className="flex items-center justify-between py-1">
+                          <span className="font-medium text-white/85 flex items-center gap-2">
+                            <span
+                              className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                                isMLJoined ? 'bg-slate-200 shadow-[0_0_6px_rgba(255,255,255,0.6)]' : 'bg-white/20'
+                              }`}
+                            />
+                            ML ENGINEER
+                          </span>
+                          <span
+                            className={`text-xs font-mono font-semibold px-2 py-0.5 rounded transition-all duration-300 ${
+                              isMLJoined
+                                ? 'bg-white/20 text-white border border-white/30'
+                                : 'bg-white/5 text-white/40 border border-white/10'
+                            }`}
+                          >
+                            {isMLJoined ? 'FILLED' : 'OPEN'}
+                          </span>
+                        </div>
+
+                        {/* Seat 4: DESIGNER */}
+                        <div className="flex items-center justify-between py-1">
+                          <span className="font-medium text-white/85 flex items-center gap-2">
+                            <span
+                              className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                                isDesignerJoined ? 'bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.6)]' : 'bg-white/20'
+                              }`}
+                            />
+                            DESIGNER
+                          </span>
+                          <span
+                            className={`text-xs font-mono font-semibold px-2 py-0.5 rounded transition-all duration-300 ${
+                              isDesignerJoined
+                                ? 'bg-sky-400/20 text-sky-300 border border-sky-400/30'
+                                : 'bg-white/5 text-white/40 border border-white/10'
+                            }`}
+                          >
+                            {isDesignerJoined ? 'FILLED' : 'OPEN'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                /* Mobile / reduced-motion: flat CSS blocks — no card framing */
+                /* ─── MOBILE / REDUCED-MOTION / WEBGL-LOST ACCESSIBLE FALLBACK ─── */
                 <div
                   className="w-full max-w-sm grid grid-cols-2 gap-3 mt-4 lg:mt-0"
-                  aria-label="Team seat grid"
+                  aria-label="Team member positions"
                 >
-                  {/* YOU — filled, amber */}
+                  {/* Block 1: YOU (Filled Amber) */}
                   <div
-                    className="p-3.5 flex flex-col justify-between h-24"
+                    className="p-3.5 flex flex-col justify-between h-24 rounded-xl"
                     style={{
-                      backgroundColor: '#fbbf24',
+                      backgroundColor: '#f59e0b',
                       border: '2px solid #0f172a',
                       boxShadow: '3px 3px 0 #0f172a',
                     }}
                   >
                     <span
                       className="text-[10px] font-mono font-extrabold uppercase tracking-widest"
-                      style={{ color: '#0f172a', opacity: 0.65 }}
+                      style={{ color: '#0f172a', opacity: 0.7 }}
                     >
                       Seat 01
                     </span>
                     <div>
                       <p className="text-base font-black leading-tight" style={{ color: '#0f172a' }}>
-                        YOU
+                        {userInitial ? `YOU (${userInitial})` : 'YOU'}
                       </p>
                       <p
                         className="text-[10px] font-mono font-bold uppercase"
@@ -386,39 +690,39 @@ export const HomeHero = ({ activeHackathonsCount = 4 }) => {
                     </div>
                   </div>
 
-                  {/* BACKEND — empty seat outline */}
+                  {/* Block 2: BACKEND (Open Dashed Slot) */}
                   <div
-                    className="p-3.5 flex flex-col justify-between h-24"
+                    className="p-3.5 flex flex-col justify-between h-24 rounded-xl"
                     style={{
                       backgroundColor: 'transparent',
-                      border: '2px dashed rgba(52, 211, 153, 0.45)',
+                      border: '2px dashed rgba(16, 185, 129, 0.45)',
                     }}
                   >
                     <span
                       className="text-[10px] font-mono font-extrabold uppercase tracking-widest"
-                      style={{ color: 'rgba(52, 211, 153, 0.6)' }}
+                      style={{ color: 'rgba(16, 185, 129, 0.6)' }}
                     >
                       Seat 02
                     </span>
                     <div>
                       <p
                         className="text-sm font-black leading-tight uppercase"
-                        style={{ color: 'rgba(52, 211, 153, 0.8)' }}
+                        style={{ color: 'rgba(16, 185, 129, 0.85)' }}
                       >
                         Backend
                       </p>
                       <p
                         className="text-[10px] font-mono font-bold"
-                        style={{ color: 'rgba(255,255,255,0.35)' }}
+                        style={{ color: 'rgba(255, 255, 255, 0.35)' }}
                       >
                         Open Seat
                       </p>
                     </div>
                   </div>
 
-                  {/* ML ENGINEER — empty seat outline */}
+                  {/* Block 3: ML ENGINEER (Open Dashed Slot) */}
                   <div
-                    className="p-3.5 flex flex-col justify-between h-24"
+                    className="p-3.5 flex flex-col justify-between h-24 rounded-xl"
                     style={{
                       backgroundColor: 'transparent',
                       border: '2px dashed rgba(255, 255, 255, 0.35)',
@@ -426,27 +730,23 @@ export const HomeHero = ({ activeHackathonsCount = 4 }) => {
                   >
                     <span
                       className="text-[10px] font-mono font-extrabold uppercase tracking-widest"
-                      style={{ color: 'rgba(255,255,255,0.4)' }}
+                      style={{ color: 'rgba(255, 255, 255, 0.4)' }}
                     >
                       Seat 03
                     </span>
                     <div>
-                      <p
-                        className="text-sm font-black leading-tight uppercase text-white/70"
-                      >
+                      <p className="text-sm font-black leading-tight uppercase text-white/70">
                         ML Eng
                       </p>
-                      <p
-                        className="text-[10px] font-mono font-bold text-white/35"
-                      >
+                      <p className="text-[10px] font-mono font-bold text-white/35">
                         Open Seat
                       </p>
                     </div>
                   </div>
 
-                  {/* DESIGNER — empty seat outline */}
+                  {/* Block 4: DESIGNER (Open Dashed Slot) */}
                   <div
-                    className="p-3.5 flex flex-col justify-between h-24"
+                    className="p-3.5 flex flex-col justify-between h-24 rounded-xl"
                     style={{
                       backgroundColor: 'transparent',
                       border: '2px dashed rgba(56, 189, 248, 0.45)',
@@ -461,19 +761,18 @@ export const HomeHero = ({ activeHackathonsCount = 4 }) => {
                     <div>
                       <p
                         className="text-sm font-black leading-tight uppercase"
-                        style={{ color: 'rgba(56, 189, 248, 0.8)' }}
+                        style={{ color: 'rgba(56, 189, 248, 0.85)' }}
                       >
                         Designer
                       </p>
-                      <p
-                        className="text-[10px] font-mono font-bold text-white/35"
-                      >
+                      <p className="text-[10px] font-mono font-bold text-white/35">
                         Open Seat
                       </p>
                     </div>
                   </div>
                 </div>
               )}
+
             </div>
 
           </div>
