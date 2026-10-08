@@ -5,7 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { PlusCircle, Users } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAnimation } from '../../animations/AnimationContext';
-import { LivingMatchCore } from './LivingMatchCore';
+import { LivingEnergyGlobe } from './LivingEnergyGlobe';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -103,7 +103,8 @@ export const HomeHero = ({ activeHackathonsCount = 4 }) => {
   const line3Ref = useRef(null);
   const subcopyRef = useRef(null);
   const ctaRef = useRef(null);
-  const coreWrapperRef = useRef(null);
+  const socialProofRef = useRef(null);
+  const globeWrapperRef = useRef(null);
 
   const hasEnteredRef = useRef(false);
 
@@ -179,13 +180,21 @@ export const HomeHero = ({ activeHackathonsCount = 4 }) => {
           }, '-=0.3');
         }
 
-        if (coreWrapperRef.current) {
-          tl.from(coreWrapperRef.current, {
+        if (socialProofRef.current) {
+          tl.from(socialProofRef.current, {
             opacity: 0,
-            scale: 0.92,
-            duration: 0.8,
+            y: 12,
+            duration: 0.4,
+          }, '-=0.2');
+        }
+
+        if (globeWrapperRef.current) {
+          tl.from(globeWrapperRef.current, {
+            opacity: 0,
+            scale: 0.94,
+            duration: 0.85,
             ease: 'power2.out',
-          }, '-=0.5');
+          }, '-=0.55');
         }
       }
 
@@ -238,10 +247,10 @@ export const HomeHero = ({ activeHackathonsCount = 4 }) => {
           }, 0);
         }
 
-        // 3. Living Match Core subtle vertical parallax
-        if (coreWrapperRef.current) {
-          heroTimeline.to(coreWrapperRef.current, {
-            y: 35,
+        // 3. Living Energy Globe subtle vertical drift
+        if (globeWrapperRef.current) {
+          heroTimeline.to(globeWrapperRef.current, {
+            y: 40,
             ease: 'none',
           }, 0);
         }
@@ -349,27 +358,27 @@ export const HomeHero = ({ activeHackathonsCount = 4 }) => {
         {/* ══════════════════════════════════════════════════════════════════
             MAIN HERO SPATIAL STAGE (Split Desktop Composition)
             Left: Editorial Headline + Copy + Tactile Actions (z-index 3)
-            Right: Interactive Living Match Core (z-index 2)
+            Right: Interactive Living Energy Globe / Match Field (z-index 2)
             ══════════════════════════════════════════════════════════════════ */}
         <div
-          className="relative z-10 w-full h-full grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center"
+          className="relative z-10 w-full h-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-4 items-center"
           style={{
             padding: isMobile
-              ? '40px 20px 48px'
-              : 'clamp(48px, 8vh, 96px) clamp(32px, 5vw, 84px)',
+              ? '36px 20px 48px'
+              : 'clamp(44px, 7vh, 88px) clamp(24px, 4vw, 72px)',
             minHeight: isMobile ? 'auto' : `calc(100svh - ${navHeight}px)`,
           }}
         >
           {/* ─── LEFT COLUMN: EDITORIAL HEADLINE & ACTIONS (Z-INDEX 3) ─── */}
           <div
-            className="lg:col-span-6 xl:col-span-7 flex flex-col justify-center space-y-6 text-left relative z-[3]"
-            style={{ paddingRight: isMobile ? 0 : 'clamp(24px, 4vw, 56px)' }}
+            className="lg:col-span-5 xl:col-span-5 flex flex-col justify-center space-y-6 text-left relative z-[3]"
+            style={{ paddingRight: isMobile ? 0 : 'clamp(16px, 2.5vw, 40px)' }}
           >
             {/* Eyebrow Label */}
             <div
               ref={eyebrowRef}
               className="inline-flex items-center gap-2 text-[11px] font-mono font-bold uppercase tracking-widest select-none"
-              style={{ color: 'rgba(255, 255, 255, 0.55)' }}
+              style={{ color: 'rgba(255, 255, 255, 0.65)' }}
             >
               <span
                 className="inline-block w-2 h-2 rounded-full shadow-[0_0_8px_rgba(251,191,36,0.8)]"
@@ -382,7 +391,7 @@ export const HomeHero = ({ activeHackathonsCount = 4 }) => {
             <h1
               className="font-black tracking-tight leading-[1.04] select-none"
               style={{
-                fontSize: 'clamp(2.4rem, 5.2vw, 4.6rem)',
+                fontSize: 'clamp(2.4rem, 5vw, 4.4rem)',
                 color: '#ffffff',
               }}
             >
@@ -417,8 +426,8 @@ export const HomeHero = ({ activeHackathonsCount = 4 }) => {
               ref={subcopyRef}
               className="leading-relaxed max-w-md font-normal"
               style={{
-                fontSize: 'clamp(0.95rem, 1.5vw, 1.15rem)',
-                color: 'rgba(255, 255, 255, 0.8)',
+                fontSize: 'clamp(0.95rem, 1.4vw, 1.15rem)',
+                color: 'rgba(255, 255, 255, 0.85)',
               }}
             >
               Find the teammates whose skills your hackathon idea is missing.
@@ -436,14 +445,34 @@ export const HomeHero = ({ activeHackathonsCount = 4 }) => {
                 I want to join a team
               </HeroSecondaryBtn>
             </div>
+
+            {/* Subtle Social Proof (Reference Image Pattern: "2,000+ students already building") */}
+            <div
+              ref={socialProofRef}
+              className="flex items-center gap-3 pt-2 select-none"
+            >
+              <div className="flex -space-x-2 overflow-hidden">
+                {['bg-amber-500', 'bg-sky-500', 'bg-emerald-500', 'bg-purple-500'].map((color, i) => (
+                  <div
+                    key={i}
+                    className={`inline-block h-6 w-6 sm:h-7 sm:w-7 rounded-full ring-2 ring-[#06080f] ${color} flex items-center justify-center text-[10px] font-bold text-white shadow-sm`}
+                  >
+                    {['JD', 'AL', 'SK', 'MR'][i]}
+                  </div>
+                ))}
+              </div>
+              <div className="text-xs font-medium text-slate-300">
+                <span className="font-bold text-white">2,000+ students</span> already building
+              </div>
+            </div>
           </div>
 
-          {/* ─── RIGHT COLUMN: LIVING MATCH CORE (Z-INDEX 2) ─── */}
+          {/* ─── RIGHT COLUMN: LIVING ENERGY GLOBE / MATCH FIELD (Z-INDEX 2) ─── */}
           <div
-            ref={coreWrapperRef}
-            className="lg:col-span-6 xl:col-span-5 relative w-full flex items-center justify-center relative z-[2]"
+            ref={globeWrapperRef}
+            className="lg:col-span-7 xl:col-span-7 relative w-full flex items-center justify-center relative z-[2] overflow-visible"
           >
-            <LivingMatchCore isMobile={isMobile} reducedMotion={reducedMotion} />
+            <LivingEnergyGlobe isMobile={isMobile} reducedMotion={reducedMotion} />
           </div>
         </div>
       </div>
