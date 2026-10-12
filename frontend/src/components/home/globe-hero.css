@@ -1,0 +1,1179 @@
+.gh {
+  --gh-bg: transparent;
+  --gh-canvas-bg: transparent;
+  --gh-text: #f2f4ff;
+  --gh-muted: #a8aed6;
+  --gh-ink: #0b1033;
+  --gh-cobalt: #2a3bff;
+  --gh-mint: #5eead4;
+  --gh-yellow: #ffd23f;
+  --gh-white: #f2f4ff;
+  --gh-glass: rgba(255, 255, 255, 0.08);
+  --gh-edge: rgba(255, 255, 255, 0.16);
+  --gh-hi: rgba(255, 255, 255, 0.32);
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  position: relative;
+  min-height: calc(100svh - var(--navbar-height, 64px));
+  overflow: hidden;
+  isolation: isolate;
+  background: radial-gradient(circle at 68% 48%, rgba(20, 32, 90, 0.28) 0%, rgba(6, 8, 24, 0.12) 55%, transparent 85%);
+  color: var(--gh-text);
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  max-width: 100vw;
+  margin-top: -2rem;
+  transition: color 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gh[data-gh-theme="light"] {
+  --gh-bg: transparent;
+  --gh-canvas-bg: transparent;
+  --gh-text: #0b1033;
+  --gh-muted: #475569;
+  --gh-ink: #0b1033;
+  --gh-glass: rgba(255, 255, 255, 0.85);
+  --gh-edge: rgba(15, 23, 42, 0.12);
+  --gh-hi: rgba(255, 255, 255, 0.95);
+  background: radial-gradient(circle at 68% 48%, rgba(218, 228, 255, 0.35) 0%, rgba(248, 250, 252, 0.12) 55%, transparent 85%);
+}
+
+.gh-canvas,
+.gh-atmosphere,
+.gh-nodes {
+  position: absolute;
+  inset: 0;
+}
+
+.gh-canvas {
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.gh-atmosphere {
+  z-index: 0;
+  pointer-events: none;
+}
+
+.gh-light {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  filter: blur(70px);
+}
+
+.gh-light--cobalt {
+  width: 34vw;
+  height: 34vw;
+  min-width: 260px;
+  min-height: 260px;
+  top: 10%;
+  right: 8%;
+  background: rgba(42, 59, 255, 0.17);
+}
+
+.gh-light--mint {
+  width: 28vw;
+  height: 28vw;
+  min-width: 220px;
+  min-height: 220px;
+  right: 10%;
+  bottom: -6%;
+  background: rgba(94, 234, 212, 0.12);
+}
+
+.gh-light--yellow {
+  width: 15vw;
+  height: 15vw;
+  min-width: 140px;
+  min-height: 140px;
+  left: 42%;
+  top: 26%;
+  background: rgba(255, 210, 63, 0.07);
+}
+
+.gh[data-gh-theme="light"] .gh-light--cobalt {
+  background: rgba(42, 59, 255, 0.08);
+  mix-blend-mode: normal;
+}
+
+.gh[data-gh-theme="light"] .gh-light--mint {
+  background: rgba(94, 234, 212, 0.07);
+  mix-blend-mode: normal;
+}
+
+.gh[data-gh-theme="light"] .gh-light--yellow {
+  background: rgba(255, 210, 63, 0.08);
+  mix-blend-mode: normal;
+}
+
+.gh-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.14;
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--gh-text) 7%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--gh-text) 7%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 72px 72px;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black 12%,
+    black 84%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black 12%,
+    black 84%,
+    transparent
+  );
+}
+
+.gh-inner {
+  position: relative;
+  z-index: 3;
+  min-height: calc(100svh - var(--navbar-height, 64px));
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(500px, 1.05fr);
+  align-items: center;
+  gap: clamp(24px, 3.5vw, 60px);
+  padding: clamp(20px, 3vh, 44px) clamp(24px, 4.5vw, 76px) 36px;
+  box-sizing: border-box;
+}
+
+.gh-copy {
+  position: relative;
+  z-index: 5;
+  max-width: 660px;
+  transform: translate3d(
+    calc(var(--pointer-x, 0) * -4px),
+    calc(var(--pointer-y, 0) * -2px),
+    0
+  );
+  transition: transform 800ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gh-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  color: var(--gh-muted);
+  font: 700 12px/1 var(--font-mono, monospace);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.gh-eyebrow__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gh-yellow);
+  box-shadow: 0 0 16px var(--gh-yellow);
+  animation: gh-pulse-dot 2.4s ease-in-out infinite;
+}
+
+.gh-heading {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body, inherit));
+  font-size: clamp(2.5rem, 4.3vw, 4.4rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  max-width: 16ch;
+  color: var(--gh-text);
+}
+
+.gh-heading__line {
+  display: block;
+  overflow: visible;
+  padding-bottom: 0.06em;
+  line-height: 1.1;
+}
+
+.gh-word {
+  display: inline-block;
+  vertical-align: top;
+  margin-right: 0.22em;
+  padding-bottom: 0.04em;
+  cursor: default;
+  overflow: hidden;
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gh-word:hover {
+  transform: translateY(-2px);
+}
+
+.gh-word > span {
+  display: inline-block;
+  transform: translateY(118%);
+  animation: gh-word-rise 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(
+    80ms +
+    var(--i) * 65ms
+  );
+  transition: filter 260ms ease;
+}
+
+.gh-word:hover > span {
+  filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.45));
+}
+
+.gh-word--accent > span {
+  background: linear-gradient(
+    110deg,
+    var(--gh-yellow) 0%,
+    #fff4cc 32%,
+    #ffffff 50%,
+    #fff4cc 68%,
+    var(--gh-yellow) 100%
+  );
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation:
+    gh-word-rise 900ms cubic-bezier(0.16, 1, 0.3, 1) both,
+    gh-accent-shimmer 4.8s ease-in-out infinite;
+  animation-delay:
+    calc(80ms + var(--i) * 65ms),
+    calc(1100ms + var(--i) * 90ms);
+}
+
+.gh-word--accent:hover > span {
+  filter: drop-shadow(0 0 18px rgba(255, 210, 63, 0.8));
+}
+
+.gh[data-gh-theme="light"] .gh-word--accent > span {
+  background: linear-gradient(
+    110deg,
+    #d97706 0%,
+    #f59e0b 32%,
+    #fbbf24 50%,
+    #f59e0b 68%,
+    #d97706 100%
+  );
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gh-sub {
+  max-width: 36ch;
+  margin: 22px 0 0;
+  color: var(--gh-muted);
+  font: 500 clamp(0.98rem, 1.2vw, 1.14rem)/1.55 var(--font-body, inherit);
+}
+
+.gh-reveal {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  animation: gh-reveal 750ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--delay, 0ms);
+}
+
+.gh-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.gh-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 24px;
+  border: 2px solid var(--gh-ink);
+  border-radius: 999px;
+  font: 700 15px/1 var(--font-body, inherit);
+  cursor: pointer;
+  overflow: hidden;
+  text-decoration: none;
+  user-select: none;
+  transition:
+    transform 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 360ms;
+}
+
+.gh-btn:focus-visible,
+.gh-node:focus-visible {
+  outline: 3px solid var(--gh-yellow);
+  outline-offset: 4px;
+}
+
+.gh-btn--primary {
+  color: var(--gh-ink);
+  background: var(--gh-yellow);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 10px 24px -6px rgba(255, 210, 63, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.gh-btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 16px 32px -6px rgba(255, 210, 63, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.gh-btn--primary:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 6px 14px -4px rgba(255, 210, 63, 0.4);
+}
+
+.gh-btn--secondary {
+  color: var(--gh-text);
+  background: var(--gh-glass);
+  border-color: var(--gh-edge);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 var(--gh-hi),
+    0 16px 36px -18px rgba(0, 0, 0, 0.38);
+}
+
+.gh-btn--secondary:hover {
+  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--gh-glass) 120%, white 10%);
+}
+
+.gh-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gh-btn--primary:hover svg {
+  transform: translateX(4px);
+}
+
+.gh-btn__label {
+  transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gh-btn__label--hover {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transform: translateY(110%);
+  color: var(--gh-yellow);
+  background: var(--gh-ink);
+}
+
+.gh-btn--primary:hover .gh-btn__label:first-child {
+  transform: translateY(-110%);
+}
+
+.gh-btn--primary:hover .gh-btn__label--hover {
+  transform: translateY(0);
+}
+
+.gh-proof {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 30px;
+  color: var(--gh-muted);
+  font: 600 13px/1.2 var(--font-body, inherit);
+}
+
+.gh-proof__avatars {
+  display: flex;
+}
+
+.gh-proof__avatars img,
+.gh-proof__avatars span {
+  width: 32px;
+  height: 32px;
+  margin-left: -9px;
+  border: 2px solid var(--gh-bg);
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--gh-glass);
+}
+
+.gh-proof__avatars img:first-child,
+.gh-proof__avatars span:first-child {
+  margin-left: 0;
+}
+
+/* ========================================================= */
+/* LIVE HACKATHON WAR-ROOM TERMINAL — REPLACES ENERGY SPHERE */
+/* ========================================================= */
+/* CURRENT HACKATHONS SHOWCASE — PROFESSIONAL & HIGH-CRAFT   */
+/* ========================================================= */
+
+.gh-events-stage {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+  box-sizing: border-box;
+  z-index: 4;
+}
+
+.gh-events-card {
+  position: relative;
+  width: 100%;
+  max-width: 530px;
+  border-radius: 20px;
+  background: rgba(8, 12, 30, 0.82);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 24px 64px -16px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transition:
+    transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 300ms ease,
+    border-color 300ms ease;
+}
+
+.gh[data-gh-theme="light"] .gh-events-card {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow:
+    0 24px 60px -16px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.gh-events-backdrop {
+  position: absolute;
+  inset: -14%;
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(42, 59, 255, 0.24) 0%,
+    rgba(56, 189, 248, 0.12) 36%,
+    rgba(245, 158, 11, 0.08) 55%,
+    transparent 74%
+  );
+  filter: blur(52px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.gh[data-gh-theme="light"] .gh-events-backdrop {
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(79, 110, 247, 0.16) 0%,
+    rgba(56, 189, 248, 0.1) 40%,
+    transparent 72%
+  );
+}
+
+/* Header: Live Beacon & Count */
+.gh-events-topbar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.gh[data-gh-theme="light"] .gh-events-topbar {
+  border-bottom-color: rgba(15, 23, 42, 0.07);
+  background: rgba(15, 23, 42, 0.02);
+}
+
+.gh-live-beacon-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body, inherit);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: -0.01em;
+}
+
+.gh-live-beacon {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+  animation: gh-pulse-dot 2.2s ease-in-out infinite;
+}
+
+.gh-events-counter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--font-body, inherit);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--gh-text);
+  letter-spacing: -0.01em;
+}
+
+.gh[data-gh-theme="light"] .gh-events-counter-pill {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.09);
+}
+
+.gh-counter-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gh-yellow);
+}
+
+/* Featured Hackathon Hero Block */
+.gh-featured-block {
+  position: relative;
+  z-index: 2;
+  padding: 18px 22px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gh-featured-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gh-tag-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: var(--font-body, inherit);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.24);
+}
+
+.gh-tag-mode-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #38bdf8;
+}
+
+.gh-tag-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  font-family: var(--font-body, inherit);
+  font-size: 11px;
+  font-weight: 600;
+  color: #f59e0b;
+}
+
+.gh-countdown-label {
+  opacity: 0.9;
+}
+
+.gh-countdown-time {
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.gh-featured-title-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gh-featured-title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body, inherit));
+  font-size: clamp(1.3rem, 1.65vw, 1.55rem);
+  font-weight: 700;
+  color: var(--gh-text);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.gh-featured-badge {
+  font-family: var(--font-body, inherit);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: -0.01em;
+  color: var(--gh-yellow);
+  background: rgba(255, 210, 63, 0.12);
+  border: 1px solid rgba(255, 210, 63, 0.28);
+  white-space: nowrap;
+}
+
+.gh-featured-organizer {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body, inherit);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--gh-muted);
+}
+
+.gh-featured-organizer svg {
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+/* 3-Column Intel Grid */
+.gh-intel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.gh[data-gh-theme="light"] .gh-intel-grid {
+  background: rgba(15, 23, 42, 0.03);
+  border-color: rgba(15, 23, 42, 0.07);
+}
+
+.gh-intel-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gh-intel-label {
+  font-family: var(--font-body, inherit);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--gh-muted);
+}
+
+.gh-intel-val {
+  font-family: var(--font-body, inherit);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gh-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gh-intel-val--prize {
+  color: #10b981;
+}
+
+.gh-intel-val--teams {
+  color: #38bdf8;
+}
+
+/* Tags & Action Button */
+.gh-featured-foot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.gh-featured-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gh-tag-pill {
+  font-family: var(--font-body, inherit);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--gh-text);
+  transition: background 200ms ease;
+}
+
+.gh[data-gh-theme="light"] .gh-tag-pill {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.09);
+}
+
+.gh-btn-assemble-event {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--gh-yellow);
+  color: var(--gh-ink);
+  font-family: var(--font-body, inherit);
+  font-size: 12.5px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(255, 210, 63, 0.35);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.gh-btn-assemble-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(255, 210, 63, 0.5);
+}
+
+.gh-btn-assemble-event:active {
+  transform: translateY(1px);
+}
+
+/* Interactive Queue Block */
+.gh-queue-block {
+  position: relative;
+  z-index: 2;
+  padding: 13px 20px 13px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.gh[data-gh-theme="light"] .gh-queue-block {
+  border-top-color: rgba(15, 23, 42, 0.07);
+  background: rgba(15, 23, 42, 0.02);
+}
+
+.gh-queue-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-family: var(--font-body, inherit);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gh-muted);
+  letter-spacing: -0.01em;
+}
+
+.gh-queue-hint {
+  font-size: 10px;
+  opacity: 0.75;
+}
+
+.gh-queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gh-queue-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--gh-text);
+  cursor: pointer;
+  text-align: left;
+  transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+}
+
+.gh[data-gh-theme="light"] .gh-queue-item {
+  background: rgba(15, 23, 42, 0.025);
+  border-color: rgba(15, 23, 42, 0.06);
+}
+
+.gh-queue-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateX(3px);
+}
+
+.gh[data-gh-theme="light"] .gh-queue-item:hover {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+.gh-queue-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.gh-queue-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+  transition: background 200ms ease;
+}
+
+.gh-queue-item:hover .gh-queue-dot {
+  background: var(--gh-yellow);
+  box-shadow: 0 0 8px var(--gh-yellow);
+}
+
+.gh-queue-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gh-queue-item-title {
+  font-family: var(--font-body, inherit);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gh-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gh-queue-item-sub {
+  font-family: var(--font-body, inherit);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gh-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gh-queue-item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.gh-queue-item-mode {
+  font-family: var(--font-body, inherit);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gh-muted);
+}
+
+.gh-queue-item-teams {
+  font-family: var(--font-body, inherit);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #38bdf8;
+}
+
+.gh-queue-item-arrow {
+  font-size: 13px;
+  color: var(--gh-muted);
+  transition: transform 200ms ease, color 200ms ease;
+}
+
+.gh-queue-item:hover .gh-queue-item-arrow {
+  color: var(--gh-yellow);
+  transform: translateX(2px);
+}
+
+/* Bottom Trust & Directory Strip */
+.gh-card-footer {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.gh[data-gh-theme="light"] .gh-card-footer {
+  border-top-color: rgba(15, 23, 42, 0.07);
+  background: rgba(15, 23, 42, 0.02);
+}
+
+.gh-trust-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body, inherit);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gh-muted);
+}
+
+.gh-trust-note svg {
+  color: #10b981;
+}
+
+.gh-dir-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-body, inherit);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--gh-yellow);
+  cursor: pointer;
+  letter-spacing: -0.01em;
+  transition: opacity 200ms ease;
+}
+
+.gh-dir-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+@keyframes gh-word-rise {
+  0% {
+    transform: translateY(118%);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes gh-accent-shimmer {
+  0%, 15% {
+    background-position: 180% center;
+  }
+  65%, 100% {
+    background-position: -180% center;
+  }
+}
+
+@keyframes gh-reveal {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes gh-core-drift {
+  0% {
+    transform:
+      translate3d(-1.2%, -1.6%, 0)
+      rotate(-2deg);
+  }
+  50% {
+    transform:
+      translate3d(1.5%, 1%, 0)
+      rotate(1deg);
+  }
+  100% {
+    transform:
+      translate3d(2.2%, 2.4%, 0)
+      rotate(3deg);
+  }
+}
+
+@keyframes gh-core-breathe {
+  0%, 100% {
+    transform: scale(0.94);
+    opacity: 0.62;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.92;
+  }
+}
+
+@media (max-width: 1180px) {
+  .gh-inner {
+    grid-template-columns: minmax(0, 0.95fr) minmax(440px, 1.05fr);
+    gap: 24px;
+    padding-inline: clamp(20px, 3.5vw, 48px);
+  }
+
+  .gh-heading {
+    font-size: clamp(2.4rem, 4vw, 3.8rem);
+  }
+
+  .gh-events-card {
+    max-width: 480px;
+  }
+}
+
+@media (max-width: 960px) {
+  .gh-inner {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    padding: 32px 24px 54px;
+    min-height: auto;
+  }
+
+  .gh-copy {
+    max-width: 100%;
+  }
+
+  .gh-heading {
+    max-width: 14ch;
+    font-size: clamp(2.4rem, 6.5vw, 3.6rem);
+  }
+
+  .gh-events-stage {
+    width: 100%;
+    max-width: 540px;
+    margin: 0 auto;
+  }
+
+  .gh-events-card {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .gh-inner {
+    padding: 20px 16px 40px;
+    gap: 28px;
+  }
+
+  .gh-heading {
+    font-size: clamp(2.2rem, 9.5vw, 3rem);
+    max-width: 12ch;
+  }
+
+  .gh-sub {
+    font-size: 0.96rem;
+    margin-top: 16px;
+  }
+
+  .gh-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .gh-btn {
+    width: 100%;
+  }
+
+  .gh-featured-block {
+    padding: 16px 16px 14px;
+  }
+
+  .gh-featured-title {
+    font-size: 1.25rem;
+  }
+
+  .gh-intel-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .gh-featured-foot-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .gh-btn-assemble-event {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .gh-queue-block {
+    padding: 12px 16px;
+  }
+
+  .gh-queue-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .gh-queue-item-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .gh-card-footer {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 10px 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gh-word > span,
+  .gh-reveal {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .gh-core-ring,
+  .gh-core-glint {
+    animation: none;
+  }
+
+  .gh-copy,
+  .gh-btn,
+  .gh-node,
+  .gh-node::after {
+    transition: none;
+  }
+}

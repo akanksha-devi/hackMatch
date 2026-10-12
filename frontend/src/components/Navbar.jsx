@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { 
@@ -26,16 +26,117 @@ import { StatusBadge } from './StatusBadge';
 import { FOCUS, MOTION } from '../design-system/tokens';
 import { Avatar } from './Avatar';
 
+// Navigation links for Desktop Magnetic Sliding Tab Highlight
+const NAV_LINKS = [
+  { path: '/hackathons', label: 'Hackathons', icon: Trophy, accentColor: 'text-amber-400' },
+  { path: '/users', label: 'Find Teammates', icon: Users, accentColor: 'text-cyan-400' },
+];
+
+/**
+ * MagneticNav — Vercel / Raycast style physics-based sliding tab highlight
+ */
+const MagneticNav = () => {
+  const location = useLocation();
+  const [hoveredPath, setHoveredPath] = useState(null);
+  const containerRef = useRef(null);
+  const tabRefs = useRef({});
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
+
+  const activePath = NAV_LINKS.some((link) => link.path === location.pathname) ? location.pathname : null;
+  const currentTarget = hoveredPath || activePath;
+
+  const updateIndicator = useCallback((path) => {
+    if (!path || !tabRefs.current[path] || !containerRef.current) {
+      setIndicatorStyle((prev) => ({ ...prev, opacity: 0 }));
+      return;
+    }
+    const tabEl = tabRefs.current[path];
+    const containerEl = containerRef.current;
+    const tabRect = tabEl.getBoundingClientRect();
+    const containerRect = containerEl.getBoundingClientRect();
+
+    setIndicatorStyle({
+      left: tabRect.left - containerRect.left,
+      width: tabRect.width,
+      opacity: 1,
+    });
+  }, []);
+
+  useEffect(() => {
+    updateIndicator(currentTarget);
+  }, [currentTarget, updateIndicator]);
+
+  useEffect(() => {
+    const handleResize = () => updateIndicator(currentTarget);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [currentTarget, updateIndicator]);
+
+  return (
+    <div
+      ref={containerRef}
+      onMouseLeave={() => setHoveredPath(null)}
+      className="relative hidden lg:flex items-center p-1 rounded-full border transition-colors select-none bg-slate-100/80 dark:bg-white/[0.04] border-slate-200/80 dark:border-white/[0.08]"
+    >
+      {/* The Magnetic Sliding Pill Indicator */}
+      <span
+        aria-hidden="true"
+        className="absolute top-1 bottom-1 rounded-full pointer-events-none transition-all duration-260 ease-[cubic-bezier(0.16,1,0.3,1)] bg-white text-slate-900 shadow-sm border border-slate-200/90 dark:bg-white/12 dark:text-white dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.22)] dark:border-white/[0.14]"
+        style={{
+          left: `${indicatorStyle.left}px`,
+          width: `${indicatorStyle.width}px`,
+          opacity: indicatorStyle.opacity,
+        }}
+      />
+
+      {NAV_LINKS.map(({ path, label, icon: Icon, accentColor }) => {
+        const isActive = location.pathname === path;
+        const isHovered = hoveredPath === path;
+        return (
+          <Link
+            key={path}
+            to={path}
+            ref={(el) => (tabRefs.current[path] = el)}
+            onMouseEnter={() => setHoveredPath(path)}
+            className={`relative z-10 shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-colors duration-200 inline-flex items-center gap-2 select-none ${
+              isActive || isHovered
+                ? 'text-slate-950 dark:text-white font-bold'
+                : 'text-slate-600 dark:text-gray-300 hover:text-slate-950 dark:hover:text-white'
+            }`}
+          >
+            <SpatialAnimatedIcon
+              icon={Icon}
+              animation={path === '/hackathons' ? 'lift' : 'group'}
+              trigger="parent-hover"
+              className={`w-3.5 h-3.5 shrink-0 ${accentColor}`}
+            />
+            <span>{label}</span>
+          </Link>
+        );
+      })}
+    </div>
+  );
+};
+
 export const Navbar = () => {
   const { user, collegeName, isAdmin, logout, isAuthenticated } = useAuth();
-  const { resolvedTheme } = useTheme();
-  const isLight = resolvedTheme === 'light';
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Scroll listener for subtle compaction & depth
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 15);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Global Ctrl+K / Cmd+K listener
   useEffect(() => {
@@ -82,77 +183,48 @@ export const Navbar = () => {
     };
   }, [dropdownOpen]);
 
-  const isActive = (path) => location.pathname === path;
-
   return (
-    <nav className="sticky top-0 z-50 transition-colors duration-200">
-      {/* Background Glass Plate - Keeps sticky navbar blurred without trapping descendant dropdowns in a Backdrop Root */}
-      <div 
-        aria-hidden="true"
-        className={`absolute inset-0 pointer-events-none -z-10 border-b shadow-[0_4px_20px_-5px_rgba(0,0,0,0.3)] transition-colors duration-200 ${
-          isLight
-            ? 'bg-white/75 backdrop-blur-xl border-slate-200/80'
-            : 'bg-[#07090e]/75 backdrop-blur-xl border-white/[0.08]'
-        }`}
-      />
-      <div className="w-full max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-2 lg:gap-3 xl:gap-4">
+    <header className="sticky top-0 sm:top-2.5 lg:top-3 z-50 px-2.5 sm:px-4 lg:px-6 pointer-events-none transition-all duration-300">
+      {/* Floating Glass Island / Capsule Container */}
+      <nav
+        aria-label="Main Navigation"
+        className={`pointer-events-auto w-full max-w-7xl 2xl:max-w-[1536px] mx-auto rounded-2xl sm:rounded-full transition-all duration-300 relative bg-white/90 dark:bg-[#080c1e]/82 border border-slate-200/90 dark:border-white/[0.12] ${
+          isScrolled
+            ? 'shadow-[0_16px_40px_-12px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] dark:shadow-[0_22px_54px_-12px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.24)]'
+            : 'shadow-[0_10px_30px_-10px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] dark:shadow-[0_14px_38px_-12px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.18)]'
+        } backdrop-blur-2xl backdrop-saturate-180 px-3 sm:px-4 lg:px-5 xl:px-6 pr-4 sm:pr-5 lg:pr-6`}
+      >
+        {/* Top Hairline Specular Highlight */}
+        <div 
+          aria-hidden="true"
+          className="absolute top-0 inset-x-8 sm:inset-x-16 h-[1px] bg-gradient-to-r from-transparent via-white/45 dark:via-white/20 to-transparent pointer-events-none"
+        />
+
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-2 lg:gap-3 xl:gap-4">
           
-          {/* Left Navigation Area: Logo + Multi-College Badge + Core Links */}
-          <div className="flex items-center gap-3 lg:gap-4 xl:gap-6 shrink-0">
+          {/* Left Navigation Area: Logo + Multi-College Badge + Magnetic Sliding Links */}
+          <div className="flex items-center gap-3 lg:gap-4 xl:gap-5 shrink-0">
             {/* Logo & Multi-College Badge */}
             <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
               <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-violet-600 to-cyan-500 p-0.5 shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-transform duration-300 shrink-0">
-                  <div className="w-full h-full bg-[#0b0f17] rounded-[10px] flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-indigo-400 fill-indigo-500/20 group-hover:text-cyan-400 transition-colors" />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-amber-400 via-indigo-500 to-cyan-400 p-[1.5px] shadow-lg shadow-indigo-500/20 group-hover:scale-105 group-hover:shadow-amber-500/25 transition-all duration-300 shrink-0">
+                  <div className="w-full h-full bg-[#080c1e] rounded-[9.5px] flex items-center justify-center">
+                    <Zap className="w-4.5 h-4.5 text-amber-300 fill-amber-400/20 group-hover:text-cyan-400 transition-colors" />
                   </div>
                 </div>
-                <span className="font-extrabold text-xl tracking-tight text-white shrink-0 whitespace-nowrap">
+                <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white shrink-0 whitespace-nowrap">
                   Hack<span className="text-gradient">Match</span>
                 </span>
               </Link>
 
               {/* Multi-College Badge: Rendered on 2xl+ ultra-wide screens */}
-              <span className="hidden 2xl:inline-flex shrink-0 whitespace-nowrap items-center justify-center text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 select-none min-w-[96px]">
+              <span className="hidden 2xl:inline-flex shrink-0 whitespace-nowrap items-center justify-center text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border border-indigo-500/30 select-none min-w-[96px]">
                 MULTI-COLLEGE
               </span>
             </div>
 
-            {/* Desktop Navigation Links */}
-            <div className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0">
-              <Link
-                to="/hackathons"
-                className={`group shrink-0 whitespace-nowrap px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 inline-flex items-center gap-2 ${
-                  isActive('/hackathons')
-                    ? isLight
-                      ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm'
-                      : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/25 shadow-sm'
-                    : isLight
-                    ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-                    : 'text-gray-300 hover:text-white hover:bg-gray-800/60 border border-transparent'
-                }`}
-              >
-                <SpatialAnimatedIcon icon={Trophy} animation="lift" trigger="parent-hover" className="w-4 h-4 text-indigo-400 shrink-0" />
-                <span>Hackathons</span>
-              </Link>
-
-              <Link
-                to="/users"
-                className={`group shrink-0 whitespace-nowrap px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 inline-flex items-center gap-2 ${
-                  isActive('/users')
-                    ? isLight
-                      ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm'
-                      : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/25 shadow-sm'
-                    : isLight
-                    ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-                    : 'text-gray-300 hover:text-white hover:bg-gray-800/60 border border-transparent'
-                }`}
-              >
-                <SpatialAnimatedIcon icon={Users} animation="group" trigger="parent-hover" className="w-4 h-4 text-cyan-400 shrink-0" />
-                <span>Find Teammates</span>
-              </Link>
-            </div>
+            {/* Desktop Magnetic Sliding Links */}
+            <MagneticNav />
           </div>
 
           {/* Center Section: Dedicated Structural Slot for Inline Expanding Universal Search */}
@@ -164,22 +236,18 @@ export const Navbar = () => {
           </div>
 
           {/* Right Section: Campus Badge, CTA, Notifications, Profile OR Auth Buttons */}
-          <div className="hidden lg:flex items-center gap-1.5 xl:gap-2.5 shrink-0">
+          <div className="hidden lg:flex items-center gap-1 sm:gap-1.5 xl:gap-2 shrink-0">
             {isAuthenticated ? (
               <>
                 {/* Active College Badge (Shown on 2XL+ screens to keep desktop spacious) */}
                 {collegeName && (
                   <div
-                    className={`hidden 2xl:flex items-center gap-2 px-3 h-10 rounded-xl border text-xs shrink-0 max-w-[190px] ${
-                      isLight
-                        ? 'bg-indigo-50/80 border-indigo-200 text-indigo-900 shadow-xs'
-                        : 'bg-slate-900/90 border-indigo-500/30 text-gray-300'
-                    }`}
+                    className="hidden 2xl:flex items-center gap-1.5 px-2.5 h-9 rounded-full border text-xs shrink-0 max-w-[170px] bg-indigo-50/80 border-indigo-200 text-indigo-900 shadow-xs dark:bg-slate-900/90 dark:border-indigo-500/30 dark:text-gray-300"
                     title={`Campus: ${collegeName}`}
                   >
-                    <Building2 className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-indigo-600' : 'text-cyan-400'}`} />
-                    <span className={`font-medium shrink-0 ${isLight ? 'text-indigo-600' : 'text-gray-400'}`}>Campus:</span>
-                    <span className={`font-semibold truncate ${isLight ? 'text-indigo-950' : 'text-indigo-300'}`}>{collegeName}</span>
+                    <Building2 className="w-3.5 h-3.5 shrink-0 text-indigo-600 dark:text-cyan-400" />
+                    <span className="font-medium shrink-0 text-indigo-600 dark:text-gray-400">Campus:</span>
+                    <span className="font-semibold truncate text-indigo-950 dark:text-indigo-300">{collegeName}</span>
                   </div>
                 )}
 
@@ -187,29 +255,27 @@ export const Navbar = () => {
                 {isAdmin && (
                   <Link
                     to="/admin"
-                    className="shrink-0 whitespace-nowrap px-3 h-10 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-semibold inline-flex items-center gap-1.5 transition-all"
+                    className="shrink-0 whitespace-nowrap px-3 h-9 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-500 dark:text-amber-400 text-xs font-semibold inline-flex items-center gap-1.5 transition-all"
                   >
                     <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
                     <span>Admin Panel</span>
                   </Link>
                 )}
 
-                {/* Post Team Request Primary CTA */}
-                <SpatialButton
+                {/* Post Team Request Primary CTA — Polished Warm Gold Pill */}
+                <Link
                   to="/post-request"
-                  variant="primary"
-                  size="md"
-                  icon={PlusCircle}
-                  className="hidden sm:inline-flex shrink-0 whitespace-nowrap"
+                  className="hidden sm:inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap px-3.5 py-1.5 xl:px-4 xl:py-2 rounded-full text-xs sm:text-sm font-bold bg-[#ffd23f] hover:bg-[#ffe066] text-slate-950 shadow-[0_4px_16px_-2px_rgba(255,210,63,0.45),inset_0_1px_0_rgba(255,255,255,0.6)] hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
                 >
+                  <PlusCircle className="w-4 h-4 text-slate-950 shrink-0" />
                   <span className="hidden xl:inline">Post Team Request</span>
                   <span className="xl:hidden">Post</span>
-                </SpatialButton>
+                </Link>
 
                 {/* Notifications Bell */}
                 <NotificationBell />
 
-                {/* Theme Toggle */}
+                {/* Circular Theme Toggle Control */}
                 <ThemeToggle size="md" />
 
                 {/* Profile Dropdown */}
@@ -230,12 +296,12 @@ export const Navbar = () => {
                     <div 
                       role="menu"
                       aria-label="User navigation menu"
-                      className="absolute right-0 mt-2 w-64 rounded-2xl z-50 overflow-hidden motion-open liquid-glass-floating text-slate-900 dark:text-slate-100"
+                      className="absolute right-0 mt-2 w-64 rounded-2xl z-50 overflow-hidden motion-open shadow-2xl backdrop-blur-2xl bg-white/96 dark:bg-[#090d20]/96 text-slate-900 dark:text-slate-100 border border-slate-200/90 dark:border-white/14 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.18)] dark:shadow-[0_24px_60px_-12px_rgba(0,0,0,0.85)]"
                     >
-                      {/* Top Specular Accent Highlight Line matching SpatialCard */}
-                      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-white/30 via-indigo-400/40 to-cyan-400/30 dark:from-white/20 dark:via-indigo-300/30 dark:to-cyan-300/20 opacity-80 pointer-events-none" />
+                      {/* Top Specular Accent Highlight Line */}
+                      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-white/30 via-amber-400/30 to-cyan-400/30 dark:from-white/20 dark:via-amber-300/25 dark:to-cyan-300/20 opacity-80 pointer-events-none" />
 
-                      <div className="px-4 py-3 border-b border-slate-200/50 dark:border-white/10 bg-white/20 dark:bg-white/[0.02]">
+                      <div className="px-4 py-3 border-b border-slate-200/70 dark:border-white/10 bg-slate-50/80 dark:bg-white/[0.03]">
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Logged in as</p>
                         <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.name}</p>
                         {collegeName && (
@@ -256,7 +322,7 @@ export const Navbar = () => {
                           role="menuitem"
                           onClick={() => setDropdownOpen(false)}
                           style={{ animationDelay: '0ms' }}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-900/5 dark:hover:bg-white/10 transition-colors group animate-in fade-in duration-240 fill-mode-both"
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors group animate-in fade-in duration-240 fill-mode-both"
                         >
                           <SpatialAnimatedIcon icon={LayoutDashboard} animation="micro-lift" trigger="parent-hover" className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0" />
                           Student Dashboard
@@ -267,7 +333,7 @@ export const Navbar = () => {
                           role="menuitem"
                           onClick={() => setDropdownOpen(false)}
                           style={{ animationDelay: '60ms' }}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-900/5 dark:hover:bg-white/10 transition-colors group animate-in fade-in duration-240 fill-mode-both"
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors group animate-in fade-in duration-240 fill-mode-both"
                         >
                           <SpatialAnimatedIcon icon={Bell} animation="signal" trigger="parent-hover" className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
                           Notifications
@@ -278,7 +344,7 @@ export const Navbar = () => {
                           role="menuitem"
                           onClick={() => setDropdownOpen(false)}
                           style={{ animationDelay: '120ms' }}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-900/5 dark:hover:bg-white/10 transition-colors group animate-in fade-in duration-240 fill-mode-both"
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors group animate-in fade-in duration-240 fill-mode-both"
                         >
                           <SpatialAnimatedIcon icon={Inbox} animation="bubble" trigger="parent-hover" className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
                           My Requests & Responses
@@ -289,7 +355,7 @@ export const Navbar = () => {
                           role="menuitem"
                           onClick={() => setDropdownOpen(false)}
                           style={{ animationDelay: '180ms' }}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-900/5 dark:hover:bg-white/10 transition-colors group animate-in fade-in duration-240 fill-mode-both"
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors group animate-in fade-in duration-240 fill-mode-both"
                         >
                           <SpatialAnimatedIcon icon={UserIcon} animation="group" trigger="parent-hover" className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
                           My Profile
@@ -309,7 +375,7 @@ export const Navbar = () => {
                         )}
                       </div>
 
-                      <div className="border-t border-slate-200/50 dark:border-white/10 my-1"></div>
+                      <div className="border-t border-slate-200/70 dark:border-white/10 my-1"></div>
 
                       <div className="px-2 py-1">
                         <SpatialButton
@@ -322,7 +388,7 @@ export const Navbar = () => {
                             navigate('/login');
                           }}
                           icon={LogOut}
-                          className="justify-start text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 dark:hover:bg-rose-500/20 px-3 py-2 w-full font-medium"
+                          className="justify-start text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/20 px-3 py-2 w-full font-medium"
                         >
                           Sign Out
                         </SpatialButton>
@@ -332,37 +398,33 @@ export const Navbar = () => {
                 </div>
               </>
             ) : (
-              <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-                <SpatialButton
+              <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+                <Link
                   to="/admin/login"
-                  variant="ghost"
-                  size="sm"
-                  className="shrink-0 text-slate-600 dark:text-gray-400"
+                  className="hidden xl:inline-flex text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-gray-200"
                 >
                   Admin Login
-                </SpatialButton>
-                <SpatialButton
+                </Link>
+                <Link
                   to="/login"
-                  variant="ghost"
-                  size="sm"
-                  className="shrink-0"
+                  className="text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full transition-colors text-slate-700 hover:text-slate-950 hover:bg-slate-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/5"
                 >
                   Log In
-                </SpatialButton>
-                <SpatialButton
+                </Link>
+                {/* Hero-Harmonized Warm Gold "Get Started" Pill */}
+                <Link
                   to="/signup"
-                  variant="primary"
-                  size="sm"
-                  className="shrink-0 whitespace-nowrap"
+                  className="shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-xs sm:text-sm font-bold bg-[#ffd23f] hover:bg-[#ffe066] text-slate-950 shadow-[0_4px_16px_-2px_rgba(255,210,63,0.45),inset_0_1px_0_rgba(255,255,255,0.6)] hover:-translate-y-0.5 active:scale-95 active:translate-y-0 transition-all duration-200"
                 >
                   Get Started
-                </SpatialButton>
-                <ThemeToggle />
+                </Link>
+                {/* Circular Theme Toggle Control */}
+                <ThemeToggle size="md" />
               </div>
             )}
           </div>
 
-          {/* Mobile Menu Trigger */}
+          {/* Mobile Navigation Controls (< lg) */}
           <div className="flex lg:hidden items-center gap-1.5 sm:gap-2 shrink-0">
             <SpatialIconButton
               icon={Search}
@@ -383,22 +445,14 @@ export const Navbar = () => {
             />
           </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Mobile Dropdown Drawer */}
+      {/* Floating Glass Mobile Dropdown Drawer */}
       {mobileMenuOpen && (
-        <div className={`lg:hidden px-4 pt-2 pb-6 space-y-3 border-b shadow-xl ${
-          isLight
-            ? 'bg-white/98 border-slate-200 text-slate-900'
-            : 'bg-gray-950/98 backdrop-blur-xl border-gray-800 text-gray-200'
-        }`}>
+        <div className="pointer-events-auto lg:hidden mt-2 rounded-2xl p-4 space-y-3 border transition-all duration-200 bg-white/95 border-slate-200/90 text-slate-900 shadow-2xl dark:bg-[#080c1e]/95 dark:backdrop-blur-2xl dark:border-white/12 dark:text-gray-200 dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
           {isAuthenticated && collegeName && (
-            <div className={`p-2.5 rounded-xl border text-xs flex items-center gap-2 mb-2 ${
-              isLight
-                ? 'bg-slate-50 border-slate-200 text-slate-700'
-                : 'bg-slate-900 border-indigo-500/30 text-gray-300'
-            }`}>
-              <Building2 className={`w-4 h-4 ${isLight ? 'text-indigo-600' : 'text-cyan-400'}`} />
+            <div className="p-2.5 rounded-xl border text-xs flex items-center gap-2 mb-2 bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-900 dark:border-indigo-500/30 dark:text-gray-300">
+              <Building2 className="w-4 h-4 text-indigo-600 dark:text-cyan-400" />
               <span className="font-semibold truncate">{collegeName}</span>
             </div>
           )}
@@ -406,44 +460,32 @@ export const Navbar = () => {
           <Link
             to="/notifications"
             onClick={() => setMobileMenuOpen(false)}
-            className={`group flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors ${
-              isLight
-                ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                : 'text-gray-200 hover:bg-gray-800'
-            }`}
+            className="group flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-200 dark:hover:bg-gray-800"
           >
-            <SpatialAnimatedIcon icon={Bell} animation="signal" trigger="parent-hover" className={`w-4 h-4 ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`} />
+            <SpatialAnimatedIcon icon={Bell} animation="signal" trigger="parent-hover" className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             Notifications
           </Link>
 
           <Link
             to="/hackathons"
             onClick={() => setMobileMenuOpen(false)}
-            className={`group flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors ${
-              isLight
-                ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                : 'text-gray-200 hover:bg-gray-800'
-            }`}
+            className="group flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-200 dark:hover:bg-gray-800"
           >
-            <SpatialAnimatedIcon icon={Trophy} animation="lift" trigger="parent-hover" className={`w-4 h-4 ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`} />
+            <SpatialAnimatedIcon icon={Trophy} animation="lift" trigger="parent-hover" className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             Hackathons
           </Link>
           <Link
             to="/users"
             onClick={() => setMobileMenuOpen(false)}
-            className={`group flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors ${
-              isLight
-                ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                : 'text-gray-200 hover:bg-gray-800'
-            }`}
+            className="group flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-200 dark:hover:bg-gray-800"
           >
-            <SpatialAnimatedIcon icon={Users} animation="group" trigger="parent-hover" className={`w-4 h-4 ${isLight ? 'text-cyan-600' : 'text-cyan-400'}`} />
+            <SpatialAnimatedIcon icon={Users} animation="group" trigger="parent-hover" className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
             Find Teammates
           </Link>
 
           {isAuthenticated ? (
-            <div className={`pt-3 border-t space-y-2 ${isLight ? 'border-slate-200' : 'border-gray-800'}`}>
-              <div className={`flex items-center gap-3 px-3 py-2 border-b mb-2 ${isLight ? 'border-slate-200' : 'border-gray-800'}`}>
+            <div className="pt-3 border-t space-y-2 border-slate-200 dark:border-gray-800">
+              <div className="flex items-center gap-3 px-3 py-2 border-b mb-2 border-slate-200 dark:border-gray-800">
                 <Avatar
                   src={user?.avatarUrl}
                   name={user?.name}
@@ -451,56 +493,42 @@ export const Navbar = () => {
                   verified={user?.experienceVerificationStatus === 'Verified' || user?.isVerified}
                 />
                 <div className="min-w-0 flex-1">
-                  <p className={`text-sm font-semibold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  <p className="text-sm font-semibold truncate text-slate-900 dark:text-white">
                     {user?.name}
                   </p>
                   {collegeName && (
-                    <p className={`text-xs truncate ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
+                    <p className="text-xs truncate text-slate-500 dark:text-gray-400">
                       {collegeName}
                     </p>
                   )}
                 </div>
               </div>
-              <SpatialButton
+              <Link
                 to="/post-request"
-                variant="primary"
-                size="md"
-                fullWidth
-                icon={PlusCircle}
                 onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-full text-sm font-bold bg-[#ffd23f] hover:bg-[#ffe066] text-slate-950 shadow-md transition-all"
               >
-                Post Team Request
-              </SpatialButton>
+                <PlusCircle className="w-4 h-4 text-slate-950" />
+                <span>Post Team Request</span>
+              </Link>
               <Link
                 to="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2 font-medium rounded-lg transition-colors ${
-                  isLight
-                    ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                    : 'text-gray-300 hover:bg-gray-800'
-                }`}
+                className="block px-3 py-2 font-medium rounded-lg transition-colors text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-gray-800"
               >
                 Student Dashboard
               </Link>
               <Link
                 to="/my-requests"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2 font-medium rounded-lg transition-colors ${
-                  isLight
-                    ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                    : 'text-gray-300 hover:bg-gray-800'
-                }`}
+                className="block px-3 py-2 font-medium rounded-lg transition-colors text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-gray-800"
               >
                 My Requests & Responses
               </Link>
               <Link
                 to="/profile"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2 font-medium rounded-lg transition-colors ${
-                  isLight
-                    ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                    : 'text-gray-300 hover:bg-gray-800'
-                }`}
+                className="block px-3 py-2 font-medium rounded-lg transition-colors text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-gray-800"
               >
                 Profile Settings
               </Link>
@@ -508,11 +536,7 @@ export const Navbar = () => {
                 <Link
                   to="/admin"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`block px-3 py-2 font-medium rounded-lg transition-colors ${
-                    isLight
-                      ? 'text-amber-700 hover:text-amber-900 hover:bg-amber-50'
-                      : 'text-amber-300 hover:bg-amber-500/10'
-                  }`}
+                  className="block px-3 py-2 font-medium rounded-lg transition-colors text-amber-700 hover:text-amber-900 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-500/10"
                 >
                   Admin Console
                 </Link>
@@ -533,33 +557,29 @@ export const Navbar = () => {
               </SpatialButton>
             </div>
           ) : (
-            <div className={`pt-3 border-t flex flex-col gap-2 ${isLight ? 'border-slate-200' : 'border-gray-800'}`}>
-              <SpatialButton
+            <div className="pt-3 border-t flex flex-col gap-2 border-slate-200 dark:border-gray-800">
+              <Link
                 to="/login"
-                variant="secondary"
-                size="md"
-                fullWidth
                 onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center px-4 py-2.5 rounded-full text-sm font-semibold bg-slate-100 text-slate-800 hover:bg-slate-200 dark:bg-white/5 dark:border dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/20 transition-all"
               >
                 Log In
-              </SpatialButton>
-              <SpatialButton
+              </Link>
+              <Link
                 to="/signup"
-                variant="primary"
-                size="md"
-                fullWidth
                 onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center px-4 py-2.5 rounded-full text-sm font-bold bg-[#ffd23f] hover:bg-[#ffe066] text-slate-950 shadow-md transition-all"
               >
-                Sign Up
-              </SpatialButton>
+                Get Started
+              </Link>
             </div>
           )}
         </div>
       )}
 
-      {/* Mobile Search In-Place Header Bar (for screens < md) */}
+      {/* Floating Mobile Search In-Place Header Bar */}
       {isSearchOpen && (
-        <div className="md:hidden absolute inset-x-0 top-0 h-16 bg-[#07090e]/95 dark:bg-[#07090e]/98 backdrop-blur-2xl border-b border-white/10 z-50 px-3 flex items-center gap-2">
+        <div className="pointer-events-auto md:hidden absolute inset-x-2.5 top-2.5 h-14 bg-white/98 dark:bg-[#080c1e]/98 backdrop-blur-2xl rounded-2xl border border-slate-200 dark:border-white/14 z-50 px-3 flex items-center gap-2 shadow-2xl">
           <div className="flex-1">
             <UniversalSearch
               isOpen={true}
@@ -575,6 +595,8 @@ export const Navbar = () => {
           />
         </div>
       )}
-    </nav>
+    </header>
   );
 };
+
+export default Navbar;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Zap, 
   Users, 
@@ -20,9 +20,10 @@ import { UserCard } from '../components/UserCard';
 import { SkillChip } from '../components/SkillChip';
 import { SpatialButton, SpatialCard, SpatialPanel } from '../components/spatial';
 import { useTheme } from '../context/ThemeContext';
-import { HomeHero } from '../components/home/HomeHero';
+import { GlobeHero } from '../components/home/GlobeHero';
 
 export const Home = () => {
+  const navigate = useNavigate();
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const [hackathons, setHackathons] = useState([]);
@@ -52,8 +53,12 @@ export const Home = () => {
 
   return (
     <div className="space-y-20 pb-12">
-      {/* Bold Campus Poster Hero */}
-      <HomeHero activeHackathonsCount={hackathons.length || 4} />
+      {/* Living Energy Field Hero */}
+      <GlobeHero
+        onFindTeam={() => navigate('/post-request')}
+        onExplore={() => navigate('/hackathons')}
+        onSkill={(skill) => navigate(`/users?skill=${encodeURIComponent(skill)}`)}
+      />
 
       {/* Popular Skill Pills preview */}
       <div className={`pt-2 pb-2 flex items-center justify-center gap-2 flex-wrap text-xs ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>

@@ -193,7 +193,6 @@ export const NotificationBell = ({ isLight = false }) => {
       <SpatialIconButton
         icon={Bell}
         label="Notifications"
-        tooltip="Notifications"
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         variant={isOpen ? 'secondary' : 'ghost'}
@@ -213,18 +212,14 @@ export const NotificationBell = ({ isLight = false }) => {
         <div
           role="dialog"
           aria-label="Notifications popover"
-          className={`absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl z-50 overflow-hidden motion-open liquid-glass-floating ${
-            isLightMode
-              ? 'text-slate-900'
-              : 'text-slate-100'
-          }`}
+          className="absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl z-50 overflow-hidden motion-open shadow-2xl backdrop-blur-2xl bg-white/96 dark:bg-[#090d20]/96 text-slate-900 dark:text-slate-100 border border-slate-200/90 dark:border-white/14 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.18)] dark:shadow-[0_24px_60px_-12px_rgba(0,0,0,0.85)]"
         >
           {/* Top Specular Accent Highlight Line matching SpatialCard */}
           <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-white/30 via-indigo-400/40 to-cyan-400/30 dark:from-white/20 dark:via-indigo-300/30 dark:to-cyan-300/20 opacity-80 pointer-events-none" />
 
           {/* Header */}
           <div
-            className="flex items-center justify-between px-4 py-3.5 border-b border-slate-200/50 dark:border-white/10 bg-white/20 dark:bg-white/[0.02]"
+            className="flex items-center justify-between px-4 py-3.5 border-b border-slate-200/70 dark:border-white/10 bg-slate-50/80 dark:bg-white/[0.03]"
           >
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm">Notifications</span>
@@ -252,13 +247,11 @@ export const NotificationBell = ({ isLight = false }) => {
 
           {/* List of Notifications */}
           <div
-            className="max-h-[380px] overflow-y-auto divide-y divide-slate-200/40 dark:divide-white/[0.06]"
+            className="max-h-[380px] overflow-y-auto divide-y divide-slate-200/50 dark:divide-white/[0.06]"
           >
             {loading ? (
               <div
-                className={`py-8 text-center text-xs ${
-                  isLightMode ? 'text-slate-500' : 'text-slate-400'
-                }`}
+                className="py-8 text-center text-xs text-slate-500 dark:text-slate-400"
               >
                 <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                 Loading updates...
@@ -266,21 +259,15 @@ export const NotificationBell = ({ isLight = false }) => {
             ) : notifications.length === 0 ? (
               <div className="py-10 text-center">
                 <Bell
-                  className={`w-8 h-8 mx-auto mb-2 stroke-[1.5] ${
-                    isLightMode ? 'text-slate-400' : 'text-slate-500'
-                  }`}
+                  className="w-8 h-8 mx-auto mb-2 stroke-[1.5] text-slate-400 dark:text-slate-500"
                 />
                 <p
-                  className={`text-sm font-medium ${
-                    isLightMode ? 'text-slate-700' : 'text-slate-300'
-                  }`}
+                  className="text-sm font-medium text-slate-700 dark:text-slate-300"
                 >
                   No notifications yet
                 </p>
                 <p
-                  className={`text-xs mt-0.5 ${
-                    isLightMode ? 'text-slate-500' : 'text-slate-400'
-                  }`}
+                  className="text-xs mt-0.5 text-slate-500 dark:text-slate-400"
                 >
                   We'll alert you on important team & verification events.
                 </p>
@@ -301,12 +288,12 @@ export const NotificationBell = ({ isLight = false }) => {
                   style={{ animationDelay: `${idx * 60}ms` }}
                   className={`group flex items-start gap-3 p-3.5 cursor-pointer transition-all duration-240 text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500 animate-in fade-in duration-260 fill-mode-both ${
                     !notif.isRead
-                      ? 'bg-indigo-500/[0.08] dark:bg-indigo-500/15 hover:bg-slate-200/50 dark:hover:bg-white/10'
-                      : 'bg-transparent hover:bg-slate-200/40 dark:hover:bg-white/5'
+                      ? 'bg-indigo-50/60 dark:bg-indigo-500/15 hover:bg-slate-100 dark:hover:bg-white/10'
+                      : 'bg-transparent hover:bg-slate-50 dark:hover:bg-white/5'
                   }`}
                 >
                   <div
-                    className="p-2 rounded-xl shrink-0 mt-0.5 border bg-white/40 dark:bg-white/5 border-slate-200/60 dark:border-white/10 group-hover:scale-105 group-hover:border-indigo-400/40 transition-all duration-180"
+                    className="p-2 rounded-xl shrink-0 mt-0.5 border bg-white/60 dark:bg-white/5 border-slate-200/80 dark:border-white/10 group-hover:scale-105 group-hover:border-indigo-400/40 transition-all duration-180"
                   >
                     {getNotificationIcon(notif.type)}
                   </div>
@@ -315,28 +302,20 @@ export const NotificationBell = ({ isLight = false }) => {
                       <p
                         className={`text-xs font-semibold truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-180 ${
                           !notif.isRead
-                            ? isLightMode
-                              ? 'text-slate-900 font-bold'
-                              : 'text-white'
-                            : isLightMode
-                            ? 'text-slate-700'
-                            : 'text-slate-300'
+                            ? 'text-slate-900 dark:text-white font-bold'
+                            : 'text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         {notif.title}
                       </p>
                       <span
-                        className={`text-[11px] shrink-0 ${
-                          isLightMode ? 'text-slate-500' : 'text-slate-400'
-                        }`}
+                        className="text-[11px] shrink-0 text-slate-500 dark:text-slate-400"
                       >
                         {formatTimeAgo(notif.createdAt)}
                       </span>
                     </div>
                     <p
-                      className={`text-xs line-clamp-2 leading-relaxed ${
-                        isLightMode ? 'text-slate-600' : 'text-slate-400'
-                      }`}
+                      className="text-xs line-clamp-2 leading-relaxed text-slate-600 dark:text-slate-400"
                     >
                       {notif.message}
                     </p>
