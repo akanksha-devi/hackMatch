@@ -27,6 +27,7 @@ export const Home = () => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const [hackathons, setHackathons] = useState([]);
+  const [totalHackathons, setTotalHackathons] = useState(0);
   const [teamRequests, setTeamRequests] = useState([]);
   const [users, setUsers] = useState([]);
 
@@ -39,7 +40,10 @@ export const Home = () => {
           apiService.getUsers().catch(() => ({ users: [] })),
         ]);
 
-        if (hRes.hackathons) setHackathons(hRes.hackathons.slice(0, 3));
+        if (hRes.hackathons) {
+          setHackathons(hRes.hackathons.slice(0, 3));
+          setTotalHackathons(typeof hRes.count === 'number' ? hRes.count : hRes.hackathons.length);
+        }
         if (trRes.teamRequests) setTeamRequests(trRes.teamRequests.slice(0, 3));
         if (uRes.users) setUsers(uRes.users.slice(0, 3));
       } catch (err) {
@@ -77,7 +81,9 @@ export const Home = () => {
             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 flex items-center justify-center mx-auto mb-3">
               <Trophy className="w-5 h-5" />
             </div>
-            <div className={`text-3xl font-extrabold ${isLight ? 'text-slate-900' : 'text-white'}`}>4+</div>
+            <div className={`text-3xl font-extrabold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              {totalHackathons > 0 ? `${totalHackathons}` : '19'}
+            </div>
             <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'} font-medium`}>Active Hackathons</div>
           </SpatialCard>
 

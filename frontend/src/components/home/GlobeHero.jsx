@@ -2,62 +2,30 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme as useAppTheme } from "../../context/ThemeContext";
 import { useAnimation } from "../../animations/AnimationContext";
+import apiService from "../../services/apiService";
 import "./globe-hero.css";
 
-const CURATED_CURRENT_HACKATHONS = [
-  {
-    id: "innohacks-2026",
-    title: "KIET InnoHacks 2026",
-    organizer: "KIET Group of Institutions • Delhi-NCR",
-    mode: "In-Person • Campus",
-    dates: "Oct 24 – 26, 2026",
-    deadlineLabel: "Registration Closing Soon",
-    teamsSeeking: "42 Teams Assembling",
-    prizePool: "₹1,50,000",
-    tags: ["AI / ML", "Web3", "Open Innovation"],
-    status: "Active",
-    badge: "Featured Campus",
-  },
-  {
-    id: "sih-2026",
-    title: "Smart India Hackathon 2026",
-    organizer: "Ministry of Education & AICTE",
-    mode: "Hybrid • National",
-    dates: "Nov 15 – 17, 2026",
-    deadlineLabel: "Team Registration Open",
-    teamsSeeking: "128 Teams Assembling",
-    prizePool: "₹1,00,000 / Problem",
-    tags: ["GovTech", "Smart Automation", "IoT"],
-    status: "Active",
-    badge: "National Flagship",
-  },
-  {
-    id: "google-ai-2026",
-    title: "Google AI Agents Buildathon",
-    organizer: "Google Cloud & DeepMind",
-    mode: "Online • Global",
-    dates: "Oct 20 – Nov 05, 2026",
-    deadlineLabel: "Submissions Live",
-    teamsSeeking: "86 Teams Assembling",
-    prizePool: "$50,000 in GCP Credits",
-    tags: ["Gemini 2.5", "Agentic AI", "Python"],
-    status: "Active",
-    badge: "Global AI Track",
-  },
-  {
-    id: "mathhacks-2026",
-    title: "MathHacks 2.0",
-    organizer: "Toronto Tech Community",
-    mode: "Offline • Global Track",
-    dates: "Oct 17 – 18, 2026",
-    deadlineLabel: "Active Event",
-    teamsSeeking: "24 Teams Assembling",
-    prizePool: "$10,000",
-    tags: ["Algorithms", "Data Science", "Web"],
-    status: "Active",
-    badge: "Curated Event",
-  },
-];
+// Helper to format ISO dates to clean range
+function formatDatesRange(startDate, endDate) {
+  if (!startDate) return "Dates TBA";
+  const sDate = new Date(startDate);
+  const eDate = endDate ? new Date(endDate) : null;
+  if (isNaN(sDate.getTime())) return "Dates TBA";
+
+  const sMonth = sDate.toLocaleDateString("en-US", { month: "short" });
+  const sDay = sDate.getDate();
+  const year = sDate.getFullYear();
+
+  if (eDate && !isNaN(eDate.getTime())) {
+    const eMonth = eDate.toLocaleDateString("en-US", { month: "short" });
+    const eDay = eDate.getDate();
+    if (sMonth === eMonth) {
+      return `${sMonth} ${sDay} – ${eDay}, ${year}`;
+    }
+    return `${sMonth} ${sDay} – ${eMonth} ${eDay}, ${year}`;
+  }
+  return `${sMonth} ${sDay}, ${year}`;
+}
 
 export function GlobeHero({
   headline = [
@@ -75,56 +43,147 @@ export function GlobeHero({
   const themeContext = useAppTheme();
   const animCtx = useAnimation();
 
-  const resolvedThemeStr = themeContext?.resolvedTheme || (
-    typeof document !== 'undefined' && document.documentElement.classList.contains('light') ? 'light' : 'dark'
-  );
-  const theme = resolvedThemeStr === 'light' ? 'light' : 'dark';
+  const [isDomLight, setIsDomLight] = useState(() => {
+    return typeof document !== 'undefined' ? document.documentElement.classList.contains('light') : false;
+  });
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const checkDom = () => setIsDomLight(document.documentElement.classList.contains('light'));
+    checkDom();
+    const observer = new MutationObserver(checkDom);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const theme = (isDomLight || themeContext?.resolvedTheme === 'light') ? 'light' : 'dark';
 
   const cardRef = useRef(null);
-  const [selectedId, setSelectedId] = useState("innohacks-2026");
-  const [hackathons, setHackathons] = useState(CURATED_CURRENT_HACKATHONS);
-  const [totalCount, setTotalCount] = useState(16);
+  const [selectedId, setSelectedId] = useState(null);
+  const [hackathons, setHackathons] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [teamCountMap, setTeamCountMap] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
   // Horizontal-only hover reaction (zero vertical rocking)
   const [tiltY, setTiltY] = useState(0);
 
-  // Live ticking hackathon submission lock countdown
-  const [secondsRemaining, setSecondsRemaining] = useState(85692);
+  // Real-time ticking clock for deadline countdown
+  const [nowTime, setNowTime] = useState(Date.now());
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setSecondsRemaining((prev) => (prev > 0 ? prev - 1 : 86400));
+      setNowTime(Date.now());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const formatCountdown = useMemo(() => {
-    const hours = Math.floor(secondsRemaining / 3600);
-    const mins = Math.floor((secondsRemaining % 3600) / 60);
-    const secs = secondsRemaining % 60;
-    return `${String(hours).padStart(2, "0")}h ${String(mins).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`;
-  }, [secondsRemaining]);
-
-  // Try fetching live hackathons from API to augment total count or list
+  // Fetch real hackathons from database via apiService
   useEffect(() => {
     let isMounted = true;
-    fetch("/api/hackathons")
-      .then((res) => (res.ok ? res.json() : null))
+    apiService.getHackathons({ status: "Active" })
       .then((data) => {
         if (!isMounted || !data) return;
-        if (data.total) {
-          setTotalCount(data.total);
-        } else if (Array.isArray(data.hackathons)) {
-          setTotalCount(data.hackathons.length || 16);
+        const rawList = Array.isArray(data.hackathons) ? data.hackathons : [];
+        const count = typeof data.count === "number" ? data.count : rawList.length;
+        setTotalCount(count);
+
+        if (rawList.length > 0) {
+          const mapped = rawList.map((h) => {
+            const rawDeadline = h.registrationDeadline || h.startDate;
+            return {
+              id: h._id || h.id,
+              title: h.title,
+              organizer: h.organizer || (h.collegeId?.name ? `${h.collegeId.name} • Campus` : "HackMatch Verified"),
+              mode: `${h.mode || "Online"}${h.location ? ` • ${h.location.split(",")[0].trim()}` : (h.visibility === "College" ? " • Campus" : " • Global")}`,
+              dates: formatDatesRange(h.startDate, h.endDate),
+              rawStartDate: h.startDate,
+              rawEndDate: h.endDate,
+              rawDeadline,
+              prizePool: h.prizePool || "See Event Details",
+              tags: Array.isArray(h.tags) && h.tags.length > 0 ? h.tags.slice(0, 3) : ["Hackathon", "Open Track"],
+              status: h.status || "Active",
+              badge: h.visibility === "College" ? "Campus Flagship" : (h.isExternal ? "Verified Global Sync" : "Featured Event"),
+            };
+          });
+
+          setHackathons(mapped);
+          setSelectedId((prev) => prev || mapped[0]?.id);
         }
+        setIsLoading(false);
       })
-      .catch(() => {
-        // Fall back gracefully to curated state
+      .catch((err) => {
+        console.warn("Notice: GlobeHero live hackathon load fallback", err?.message);
+        if (isMounted) setIsLoading(false);
       });
+
     return () => {
       isMounted = false;
     };
   }, []);
+
+  // Fetch real team requests count for the selected hackathon
+  useEffect(() => {
+    if (!selectedId) return;
+    let isMounted = true;
+    apiService.getHackathonById(selectedId)
+      .then((res) => {
+        if (!isMounted || !res) return;
+        const count = Array.isArray(res.teamRequests) ? res.teamRequests.length : 0;
+        setTeamCountMap((prev) => ({
+          ...prev,
+          [selectedId]: count > 0 ? `${count} Team${count > 1 ? "s" : ""} Assembling` : "Open for Teams",
+        }));
+      })
+      .catch(() => {
+        // Fall back gracefully
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedId]);
+
+  // Active hackathon resolution
+  const activeHackathon = useMemo(() => {
+    if (hackathons.length === 0) return null;
+    return hackathons.find((h) => h.id === selectedId) || hackathons[0];
+  }, [hackathons, selectedId]);
+
+  // Format real-time dynamic countdown based on actual registrationDeadline
+  const countdownDisplay = useMemo(() => {
+    if (!activeHackathon?.rawDeadline) return { label: "Deadline", time: "Open" };
+    const deadlineMs = new Date(activeHackathon.rawDeadline).getTime();
+    if (isNaN(deadlineMs)) return { label: "Deadline", time: "Open" };
+
+    const diffSec = Math.floor((deadlineMs - nowTime) / 1000);
+
+    if (diffSec <= 0) {
+      if (activeHackathon.rawEndDate && new Date(activeHackathon.rawEndDate).getTime() > nowTime) {
+        return { label: "Event", time: "Live Now" };
+      }
+      return { label: "Status", time: "Registration Closed" };
+    }
+
+    if (diffSec > 86400) {
+      const days = Math.floor(diffSec / 86400);
+      const hours = Math.floor((diffSec % 86400) / 3600);
+      const mins = Math.floor((diffSec % 3600) / 60);
+      return { label: "Lock in", time: `${days}d ${hours}h ${mins}m` };
+    }
+
+    const hours = Math.floor(diffSec / 3600);
+    const mins = Math.floor((diffSec % 3600) / 60);
+    const secs = diffSec % 60;
+    return {
+      label: "Lock in",
+      time: `${String(hours).padStart(2, "0")}h ${String(mins).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`,
+    };
+  }, [activeHackathon, nowTime]);
+
+  const queueHackathons = useMemo(() => {
+    if (!activeHackathon) return [];
+    return hackathons.filter((h) => h.id !== activeHackathon.id).slice(0, 3);
+  }, [hackathons, activeHackathon]);
 
   // Ensure cosmic universe background particles flow with clean opacity
   useEffect(() => {
@@ -151,18 +210,6 @@ export function GlobeHero({
 
   const handleFindTeam = onFindTeam || (() => navigate('/post-request'));
   const handleExplore = onExplore || (() => navigate('/hackathons'));
-
-  const activeHackathon = useMemo(() => {
-    return (
-      hackathons.find((h) => h.id === selectedId) ||
-      hackathons[0] ||
-      CURATED_CURRENT_HACKATHONS[0]
-    );
-  }, [hackathons, selectedId]);
-
-  const queueHackathons = useMemo(() => {
-    return hackathons.filter((h) => h.id !== activeHackathon.id).slice(0, 3);
-  }, [hackathons, activeHackathon]);
 
   return (
     <section
@@ -313,108 +360,135 @@ export function GlobeHero({
             </div>
 
             {/* Featured Hackathon Hero Block */}
-            <div className="gh-featured-block">
-              <div className="gh-featured-status-row">
-                <span className="gh-tag-mode">
-                  <span className="gh-tag-mode-dot" />
-                  {activeHackathon.mode}
-                </span>
-                <span className="gh-tag-countdown">
-                  <span className="gh-countdown-icon">⚡</span>
-                  <span className="gh-countdown-label">Lock in</span>
-                  <span className="gh-countdown-time">{formatCountdown}</span>
-                </span>
-              </div>
-
-              <div className="gh-featured-title-wrap">
-                <h2 className="gh-featured-title">
-                  {activeHackathon.title}
-                </h2>
-                <span className="gh-featured-badge">
-                  {activeHackathon.badge}
-                </span>
-              </div>
-
-              <p className="gh-featured-organizer">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
-                <span>{activeHackathon.organizer}</span>
-              </p>
-
-              {/* Essential Intel Metric Grid */}
-              <div className="gh-intel-grid">
-                <div className="gh-intel-cell">
-                  <span className="gh-intel-label">Timeline</span>
-                  <span className="gh-intel-val">{activeHackathon.dates}</span>
-                </div>
-                <div className="gh-intel-cell">
-                  <span className="gh-intel-label">Prize Pool</span>
-                  <span className="gh-intel-val gh-intel-val--prize">{activeHackathon.prizePool}</span>
-                </div>
-                <div className="gh-intel-cell">
-                  <span className="gh-intel-label">Teams Assembling</span>
-                  <span className="gh-intel-val gh-intel-val--teams">{activeHackathon.teamsSeeking}</span>
+            {isLoading ? (
+              <div className="gh-featured-block" style={{ padding: "40px 22px", textAlign: "center" }}>
+                <div style={{ opacity: 0.7, fontSize: "13px", color: "var(--gh-muted)" }}>
+                  Syncing verified live hackathons...
                 </div>
               </div>
-
-              {/* Tags & Direct Action */}
-              <div className="gh-featured-foot-row">
-                <div className="gh-featured-tags">
-                  {activeHackathon.tags.map((tag) => (
-                    <span className="gh-tag-pill" key={tag}>
-                      {tag}
-                    </span>
-                  ))}
+            ) : activeHackathon ? (
+              <div className="gh-featured-block">
+                <div className="gh-featured-status-row">
+                  <span className="gh-tag-mode">
+                    <span className="gh-tag-mode-dot" />
+                    {activeHackathon.mode}
+                  </span>
+                  <span className="gh-tag-countdown">
+                    <span className="gh-countdown-icon">⚡</span>
+                    <span className="gh-countdown-label">{countdownDisplay.label}</span>
+                    <span className="gh-countdown-time">{countdownDisplay.time}</span>
+                  </span>
                 </div>
 
-                <button
-                  type="button"
-                  className="gh-btn-assemble-event"
-                  onClick={handleFindTeam}
-                >
-                  <span>Assemble Team</span>
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M5 12h14M13 6l6 6-6 6" />
+                <div className="gh-featured-title-wrap">
+                  <h2 className="gh-featured-title">
+                    {activeHackathon.title}
+                  </h2>
+                  <span className="gh-featured-badge">
+                    {activeHackathon.badge}
+                  </span>
+                </div>
+
+                <p className="gh-featured-organizer">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
                   </svg>
+                  <span>{activeHackathon.organizer}</span>
+                </p>
+
+                {/* Essential Intel Metric Grid */}
+                <div className="gh-intel-grid">
+                  <div className="gh-intel-cell">
+                    <span className="gh-intel-label">Timeline</span>
+                    <span className="gh-intel-val">{activeHackathon.dates}</span>
+                  </div>
+                  <div className="gh-intel-cell">
+                    <span className="gh-intel-label">Prize Pool</span>
+                    <span className="gh-intel-val gh-intel-val--prize">{activeHackathon.prizePool}</span>
+                  </div>
+                  <div className="gh-intel-cell">
+                    <span className="gh-intel-label">Teams Assembling</span>
+                    <span className="gh-intel-val gh-intel-val--teams">
+                      {teamCountMap[activeHackathon.id] || activeHackathon.teamsSeeking}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Tags & Direct Action */}
+                <div className="gh-featured-foot-row">
+                  <div className="gh-featured-tags">
+                    {activeHackathon.tags.map((tag) => (
+                      <span className="gh-tag-pill" key={tag}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="gh-btn-assemble-event"
+                    onClick={() => {
+                      if (activeHackathon?.id) {
+                        navigate(`/post-request?hackathon=${activeHackathon.id}`);
+                      } else {
+                        handleFindTeam();
+                      }
+                    }}
+                  >
+                    <span>Assemble Team</span>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="gh-featured-block" style={{ padding: "30px 22px", textAlign: "center" }}>
+                <p style={{ color: "var(--gh-muted)", fontSize: "13px" }}>No active hackathons scheduled right now.</p>
+                <button type="button" className="gh-dir-link" onClick={handleExplore} style={{ marginTop: "8px" }}>
+                  Browse all past & upcoming events →
                 </button>
               </div>
-            </div>
+            )}
 
             {/* Current Hackathons Interactive Queue */}
-            <div className="gh-queue-block">
-              <div className="gh-queue-head">
-                <span>Upcoming Active Events</span>
-                <span className="gh-queue-hint">Click to preview</span>
-              </div>
+            {queueHackathons.length > 0 && (
+              <div className="gh-queue-block">
+                <div className="gh-queue-head">
+                  <span>Upcoming Active Events</span>
+                  <span className="gh-queue-hint">Click to preview</span>
+                </div>
 
-              <div className="gh-queue-list">
-                {queueHackathons.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className="gh-queue-item"
-                    onClick={() => setSelectedId(item.id)}
-                    aria-label={`Preview ${item.title}`}
-                  >
-                    <div className="gh-queue-item-left">
-                      <span className="gh-queue-dot" />
-                      <div className="gh-queue-item-info">
-                        <span className="gh-queue-item-title">{item.title}</span>
-                        <span className="gh-queue-item-sub">{item.organizer.split('•')[0]}</span>
+                <div className="gh-queue-list">
+                  {queueHackathons.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="gh-queue-item"
+                      onClick={() => setSelectedId(item.id)}
+                      aria-label={`Preview ${item.title}`}
+                    >
+                      <div className="gh-queue-item-left">
+                        <span className="gh-queue-dot" />
+                        <div className="gh-queue-item-info">
+                          <span className="gh-queue-item-title">{item.title}</span>
+                          <span className="gh-queue-item-sub">{item.organizer ? item.organizer.split('•')[0].trim() : ''}</span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="gh-queue-item-right">
-                      <span className="gh-queue-item-mode">{item.mode.split('•')[0].trim()}</span>
-                      <span className="gh-queue-item-teams">{item.teamsSeeking.split(' ')[0]} Teams</span>
-                      <span className="gh-queue-item-arrow">→</span>
-                    </div>
-                  </button>
-                ))}
+                      <div className="gh-queue-item-right">
+                        <span className="gh-queue-item-mode">{item.mode ? item.mode.split('•')[0].trim() : 'Live'}</span>
+                        <span className="gh-queue-item-teams">
+                          {teamCountMap[item.id] ? teamCountMap[item.id].split(' ')[0] + ' Teams' : 'Open'}
+                        </span>
+                        <span className="gh-queue-item-arrow">→</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Bottom Trust & Directory Link */}
             <div className="gh-card-footer">

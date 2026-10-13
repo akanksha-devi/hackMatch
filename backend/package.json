@@ -11,9 +11,10 @@
     "seed:demo": "node src/utils/seed.js",
     "seed:admin": "node src/utils/seedAdmin.js",
     "sync:hackathons": "node src/scripts/syncHackathons.js",
-    "test": "node tests/test_isolation.js && node tests/test_hackathon_sync.js",
+    "test": "node tests/test_isolation.js && node tests/test_hackathon_sync.js && node tests/test_search_isolation.js",
     "test:isolation": "node tests/test_isolation.js",
-    "test:sync": "node tests/test_hackathon_sync.js"
+    "test:sync": "node tests/test_hackathon_sync.js",
+    "test:search": "node tests/test_search_isolation.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
