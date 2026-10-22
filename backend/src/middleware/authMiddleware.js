@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { getJwtSecret } from '../utils/sanitize.js';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -10,7 +11,7 @@ export const protect = async (req, res, next) => {
   ) {
     try {
       token = req.headers.authorization.split(' ')[1];
-      const secret = process.env.JWT_SECRET || 'hackmatch_super_secret_jwt_key_multi_college_2026';
+      const secret = getJwtSecret();
       const decoded = jwt.verify(token, secret);
 
       const user = await User.findById(decoded.id).populate('collegeId');

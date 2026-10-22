@@ -2,6 +2,7 @@ import College from '../models/College.js';
 import User from '../models/User.js';
 import TeamRequest from '../models/TeamRequest.js';
 import AuditLog from '../models/AuditLog.js';
+import { safeRegex } from '../utils/sanitize.js';
 
 /**
  * @route   GET /api/colleges
@@ -16,8 +17,10 @@ export const getColleges = async (req, res) => {
     const filter = isSuperAdmin ? {} : { status: 'Active' };
 
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search, 'i');
-      filter.$or = [{ name: searchRegex }, { code: searchRegex }, { location: searchRegex }];
+      const searchRegex = safeRegex(String(req.query.search));
+      if (searchRegex) {
+        filter.$or = [{ name: searchRegex }, { code: searchRegex }, { location: searchRegex }];
+      }
     }
 
     const colleges = await College.find(filter).sort({ name: 1 });

@@ -15,7 +15,13 @@ export const connectDB = async () => {
     return cached.conn;
   }
 
-  let mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/hackmatch';
+  let mongoUri = process.env.MONGODB_URI;
+  if (!mongoUri) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('FATAL SECURITY ERROR: MONGODB_URI environment variable is required in production.');
+    }
+    mongoUri = 'mongodb://127.0.0.1:27017/hackmatch';
+  }
 
   // In local dev, if .local-mongo-uri exists, attempt to connect to the existing running instance
   if (process.env.NODE_ENV !== 'production' && (mongoUri.includes('127.0.0.1') || mongoUri.includes('localhost'))) {

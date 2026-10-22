@@ -14,7 +14,8 @@
     "test": "node tests/test_isolation.js && node tests/test_hackathon_sync.js && node tests/test_search_isolation.js",
     "test:isolation": "node tests/test_isolation.js",
     "test:sync": "node tests/test_hackathon_sync.js",
-    "test:search": "node tests/test_search_isolation.js"
+    "test:search": "node tests/test_search_isolation.js",
+    "test:security": "node tests/test_security.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

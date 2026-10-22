@@ -1,6 +1,7 @@
 import TeamRequest from '../models/TeamRequest.js';
 import Hackathon from '../models/Hackathon.js';
 import { normalizeSkills, findMatchingCandidates } from '../services/matchingService.js';
+import { escapeRegex } from '../utils/sanitize.js';
 
 /**
  * @route   GET /api/team-requests
@@ -28,7 +29,10 @@ export const getTeamRequests = async (req, res) => {
     }
 
     if (req.query.skill) {
-      filter.skillsNeeded = { $regex: new RegExp(`^${req.query.skill.trim()}$`, 'i') };
+      const cleanSkill = escapeRegex(String(req.query.skill).trim().slice(0, 50));
+      if (cleanSkill) {
+        filter.skillsNeeded = { $regex: new RegExp(`^${cleanSkill}$`, 'i') };
+      }
     }
 
     if (req.query.postedBy) {
@@ -123,8 +127,20 @@ export const createTeamRequest = async (req, res) => {
       });
     }
 
-    // Assign author and college strictly from authenticated user
+    // STRICT MULTI-COLLEGE ISOLATION:
+    // Non-superAdmins cannot attach team requests to another college's private hackathon
     const userCollegeId = req.user.collegeId?._id || req.user.collegeId;
+    if (hackathonDoc.visibility === 'College' && req.user.role !== 'superAdmin') {
+      const userColId = userCollegeId ? userCollegeId.toString() : '';
+      const hackColId = (hackathonDoc.collegeId?._id || hackathonDoc.collegeId)?.toString();
+
+      if (!hackColId || userColId !== hackColId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: You cannot create a team request for another college institution\'s hackathon.',
+        });
+      }
+    }
 
     const newRequest = await TeamRequest.create({
       hackathon: hackathonDoc._id,

@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
+import { getJwtSecret } from './sanitize.js';
 
 export const generateToken = (payload) => {
-  const secret = process.env.JWT_SECRET || 'hackmatch_super_secret_jwt_key_multi_college_2026';
+  const secret = getJwtSecret();
   return jwt.sign(payload, secret, {
     expiresIn: '30d',
   });

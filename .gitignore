@@ -171,3 +171,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Temporary scratch and audit scripts
+scratch/
+

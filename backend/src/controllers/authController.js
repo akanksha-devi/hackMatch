@@ -31,10 +31,29 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    if (password.length < 6) {
+    if (
+      typeof name !== 'string' ||
+      typeof email !== 'string' ||
+      typeof password !== 'string' ||
+      typeof collegeId !== 'string'
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be at least 6 characters long.',
+        message: 'Invalid input types: name, email, password, and collegeId must be valid strings.',
+      });
+    }
+
+    if (password.length < 6 || password.length > 128) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be between 6 and 128 characters long.',
+      });
+    }
+
+    if (email.length > 255) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email must be 255 characters or fewer.',
       });
     }
 
@@ -154,6 +173,20 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Please provide both email and password.',
+      });
+    }
+
+    if (typeof email !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and password must be valid strings.',
+      });
+    }
+
+    if (email.length > 255 || password.length > 128) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email or password length.',
       });
     }
 

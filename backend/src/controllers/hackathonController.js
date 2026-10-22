@@ -1,5 +1,6 @@
 import Hackathon from '../models/Hackathon.js';
 import TeamRequest from '../models/TeamRequest.js';
+import { safeRegex, escapeRegex } from '../utils/sanitize.js';
 
 /**
  * @route   GET /api/hackathons
@@ -68,7 +69,10 @@ export const getHackathons = async (req, res) => {
     }
 
     if (req.query.tag && req.query.tag !== 'All') {
-      filter.tags = { $regex: new RegExp(`^${req.query.tag.trim()}$`, 'i') };
+      const tagQuery = escapeRegex(String(req.query.tag).trim().slice(0, 50));
+      if (tagQuery) {
+        filter.tags = { $regex: new RegExp(`^${tagQuery}$`, 'i') };
+      }
     }
 
     // Combine conditions cleanly
@@ -83,15 +87,17 @@ export const getHackathons = async (req, res) => {
     }
 
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search.trim(), 'i');
-      andClauses.push({
-        $or: [
-          { title: searchRegex },
-          { organizer: searchRegex },
-          { description: searchRegex },
-          { location: searchRegex },
-        ],
-      });
+      const searchRegex = safeRegex(String(req.query.search));
+      if (searchRegex) {
+        andClauses.push({
+          $or: [
+            { title: searchRegex },
+            { organizer: searchRegex },
+            { description: searchRegex },
+            { location: searchRegex },
+          ],
+        });
+      }
     }
 
     if (andClauses.length > 0) {
@@ -211,30 +217,30 @@ export const createHackathon = async (req, res) => {
       visibility,
     } = req.body;
 
-    if (!title) {
+    if (!title || typeof title !== 'string' || !title.trim()) {
       return res.status(400).json({
         success: false,
         message: 'Hackathon title is required.',
       });
     }
 
-    const hackathonVisibility = visibility === 'College' ? 'College' : 'Global';
-    const assignedCollegeId =
-      hackathonVisibility === 'College'
-        ? req.user.collegeId?._id || req.user.collegeId
-        : null;
+    const isSuperAdmin = req.user.role === 'superAdmin';
+    // STRICT TENANT ISOLATION: Non-superAdmins can ONLY create College-scoped hackathons affiliated with their own institution
+    const hackathonVisibility = isSuperAdmin && visibility === 'Global' ? 'Global' : 'College';
+    const userCollegeId = req.user.collegeId?._id || req.user.collegeId;
+    const assignedCollegeId = hackathonVisibility === 'College' ? userCollegeId : null;
 
     const hackathon = await Hackathon.create({
       title: title.trim(),
-      description: description ? description.trim() : '',
-      organizer: organizer ? organizer.trim() : '',
-      mode: mode || 'Online',
-      location: location ? location.trim() : '',
+      description: typeof description === 'string' ? description.trim() : '',
+      organizer: typeof organizer === 'string' ? organizer.trim() : '',
+      mode: mode && ['Online', 'Offline', 'Hybrid'].includes(mode) ? mode : 'Online',
+      location: typeof location === 'string' ? location.trim() : '',
       startDate,
       endDate,
       registrationDeadline,
-      registrationLink: registrationLink ? registrationLink.trim() : '',
-      tags: Array.isArray(tags) ? tags : [],
+      registrationLink: typeof registrationLink === 'string' ? registrationLink.trim() : '',
+      tags: Array.isArray(tags) ? tags.map((t) => String(t).trim()).filter(Boolean) : [],
       visibility: hackathonVisibility,
       collegeId: assignedCollegeId,
       postedBy: req.user._id,
@@ -283,7 +289,46 @@ export const updateHackathon = async (req, res) => {
       });
     }
 
-    Object.assign(hackathon, req.body);
+    // STRICT MASS-ASSIGNMENT PROTECTION: Use explicit field allowlist
+    const {
+      title,
+      description,
+      organizer,
+      mode,
+      location,
+      startDate,
+      endDate,
+      registrationDeadline,
+      registrationLink,
+      tags,
+      status,
+      visibility,
+    } = req.body;
+
+    if (title !== undefined && typeof title === 'string') hackathon.title = title.trim();
+    if (description !== undefined && typeof description === 'string') hackathon.description = description.trim();
+    if (organizer !== undefined && typeof organizer === 'string') hackathon.organizer = organizer.trim();
+    if (mode !== undefined && ['Online', 'Offline', 'Hybrid'].includes(mode)) hackathon.mode = mode;
+    if (location !== undefined && typeof location === 'string') hackathon.location = location.trim();
+    if (startDate !== undefined) hackathon.startDate = startDate;
+    if (endDate !== undefined) hackathon.endDate = endDate;
+    if (registrationDeadline !== undefined) hackathon.registrationDeadline = registrationDeadline;
+    if (registrationLink !== undefined && typeof registrationLink === 'string') {
+      hackathon.registrationLink = registrationLink.trim();
+    }
+    if (Array.isArray(tags)) {
+      hackathon.tags = tags.map((t) => String(t).trim()).filter(Boolean);
+    }
+    if (status !== undefined && ['Active', 'Inactive'].includes(status)) {
+      hackathon.status = status;
+    }
+    // Only superAdmin can change visibility to Global
+    if (isSuperAdmin && visibility && ['Global', 'College'].includes(visibility)) {
+      hackathon.visibility = visibility;
+    }
+
+    // Protected fields (collegeId, isExternal, source, postedBy, syncStatus, externalId)
+    // are strictly excluded from update to prevent BOLA and identity tampering.
     await hackathon.save();
 
     res.json({

@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import { normalizeSkills } from '../services/matchingService.js';
 import { generateAvatarUploadSignature, deleteCloudinaryAsset } from '../config/cloudinary.js';
 import { createVerificationNotification } from '../services/notificationService.js';
+import { escapeRegex, safeRegex, isAllowedAvatarPublicId } from '../utils/sanitize.js';
 
 /**
  * @route   GET /api/users
@@ -27,18 +28,25 @@ export const getUsers = async (req, res) => {
 
     // Filter by skill
     if (req.query.skill && req.query.skill !== 'All') {
-      filter.skills = { $regex: new RegExp(`^${req.query.skill.trim()}$`, 'i') };
+      const cleanSkill = escapeRegex(String(req.query.skill).trim().slice(0, 50));
+      if (cleanSkill) {
+        filter.skills = { $regex: new RegExp(`^${cleanSkill}$`, 'i') };
+      }
     }
 
     // Filter by experience level
     if (req.query.experienceLevel && req.query.experienceLevel !== 'All') {
-      filter.experienceLevel = req.query.experienceLevel;
+      if (['Beginner', 'Intermediate', 'Advanced'].includes(req.query.experienceLevel)) {
+        filter.experienceLevel = req.query.experienceLevel;
+      }
     }
 
     // Text search by name or bio
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search.trim(), 'i');
-      filter.$or = [{ name: searchRegex }, { bio: searchRegex }];
+      const searchRegex = safeRegex(String(req.query.search));
+      if (searchRegex) {
+        filter.$or = [{ name: searchRegex }, { bio: searchRegex }];
+      }
     }
 
     const users = await User.find(filter)
@@ -80,10 +88,10 @@ export const getUserById = async (req, res) => {
     // CROSS-COLLEGE SECURITY CHECK:
     // If requester is not superAdmin, verify user belongs to the SAME college
     if (req.user.role !== 'superAdmin') {
-      const requesterCollegeId = (req.user.collegeId?._id || req.user.collegeId).toString();
-      const targetCollegeId = (user.collegeId?._id || user.collegeId).toString();
+      const requesterCollegeId = (req.user.collegeId?._id || req.user.collegeId)?.toString();
+      const targetCollegeId = (user.collegeId?._id || user.collegeId)?.toString();
 
-      if (requesterCollegeId !== targetCollegeId) {
+      if (!targetCollegeId || requesterCollegeId !== targetCollegeId) {
         return res.status(403).json({
           success: false,
           message: 'Access Denied: You cannot view student profiles from another college.',
@@ -161,7 +169,16 @@ export const updateUserProfile = async (req, res) => {
     if (linkedinUrl !== undefined) user.linkedinUrl = linkedinUrl.trim();
     if (portfolioUrl !== undefined) user.portfolioUrl = portfolioUrl.trim();
     if (avatarUrl !== undefined) user.avatarUrl = avatarUrl.trim();
-    if (req.body.avatarPublicId !== undefined) user.avatarPublicId = req.body.avatarPublicId;
+    if (req.body.avatarPublicId !== undefined) {
+      const pubId = String(req.body.avatarPublicId).trim();
+      if (!isAllowedAvatarPublicId(pubId, user._id)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid avatarPublicId: Asset identifier must belong to the authenticated user namespace.',
+        });
+      }
+      user.avatarPublicId = pubId;
+    }
 
     // Students CANNOT change collegeId, role, or status
     // (req.body.collegeId, req.body.role, req.body.status are deliberately ignored here)
@@ -226,13 +243,23 @@ export const getAvatarUploadSignature = async (req, res) => {
 export const updateAvatar = async (req, res) => {
   try {
     const { avatarUrl, avatarPublicId } = req.body;
-    if (!avatarUrl) {
+    if (!avatarUrl || typeof avatarUrl !== 'string') {
       return res.status(400).json({ success: false, message: 'avatarUrl is required' });
     }
 
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (avatarPublicId !== undefined) {
+      const pubId = String(avatarPublicId).trim();
+      if (!isAllowedAvatarPublicId(pubId, req.user._id)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid avatarPublicId: Asset identifier must belong to the avatars namespace.',
+        });
+      }
     }
 
     // Clean up older Cloudinary asset if replaced
@@ -242,7 +269,7 @@ export const updateAvatar = async (req, res) => {
 
     user.avatarUrl = avatarUrl;
     if (avatarPublicId !== undefined) {
-      user.avatarPublicId = avatarPublicId;
+      user.avatarPublicId = String(avatarPublicId).trim();
     }
     await user.save();
 

@@ -8,6 +8,7 @@ import ExperienceVerification from '../models/ExperienceVerification.js';
 import HackathonSyncLog from '../models/HackathonSyncLog.js';
 import { runHackathonSync, getSyncStatusSummary } from '../services/hackathonSync/index.js';
 import { dispatchNotification } from './notificationController.js';
+import { safeRegex } from '../utils/sanitize.js';
 
 /**
  * @route   GET /api/admin/dashboard
@@ -167,8 +168,10 @@ export const getAdminStudents = async (req, res) => {
     }
 
     if (req.query.search) {
-      const regex = new RegExp(req.query.search.trim(), 'i');
-      filter.$or = [{ name: regex }, { email: regex }, { bio: regex }];
+      const regex = safeRegex(String(req.query.search));
+      if (regex) {
+        filter.$or = [{ name: regex }, { email: regex }, { bio: regex }];
+      }
     }
 
     const students = await User.find(filter)
@@ -218,6 +221,12 @@ export const toggleStudentStatus = async (req, res) => {
     }
 
     const nextStatus = req.body.status || (student.status === 'Active' ? 'Inactive' : 'Active');
+    if (!['Active', 'Inactive'].includes(nextStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status. Status must be either "Active" or "Inactive".',
+      });
+    }
     student.status = nextStatus;
     await student.save();
 
@@ -296,6 +305,13 @@ export const createCollegeAdmin = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Name, email, password, and collegeId are required.',
+      });
+    }
+
+    if (typeof password !== 'string' || password.length < 6 || password.length > 128) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be a valid string between 6 and 128 characters.',
       });
     }
 
@@ -425,6 +441,13 @@ export const createCollegeAdminForCollege = async (req, res) => {
 
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
+    }
+
+    if (typeof password !== 'string' || password.length < 6 || password.length > 128) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be a valid string between 6 and 128 characters.',
+      });
     }
 
     const college = await College.findById(collegeId);
