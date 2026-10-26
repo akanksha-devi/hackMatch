@@ -11,5 +11,8 @@
     "test": "npm test --prefix backend",
     "seed": "npm run seed --prefix backend",
     "seed:admin": "npm run seed:admin --prefix backend"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }

@@ -17,6 +17,9 @@
     "test:search": "node tests/test_search_isolation.js",
     "test:security": "node tests/test_security.js"
   },
+  "engines": {
+    "node": "24.x"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.11.0",
