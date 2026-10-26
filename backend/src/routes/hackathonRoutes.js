@@ -22,6 +22,7 @@ router.get('/', optionalProtect, getHackathons);
 router.get('/:id', optionalProtect, getHackathonById);
 router.post('/', protect, createHackathon);
 router.put('/:id', protect, updateHackathon);
+router.patch('/:id', protect, updateHackathon);
 router.delete('/:id', protect, deleteHackathon);
 
 export default router;

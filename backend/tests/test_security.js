@@ -79,11 +79,13 @@ export const runSecurityTests = async () => {
     const studentB = await User.findOne({ email: 'rahul@example.com', role: 'student' });
     const superAdmin = await User.findOne({ role: 'superAdmin' });
     const collegeAAdmin = await User.findOne({ collegeId: collegeA._id, role: 'collegeAdmin' });
+    const collegeBAdmin = await User.findOne({ collegeId: collegeB._id, role: 'collegeAdmin' });
 
     const tokenStudentA = generateToken({ id: studentA._id, role: studentA.role, collegeId: studentA.collegeId });
     const tokenStudentB = generateToken({ id: studentB._id, role: studentB.role, collegeId: studentB.collegeId });
     const tokenSuperAdmin = generateToken({ id: superAdmin._id, role: superAdmin.role });
     const tokenCollegeAAdmin = generateToken({ id: collegeAAdmin._id, role: collegeAAdmin.role, collegeId: collegeAAdmin.collegeId });
+    const tokenCollegeBAdmin = generateToken({ id: collegeBAdmin._id, role: collegeBAdmin.role, collegeId: collegeBAdmin.collegeId });
 
     // =========================================================================
     // Security Test 1: Standard OWASP Security Headers & CORS Protection
@@ -94,11 +96,43 @@ export const runSecurityTests = async () => {
     testAssert(healthRes.headers.get('x-frame-options') === 'DENY', 'X-Frame-Options: DENY header is set');
     testAssert(healthRes.headers.get('referrer-policy') === 'strict-origin-when-cross-origin', 'Referrer-Policy header is set');
 
-    const corsRes = await fetch(`${baseUrl}/api/health`, {
-      method: 'GET',
-      headers: { Origin: 'https://malicious-phishing-site.com' },
-    });
-    testAssert(!corsRes.headers.get('access-control-allow-origin'), 'Disallowed foreign origin blocked by CORS');
+    // Test exact hostile CORS origins as specified in production security audit
+    const hostileOrigins = [
+      'https://malicious-phishing-site.com',
+      'https://malicious-phishing.vercel.app',
+      'https://evil-localhost.com',
+      'https://example.com.evil',
+      'https://localhost.evil.example',
+      'not-a-valid-url',
+    ];
+
+    for (const hostileOrigin of hostileOrigins) {
+      const hostileRes = await fetch(`${baseUrl}/api/health`, {
+        method: 'GET',
+        headers: { Origin: hostileOrigin },
+      });
+      testAssert(
+        !hostileRes.headers.get('access-control-allow-origin'),
+        `Hostile or malformed origin "${hostileOrigin}" blocked by CORS (no Access-Control-Allow-Origin header)`
+      );
+    }
+
+    // Test legitimate local development origins (credentials allowed)
+    const allowedLocalOrigins = ['http://localhost:5173', 'http://127.0.0.1:3000'];
+    for (const localOrigin of allowedLocalOrigins) {
+      const allowedRes = await fetch(`${baseUrl}/api/health`, {
+        method: 'GET',
+        headers: { Origin: localOrigin },
+      });
+      testAssert(
+        allowedRes.headers.get('access-control-allow-origin') === localOrigin,
+        `Authorized dev origin "${localOrigin}" allowed by CORS`
+      );
+      testAssert(
+        allowedRes.headers.get('access-control-allow-credentials') === 'true',
+        `Authorized dev origin "${localOrigin}" permitted with credentials`
+      );
+    }
 
     // =========================================================================
     // Security Test 2: ReDoS & Regex Injection Resistance across Search Queries
@@ -177,6 +211,97 @@ export const runSecurityTests = async () => {
     testAssert(dbHack.collegeId.toString() === collegeA._id.toString(), 'Mass-assignment attack on collegeId was blocked');
     testAssert(dbHack.isExternal === false, 'Mass-assignment attack on isExternal was blocked');
     testAssert(dbHack.postedBy.toString() === studentA._id.toString(), 'Mass-assignment attack on postedBy was blocked');
+
+    // 3b: Student attempts to promote existing hackathon visibility to Global via PUT
+    const studentVisibilityRes = await fetchApi(`/api/hackathons/${createdHackId}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${tokenStudentA}` },
+      body: JSON.stringify({
+        visibility: 'Global',
+      }),
+    });
+    testAssert(studentVisibilityRes.status === 200, 'Student update request received');
+    const dbHackAfterStudent = await Hackathon.findById(createdHackId);
+    testAssert(dbHackAfterStudent.visibility === 'College', 'Student cannot promote existing hackathon visibility to Global (remains College)');
+
+    // 3c: College Admin A attempts to edit another student\'s hackathon
+    const adminEditStudentRes = await fetchApi(`/api/hackathons/${createdHackId}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${tokenCollegeAAdmin}` },
+      body: JSON.stringify({
+        visibility: 'Global',
+        title: 'Tampered by Admin',
+      }),
+    });
+    testAssert(adminEditStudentRes.status === 403, 'College Admin cannot edit another student\'s hackathon (Status 403 Forbidden)');
+
+    // 3d: College Admin A creates their own event and attempts to promote visibility to Global
+    const adminCreatedHack = await Hackathon.create({
+      title: 'College Admin Internal Hack',
+      visibility: 'College',
+      collegeId: collegeA._id,
+      postedBy: collegeAAdmin._id,
+      status: 'Active',
+    });
+    const adminPromoteRes = await fetchApi(`/api/hackathons/${adminCreatedHack._id}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${tokenCollegeAAdmin}` },
+      body: JSON.stringify({
+        visibility: 'Global',
+      }),
+    });
+    testAssert(adminPromoteRes.status === 200, 'Author College Admin update request accepted');
+    const dbAdminHack = await Hackathon.findById(adminCreatedHack._id);
+    testAssert(dbAdminHack.visibility === 'College', 'College Admin cannot promote event to Global (remains College)');
+
+    // 3e: User from another college (Student B from College B) attempts to modify Student A\'s hackathon
+    const crossColEditRes = await fetchApi(`/api/hackathons/${createdHackId}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${tokenStudentB}` },
+      body: JSON.stringify({
+        title: 'Hacked by Student B',
+        collegeId: collegeB._id.toString(),
+      }),
+    });
+    testAssert(crossColEditRes.status === 403, 'Student from another college cannot edit Student A\'s hackathon (Status 403 Forbidden)');
+
+    // 3f: College Admin B attempts to modify Student A\'s hackathon
+    const crossColAdminEditRes = await fetchApi(`/api/hackathons/${createdHackId}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${tokenCollegeBAdmin}` },
+      body: JSON.stringify({
+        title: 'Hacked by College B Admin',
+      }),
+    });
+    testAssert(crossColAdminEditRes.status === 403, 'College Admin from another college cannot edit Student A\'s hackathon (Status 403 Forbidden)');
+
+    // 3g: SuperAdmin legitimately promotes visibility to Global
+    const superAdminPromoteRes = await fetchApi(`/api/hackathons/${createdHackId}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${tokenSuperAdmin}` },
+      body: JSON.stringify({
+        visibility: 'Global',
+      }),
+    });
+    testAssert(superAdminPromoteRes.status === 200, 'SuperAdmin visibility promotion accepted');
+    const dbHackAfterSuper = await Hackathon.findById(createdHackId);
+    testAssert(dbHackAfterSuper.visibility === 'Global', 'SuperAdmin successfully promoted hackathon visibility to Global');
+
+    // 3h: Legitimate edits by authorized author (Student A) via PATCH/PUT
+    const legitEditRes = await fetchApi(`/api/hackathons/${createdHackId}`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${tokenStudentA}` },
+      body: JSON.stringify({
+        description: 'Updated legitimate description by student author',
+        mode: 'Hybrid',
+        tags: ['AI', 'Security', 'Web3'],
+      }),
+    });
+    testAssert(legitEditRes.status === 200, 'Legitimate edits by authorized author via PATCH accepted');
+    const dbHackFinal = await Hackathon.findById(createdHackId);
+    testAssert(dbHackFinal.description === 'Updated legitimate description by student author', 'Updated description persisted in DB');
+    testAssert(dbHackFinal.mode === 'Hybrid', 'Updated mode persisted in DB');
+    testAssert(dbHackFinal.tags.includes('AI') && dbHackFinal.tags.includes('Security'), 'Updated tags persisted in DB');
 
     // =========================================================================
     // Security Test 4: Cross-College Hackathon Linkage Prevention in Team Requests
